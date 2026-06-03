@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ 
+        error: 'Database not configured. Please add DATABASE_URL environment variable in Vercel.' 
+      }, { status: 500 })
+    }
+
     const { searchParams } = new URL(request.url)
     const supplier = searchParams.get('supplier')
 
@@ -59,6 +67,9 @@ export async function GET(request: Request) {
     return NextResponse.json(formatted)
   } catch (error) {
     console.error('Error fetching exchange orders:', error)
-    return NextResponse.json({ error: 'Failed to fetch exchange orders' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to fetch exchange orders',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

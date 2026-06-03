@@ -1,8 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ 
+        error: 'Database not configured. Please add DATABASE_URL environment variable in Vercel.',
+        totalBookings: 0,
+        totalExchanges: 0,
+        totalRevenue: 0,
+        outstandingAmount: 0
+      }, { status: 500 })
+    }
+
     // Get counts
     const bookingCount = await prisma.bookingData.count()
     const exchangeCount = await prisma.exchangeData.count()
@@ -56,6 +68,13 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching stats:', error)
-    return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to fetch stats',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      totalBookings: 0,
+      totalExchanges: 0,
+      totalRevenue: 0,
+      outstandingAmount: 0
+    }, { status: 500 })
   }
 }
