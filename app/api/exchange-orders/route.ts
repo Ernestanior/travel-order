@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
   try {
+    const { prisma } = await import('@/lib/db')
+    
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ 
-        error: 'Database not configured. Please add DATABASE_URL environment variable in Vercel.' 
+        error: 'Database not configured.' 
       }, { status: 500 })
     }
 
@@ -17,7 +19,6 @@ export async function GET(request: Request) {
     let where: any = {}
 
     if (supplier) {
-      // By supplier name (fuzzy search)
       where.supplier = {
         contains: supplier,
         mode: 'insensitive'
@@ -33,10 +34,9 @@ export async function GET(request: Request) {
       orderBy: {
         exchangedate: 'desc'
       },
-      take: 100 // Limit results
+      take: 100
     })
 
-    // Transform to match frontend format
     const formatted = exchanges.map(exchange => {
       const totalCost = exchange.items.reduce((sum, item) => 
         sum + Number(item.price || 0), 0

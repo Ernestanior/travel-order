@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
   try {
+    const { prisma } = await import('@/lib/db')
+    
     if (!process.env.DATABASE_URL) {
-      return NextResponse.json({ 
-        error: 'Database not configured. Please add DATABASE_URL environment variable in Vercel.' 
-      }, { status: 500 })
+      return NextResponse.json({ error: 'Database not configured.' }, { status: 500 })
     }
 
     const { searchParams } = new URL(request.url)

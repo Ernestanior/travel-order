@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
   try {
-    // Check if database is configured
+    // Lazy import to avoid build-time execution
+    const { prisma } = await import('@/lib/db')
+    
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ 
         error: 'Database not configured. Please add DATABASE_URL environment variable in Vercel.' 
@@ -21,15 +23,12 @@ export async function GET(request: Request) {
     let where: any = {}
 
     if (searchType === 'date' && departureDate) {
-      // By departure date
       where.deptdate = new Date(departureDate)
     } else if (searchType === 'outstanding' && outstandingBeforeDate) {
-      // Outstanding before date - need to calculate from payments
       where.deptdate = {
         lte: new Date(outstandingBeforeDate)
       }
     } else if (searchType === 'customer' && customer) {
-      // By customer name (fuzzy search)
       where.customer = {
         contains: customer,
         mode: 'insensitive'
@@ -46,10 +45,9 @@ export async function GET(request: Request) {
       orderBy: {
         bookdate: 'desc'
       },
-      take: 100 // Limit results
+      take: 100
     })
 
-    // Transform to match frontend format
     const formatted = bookings.map(booking => {
       const totalCost = booking.items.reduce((sum, item) => 
         sum + Number(item.price || 0), 0
@@ -59,7 +57,6 @@ export async function GET(request: Request) {
       )
       const outstanding = totalCost - paid
 
-      // Only include if has outstanding for outstanding search
       if (searchType === 'outstanding' && outstanding <= 0) {
         return null
       }

@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET() {
   try {
+    const { prisma } = await import('@/lib/db')
+    
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ 
-        error: 'Database not configured. Please add DATABASE_URL environment variable in Vercel.',
+        error: 'Database not configured.',
         totalBookings: 0,
         totalExchanges: 0,
         totalRevenue: 0,
@@ -15,11 +17,9 @@ export async function GET() {
       }, { status: 500 })
     }
 
-    // Get counts
     const bookingCount = await prisma.bookingData.count()
     const exchangeCount = await prisma.exchangeData.count()
 
-    // Get all bookings and exchanges with their items and payments
     const bookings = await prisma.bookingData.findMany({
       include: {
         items: true,
@@ -34,7 +34,6 @@ export async function GET() {
       }
     })
 
-    // Calculate totals
     let totalRevenue = 0
     let totalOutstanding = 0
 
