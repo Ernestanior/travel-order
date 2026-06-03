@@ -1,20 +1,30 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { mockBookingOrders, mockExchangeOrders } from '@/lib/mockData'
 import { FileText, RefreshCw, Users, Building2, Search, BarChart3 } from 'lucide-react'
 
 export default function HomePage() {
-  const totalBookings = mockBookingOrders.length
-  const totalExchanges = mockExchangeOrders.length
-  const totalRevenue = [...mockBookingOrders, ...mockExchangeOrders].reduce(
-    (sum, order) => sum + order.paid,
-    0
-  )
-  const outstandingAmount = [...mockBookingOrders, ...mockExchangeOrders].reduce(
-    (sum, order) => sum + order.outstanding,
-    0
-  )
+  const [stats, setStats] = useState({
+    totalBookings: 0,
+    totalExchanges: 0,
+    totalRevenue: 0,
+    outstandingAmount: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        setStats(data)
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Error loading stats:', error)
+        setLoading(false)
+      })
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -29,22 +39,30 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Booking Orders</div>
-            <div className="text-2xl font-semibold text-gray-900">{totalBookings}</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              {loading ? '...' : stats.totalBookings}
+            </div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Exchange Orders</div>
-            <div className="text-2xl font-semibold text-gray-900">{totalExchanges}</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              {loading ? '...' : stats.totalExchanges}
+            </div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Total Paid</div>
-            <div className="text-2xl font-semibold text-gray-900">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              ${loading ? '...' : stats.totalRevenue.toFixed(2)}
+            </div>
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Outstanding</div>
-            <div className="text-2xl font-semibold text-gray-900">${outstandingAmount.toFixed(2)}</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              ${loading ? '...' : stats.outstandingAmount.toFixed(2)}
+            </div>
           </div>
         </div>
 

@@ -1,9 +1,25 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { mockBookingOrders, mockCustomers } from '@/lib/mockData'
+import { mockCustomers } from '@/lib/mockData'
 import { ArrowLeft, FileText, Plus, Search, Filter, X } from 'lucide-react'
+
+interface BookingOrder {
+  id: number
+  bookingNumber: string
+  customerName: string
+  date: string
+  departureDate: string
+  arrivalDate: string
+  totalCost: number
+  paid: number
+  outstanding: number
+  status: string
+  tour: string
+  passengers: { name: string; passport: string }[]
+  passengerNames: string
+}
 
 export default function BookingOrdersPage() {
   const [searchType, setSearchType] = useState<'all' | 'date' | 'outstanding' | 'customer'>('all')
@@ -11,30 +27,39 @@ export default function BookingOrdersPage() {
   const [outstandingBeforeDate, setOutstandingBeforeDate] = useState('')
   const [customerSearch, setCustomerSearch] = useState('')
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+  const [bookingOrders, setBookingOrders] = useState<BookingOrder[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // 筛选订单
-  const filteredOrders = useMemo(() => {
-    let orders = mockBookingOrders
-
-    if (searchType === 'date' && departureDate) {
-      // Booking Inquiry (Departure) - 按出发日期搜索
-      orders = orders.filter(order => order.departureDate === departureDate)
-    } else if (searchType === 'outstanding' && outstandingBeforeDate) {
-      // Outstanding Transactions Report: Before Departure - 出发日期之前且未付清的订单
-      orders = orders.filter(order => {
-        const hasOutstanding = order.outstanding > 0
-        const beforeDate = order.departureDate && order.departureDate <= outstandingBeforeDate
-        return hasOutstanding && beforeDate
-      })
-    } else if (searchType === 'customer' && customerSearch) {
-      // Outstanding Transactions Report: By Customer - 按客户名搜索
-      orders = orders.filter(order => 
-        order.customerName.toLowerCase().includes(customerSearch.toLowerCase())
-      )
-    }
-
-    return orders
+  // 加载订单数据
+  useEffect(() => {
+    loadOrders()
   }, [searchType, departureDate, outstandingBeforeDate, customerSearch])
+
+  const loadOrders = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set('searchType', searchType)
+      
+      if (searchType === 'date' && departureDate) {
+        params.set('departureDate', departureDate)
+      } else if (searchType === 'outstanding' && outstandingBeforeDate) {
+        params.set('outstandingBeforeDate', outstandingBeforeDate)
+      } else if (searchType === 'customer' && customerSearch) {
+        params.set('customer', customerSearch)
+      }
+
+      const response = await fetch(`/api/booking-orders?${params}`)
+      const data = await response.json()
+      setBookingOrders(data)
+    } catch (error) {
+      console.error('Error loading orders:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredOrders = bookingOrders
 
   // 客户名模糊搜索
   const matchedCustomers = useMemo(() => {
@@ -43,11 +68,6 @@ export default function BookingOrdersPage() {
       c.name.toLowerCase().includes(customerSearch.toLowerCase())
     ).slice(0, 5)
   }, [customerSearch])
-
-  const handleCustomerSelect = (customerName: string) => {
-    setCustomerSearch(customerName)
-    setShowCustomerDropdown(false)
-  }
 
   const clearFilters = () => {
     setSearchType('all')
@@ -219,7 +239,9 @@ export default function BookingOrdersPage() {
           {/* 显示筛选结果统计 */}
           {searchType !== 'all' && (
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-              Found <span className="font-semibold text-gray-900">{filteredOrders.length}</span> order(s)
+              {loading ? 'Loading...' : (
+                <>Found <span className="font-semibold text-gray-900">{filteredOrders.length}</span> order(s)</>
+              )}
             </div>
           )}
         </div>
@@ -257,7 +279,16 @@ export default function BookingOrdersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {filteredOrders.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                        <span className="ml-3">Loading orders...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                       <Search className="w-10 h-10 mx-auto mb-2 text-gray-300" />

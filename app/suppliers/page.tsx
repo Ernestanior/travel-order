@@ -1,10 +1,43 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { mockSuppliers } from '@/lib/mockData'
 import { ArrowLeft, Building2, Search } from 'lucide-react'
 
+interface Supplier {
+  id: string
+  name: string
+  telephone: string
+  tel: string
+  address: string
+  fax: string
+}
+
 export default function SuppliersPage() {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    loadSuppliers()
+  }, [searchTerm])
+
+  const loadSuppliers = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (searchTerm) params.set('search', searchTerm)
+      
+      const response = await fetch(`/api/suppliers?${params}`)
+      const data = await response.json()
+      setSuppliers(data)
+    } catch (error) {
+      console.error('Error loading suppliers:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-6">
@@ -28,6 +61,8 @@ export default function SuppliersPage() {
               <input
                 type="text"
                 placeholder="Search supplier..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-900"
               />
             </div>
@@ -52,22 +87,40 @@ export default function SuppliersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {mockSuppliers.map((supplier) => (
-                  <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {supplier.name}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {supplier.telephone || '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {supplier.fax || '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {supplier.address || '-'}
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-12 text-center">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                        <span className="ml-3 text-gray-600">Loading suppliers...</span>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : suppliers.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                      <Building2 className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No suppliers found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  suppliers.map((supplier) => (
+                    <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                        {supplier.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {supplier.telephone || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {supplier.fax || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {supplier.address || '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
