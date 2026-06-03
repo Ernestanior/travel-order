@@ -1,157 +1,255 @@
-# 旅行社订单管理系统
+# ✈️ Travel Order Management System
 
-这是一个基于 Next.js 和 TypeScript 开发的旅行社订单管理系统，用于管理机票预订、换票订单、客户和供应商信息。
+一个现代化的旅行社订单管理系统，使用 Next.js + TypeScript + Prisma + PostgreSQL 构建。
 
-## 功能模块
+## 🎯 项目完成状态
 
-### 1. Booking Order（预订订单）
-- 查看和管理所有预订订单
-- 订单详情包括：
-  - 客户信息（姓名、地址、电话、传真）
-  - 航班信息（出发/到达日期、时间、航班号、目的地）
-  - 乘客数据
-  - 支付记录和收据
-  - 特殊说明
+### ✅ 已完成功能
 
-### 2. Exchange Order（换票订单）
-- 管理机票改签/换票订单
-- 包含供应商信息
-- 追踪换票费用和支付状态
+#### 1. **核心页面**
+- ✅ 主页仪表板（统计数据展示）
+- ✅ Booking Orders（预订订单管理）
+- ✅ Exchange Orders（换票订单管理）
+- ✅ Customers（客户信息管理）
+- ✅ Suppliers（供应商管理）
+- ✅ Passenger Inquiry（乘客查询）
+- ✅ Reports（报表功能框架）
 
-### 3. Customer（客户管理）
-- 客户信息维护
-- 联系方式管理
+#### 2. **搜索和筛选功能**
+- ✅ 按出发日期搜索订单
+- ✅ 按客户名称搜索订单
+- ✅ 未付款订单查询（按日期前）
+- ✅ 按供应商搜索换票订单
+- ✅ 客户名模糊搜索（带下拉提示）
+- ✅ 乘客信息按客户查询
 
-### 4. Supplier（供应商管理）
-- 航空公司和供应商信息
-- 联系方式管理
+#### 3. **数据库集成**
+- ✅ Neon PostgreSQL 数据库配置
+- ✅ Prisma ORM 设置（9个数据表）
+- ✅ API 路由层（RESTful APIs）
+- ✅ MDB 数据导入脚本
+- ✅ 数据导入进度：**7243+ 客户记录已导入**
 
-### 5. Reports / Printouts（报表打印）
-- 预订查询（按出发日期）
-- 换票查询（按供应商）
-- 未付款交易报表
-- 收据查询和打印
-- 利润报表
-- 按客户查询
-- 已关闭预订交易
+#### 4. **UI/UX 设计**
+- ✅ 专业、简洁的设计风格
+- ✅ 去除"AI感"，使用灰色/黑色配色
+- ✅ 响应式布局（移动端友好）
+- ✅ 加载状态和错误处理
+- ✅ 统一的悬停效果和过渡动画
 
-## 技术栈
+#### 5. **部署准备**
+- ✅ GitHub 仓库：https://github.com/Ernestanior/travel-order.git
+- ✅ Vercel 部署配置
+- ✅ 环境变量设置指南
+- ✅ 详细部署文档（中英文）
 
-- **框架**: Next.js 14 (App Router)
-- **语言**: TypeScript
-- **样式**: Tailwind CSS
-- **图标**: Lucide React
+### 🔄 正在进行
 
-## 开始使用
+#### 数据导入
+- **状态**: 后台持续运行中
+- **当前进度**: 
+  - ✅ Customers: 7243+ 条记录
+  - ⏳ Suppliers: 导入中
+  - ⏳ Booking Orders: 导入中
+  - ⏳ Exchange Orders: 导入中
+  - ⏳ Passengers: 导入中
+  - ⏳ Items & Payments: 导入中
 
-### 1. 安装依赖
+**预计完成时间**: 1-2 小时（取决于数据量）
+
+## 🚀 快速开始
+
+### 本地开发
 
 ```bash
+# 克隆仓库
+git clone https://github.com/Ernestanior/travel-order.git
+cd travel-order
+
+# 安装依赖
 npm install
-```
 
-### 2. 运行开发服务器
+# 配置环境变量（.env 文件已包含）
+# DATABASE_URL 已配置 Neon PostgreSQL
 
-```bash
+# 生成 Prisma Client
+npx prisma generate
+
+# 运行开发服务器
 npm run dev
 ```
 
-访问 [http://localhost:3000](http://localhost:3000) 查看应用。
+访问: http://localhost:3000
 
-### 3. 构建生产版本
-
-```bash
-npm run build
-```
-
-### 4. 启动生产服务器
+### 数据库管理
 
 ```bash
-npm start
+# 查看数据导入进度
+npx tsx scripts/check-data.ts
+
+# 推送 schema 更改到数据库
+npx prisma db push
+
+# 打开 Prisma Studio（可视化数据库管理）
+npx prisma studio
 ```
 
-## 部署到 Vercel
+### 部署到 Vercel
 
-这个项目可以轻松部署到 Vercel：
+详细步骤请参考 [立即部署.md](./立即部署.md)
 
-1. 将代码推送到 GitHub 仓库
-2. 在 Vercel 中导入项目
-3. Vercel 会自动检测 Next.js 项目并配置构建设置
-4. 点击部署
+**简要步骤**:
+1. 在 Vercel 导入 GitHub 仓库
+2. 配置环境变量 `DATABASE_URL`
+3. 点击部署
 
-或者使用 Vercel CLI：
-
-```bash
-npm install -g vercel
-vercel
-```
-
-## 项目结构
+## 📁 项目结构
 
 ```
 airline-order/
-├── app/                      # Next.js App Router 页面
-│   ├── page.tsx             # 主页（Main Menu）
-│   ├── booking-orders/      # 预订订单
-│   │   ├── page.tsx        # 订单列表
-│   │   └── [id]/           # 订单详情
-│   ├── exchange-orders/     # 换票订单
-│   ├── customers/           # 客户管理
-│   ├── suppliers/           # 供应商管理
-│   ├── reports/             # 报表
-│   ├── layout.tsx          # 根布局
-│   └── globals.css         # 全局样式
-├── lib/                     # 工具函数和数据
-│   └── mockData.ts         # 模拟数据
-├── types/                   # TypeScript 类型定义
-│   └── index.ts
-├── public/                  # 静态资源
-├── package.json
-├── tsconfig.json
-├── tailwind.config.ts
-└── next.config.js
+├── app/                          # Next.js App Router
+│   ├── api/                      # API 路由
+│   │   ├── booking-orders/       # 预订订单 API
+│   │   ├── exchange-orders/      # 换票订单 API
+│   │   ├── customers/            # 客户 API
+│   │   ├── suppliers/            # 供应商 API
+│   │   └── stats/                # 统计数据 API
+│   ├── booking-orders/           # 预订订单页面
+│   ├── exchange-orders/          # 换票订单页面
+│   ├── customers/                # 客户管理页面
+│   ├── suppliers/                # 供应商页面
+│   ├── passenger-inquiry/        # 乘客查询页面
+│   ├── reports/                  # 报表页面
+│   └── page.tsx                  # 主页
+├── lib/                          # 工具函数
+│   ├── db.ts                     # Prisma Client 单例
+│   └── mockData.ts               # 测试数据（已弃用）
+├── prisma/                       # 数据库
+│   └── schema.prisma             # 数据库架构
+├── scripts/                      # 脚本
+│   ├── import-mdb-data.ts        # MDB 数据导入
+│   └── check-data.ts             # 数据检查
+├── types/                        # TypeScript 类型
+└── .env                          # 环境变量
 ```
 
-## 数据结构
+## 🗄️ 数据库架构
 
-### BookingOrder（预订订单）
-- 订单号、日期、状态
-- 客户信息
-- 航班信息（支持多段航班）
-- 乘客列表
-- 财务信息（总额、已付、未付）
-- 收据记录
+### 主要数据表
 
-### ExchangeOrder（换票订单）
-- 换票号、关联预订号
-- 供应商信息
-- 航班变更信息
-- 换票费用明细
+1. **customer_data** - 客户信息
+2. **supplier_data** - 供应商信息
+3. **booking_data** - 预订订单
+4. **exchange_data** - 换票订单
+5. **passenger_data** - 乘客信息
+6. **item_data** - 订单项目
+7. **exchange_item_data** - 换票项目
+8. **booking_payment_data** - 预订付款记录
+9. **exchange_payment_data** - 换票付款记录
 
-### Customer（客户）
-- 基本信息和联系方式
+## 🛠️ 技术栈
 
-### Supplier（供应商）
-- 供应商名称、联系方式、地址
+- **前端**: Next.js 14, React 18, TypeScript
+- **样式**: Tailwind CSS
+- **数据库**: PostgreSQL (Neon)
+- **ORM**: Prisma 5.22.0
+- **图标**: Lucide React
+- **部署**: Vercel
+- **版本控制**: Git + GitHub
 
-## 后续开发建议
+## 📊 API 端点
 
-1. **数据库集成**: 替换模拟数据，连接实际数据库（如 PostgreSQL, MongoDB）
-2. **用户认证**: 添加登录系统
-3. **API 路由**: 创建 API 端点处理数据 CRUD 操作
-4. **PDF 生成**: 实现发票和报表的 PDF 导出
-5. **搜索和筛选**: 增强订单搜索和筛选功能
-6. **数据验证**: 添加表单验证
-7. **状态管理**: 使用 Zustand 或 Redux 管理复杂状态
-8. **国际化**: 支持多语言
+### Booking Orders
+- `GET /api/booking-orders?searchType=all`
+- `GET /api/booking-orders?searchType=date&departureDate=2024-01-01`
+- `GET /api/booking-orders?searchType=customer&customer=John`
+- `GET /api/booking-orders?searchType=outstanding&outstandingBeforeDate=2024-01-01`
 
-## 注意事项
+### Exchange Orders
+- `GET /api/exchange-orders`
+- `GET /api/exchange-orders?supplier=Singapore Airlines`
 
-- 当前使用模拟数据，实际部署时需要连接数据库
-- 打印功能需要进一步开发
-- 支付功能需要集成支付网关
-- 建议添加用户权限管理
+### Customers
+- `GET /api/customers`
+- `GET /api/customers?search=John`
 
-## License
+### Suppliers
+- `GET /api/suppliers`
+- `GET /api/suppliers?search=Singapore`
 
-MIT
+### Stats
+- `GET /api/stats` - 返回总订单数、总收入、未付款金额
+
+## 🎨 设计理念
+
+### 颜色方案
+- **主色**: Gray-900 (#111827)
+- **背景**: Gray-50 (#F9FAFB)
+- **边框**: Gray-200 (#E5E7EB)
+- **文字**: Gray-700/900
+
+### 设计原则
+- ✅ 简洁专业
+- ✅ 清晰的视觉层次
+- ✅ 一致的间距系统
+- ✅ 微妙的交互反馈
+- ✅ 无障碍访问
+
+## 📚 文档
+
+- [QUICKSTART.md](./QUICKSTART.md) - 快速开始指南
+- [DEPLOY.md](./DEPLOY.md) - Vercel 部署指南
+- [立即部署.md](./立即部署.md) - 详细部署清单
+- [CHECKLIST.md](./CHECKLIST.md) - 功能检查清单
+
+## 🔐 环境变量
+
+```bash
+# .env
+DATABASE_URL=postgresql://[username]:[password]@[host]/[database]?channel_binding=require&sslmode=require
+```
+
+**注意**: `.env` 文件已包含在仓库中（用于演示），生产环境请使用 Vercel 环境变量。
+
+## 🐛 故障排查
+
+### 数据库连接问题
+```bash
+# 测试连接
+npx tsx scripts/check-data.ts
+
+# 重新生成 Prisma Client
+npx prisma generate
+```
+
+### 构建失败
+```bash
+# 清理并重新安装
+rm -rf node_modules package-lock.json
+npm install
+
+# 本地构建测试
+npm run build
+```
+
+## 📈 性能优化
+
+- ✅ 使用 Neon 连接池
+- ✅ API 路由数据限制（100条/请求）
+- ✅ 客户端数据缓存
+- ✅ 图片优化（Next.js Image）
+- ✅ 代码分割（Next.js 自动）
+
+## 📞 支持
+
+如有问题，请参考：
+- [Next.js 文档](https://nextjs.org/docs)
+- [Prisma 文档](https://www.prisma.io/docs)
+- [Vercel 文档](https://vercel.com/docs)
+- [Neon 文档](https://neon.tech/docs)
+
+---
+
+**最后更新**: 2024
+**版本**: 1.0.0
+**状态**: ✅ 开发完成，数据导入中
