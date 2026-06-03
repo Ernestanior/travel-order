@@ -32,35 +32,29 @@ export default function ExchangeOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {/* 头部 */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
+        <div className="mb-6">
           <Link
             href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-3 text-sm font-medium"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Main Menu
+            Back to Main Menu
           </Link>
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <RefreshCw className="w-8 h-8 text-purple-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">Exchange Order</h1>
-            </div>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded flex items-center text-sm">
-              <Plus className="w-4 h-4 mr-1" />
+            <h1 className="text-2xl font-semibold text-gray-900">Exchange Orders</h1>
+            <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center text-sm transition-colors">
+              <Plus className="w-4 h-4 mr-2" />
               New Exchange
             </button>
           </div>
         </div>
 
         {/* 搜索区域 - Exchange Inquiry (Supplier) */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Exchange Inquiry (Supplier)</h3>
-          </div>
+        <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Exchange Inquiry (Supplier)</h3>
 
           <div className="relative">
             <div className="flex items-center gap-2">
@@ -109,97 +103,97 @@ export default function ExchangeOrdersPage() {
 
           {/* 显示筛选结果统计 */}
           {supplierSearch && (
-            <div className="mt-3 text-sm text-gray-600">
-              Found <span className="font-bold text-purple-600">{filteredOrders.length}</span> exchange order(s)
+            <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+              Found <span className="font-semibold text-gray-900">{filteredOrders.length}</span> exchange order(s)
             </div>
           )}
         </div>
 
         {/* 订单表格 */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Exchange #
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Agent
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Dept Date
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Arv Date
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Total Cost
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Paid
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Outstanding
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Booking #
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
-                      <Search className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p>No exchange orders found matching your search criteria</p>
+                    <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                      <Search className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No exchange orders found matching your search criteria</p>
                     </td>
                   </tr>
                 ) : (
                   filteredOrders.map((order) => (
                   <tr
                     key={order.id}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => window.location.href = `/exchange-orders/${order.id}`}
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-purple-600">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                       {order.exchangeNumber}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
+                    <td className="px-4 py-3 text-sm text-gray-700">
                       {order.agent || order.supplierName}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {order.deptDate || order.departureDate || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {order.arvDate || order.arrivalDate || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                       ${order.totalCost.toFixed(2)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-green-600 text-right font-medium">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                       ${order.paid.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      <span className={order.outstanding > 0 ? 'text-red-600' : 'text-gray-500'}>
+                      <span className={order.outstanding > 0 ? 'text-gray-900' : 'text-gray-400'}>
                         ${order.outstanding.toFixed(2)}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded ${
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
                           order.status === 'Close'
-                            ? 'bg-gray-100 text-gray-700'
-                            : 'bg-green-100 text-green-700'
+                            ? 'bg-gray-100 text-gray-600'
+                            : 'bg-gray-900 text-white'
                         }`}
                       >
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                       {order.bookingNumber}
                     </td>
                   </tr>
@@ -209,8 +203,8 @@ export default function ExchangeOrdersPage() {
             </table>
           </div>
 
-          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-sm text-gray-600">
-            N/B: Double-click on entry to view details.
+          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-xs text-gray-500">
+            Click on any row to view details
           </div>
         </div>
       </div>

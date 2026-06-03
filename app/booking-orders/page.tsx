@@ -57,74 +57,68 @@ export default function BookingOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {/* 头部 */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
+        <div className="mb-6">
           <Link
             href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-3 text-sm font-medium"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Main Menu
+            Back to Main Menu
           </Link>
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <FileText className="w-8 h-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">Booking Order</h1>
-            </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center text-sm">
-              <Plus className="w-4 h-4 mr-1" />
+            <h1 className="text-2xl font-semibold text-gray-900">Booking Orders</h1>
+            <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center text-sm transition-colors">
+              <Plus className="w-4 h-4 mr-2" />
               New Booking
             </button>
           </div>
         </div>
 
         {/* 搜索和筛选区域 */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Search & Reports</h3>
-          </div>
+        <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Search & Filters</h3>
 
           {/* 搜索类型选择 */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
             <button
               onClick={() => clearFilters()}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 searchType === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               All Orders
             </button>
             <button
               onClick={() => setSearchType('date')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 searchType === 'date'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               By Departure Date
             </button>
             <button
               onClick={() => setSearchType('outstanding')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 searchType === 'outstanding'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               Outstanding (Before Date)
             </button>
             <button
               onClick={() => setSearchType('customer')}
-              className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 searchType === 'customer'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               By Customer
@@ -224,88 +218,88 @@ export default function BookingOrdersPage() {
 
           {/* 显示筛选结果统计 */}
           {searchType !== 'all' && (
-            <div className="mt-3 text-sm text-gray-600">
-              Found <span className="font-bold text-blue-600">{filteredOrders.length}</span> order(s)
+            <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+              Found <span className="font-semibold text-gray-900">{filteredOrders.length}</span> order(s)
             </div>
           )}
         </div>
 
         {/* 订单表格 */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Booking #
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Customer
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Depart Date
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Arrival Date
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Total Cost
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Paid
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Outstanding
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-100">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                      <Search className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                      <p>No orders found matching your search criteria</p>
+                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                      <Search className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No orders found matching your search criteria</p>
                     </td>
                   </tr>
                 ) : (
                   filteredOrders.map((order) => (
                   <tr
                     key={order.id}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => window.location.href = `/booking-orders/${order.id}`}
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-blue-600">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                       {order.bookingNumber}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
+                    <td className="px-4 py-3 text-sm text-gray-700">
                       {order.customerName}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {order.departureDate || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {order.arrivalDate || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                       ${order.totalCost.toFixed(2)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-green-600 text-right font-medium">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                       ${order.paid.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      <span className={order.outstanding > 0 ? 'text-red-600' : 'text-gray-500'}>
+                      <span className={order.outstanding > 0 ? 'text-gray-900' : 'text-gray-400'}>
                         ${order.outstanding.toFixed(2)}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded ${
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
                           order.status === 'Close'
-                            ? 'bg-gray-100 text-gray-700'
-                            : 'bg-green-100 text-green-700'
+                            ? 'bg-gray-100 text-gray-600'
+                            : 'bg-gray-900 text-white'
                         }`}
                       >
                         {order.status}
@@ -318,8 +312,8 @@ export default function BookingOrdersPage() {
             </table>
           </div>
 
-          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-sm text-gray-600">
-            N/B: Double-click on entry to view details.
+          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-xs text-gray-500">
+            Click on any row to view details
           </div>
         </div>
       </div>

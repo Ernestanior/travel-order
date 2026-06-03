@@ -1,13 +1,184 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  customer  String        @id
+  address   String?       @db.VarChar(255)
+  tel       String        @db.VarChar(50)
+  fax       String?       @db.VarChar(50)
+  bookings  BookingData[]
+  exchanges ExchangeData[]
+
+  @@unique([customer, tel])
+  @@map("customer_data")
+}
+
+model Supplier {
+  supplier  String         @id @db.VarChar(200)
+  address   String?        @db.VarChar(255)
+  tel       String?        @db.VarChar(50)
+  fax       String?        @db.VarChar(50)
+  exchanges ExchangeData[]
+
+  @@map("supplier_data")
+}
+
+model BookingData {
+  id         Int                  @id @default(autoincrement())
+  bookno     String               @unique @db.VarChar(50)
+  bookdate   DateTime?            @db.Date
+  customer   String               @db.VarChar(200)
+  deptdate   DateTime?            @db.Date
+  depttime   String?              @db.VarChar(50)
+  deptflt    String?              @db.VarChar(50)
+  deptdest   String?              @db.VarChar(50)
+  deptdate2  DateTime?            @db.Date
+  depttime2  String?              @db.VarChar(50)
+  deptflt2   String?              @db.VarChar(50)
+  deptdest2  String?              @db.VarChar(50)
+  arrvdate   DateTime?            @db.Date
+  arrvtime   String?              @db.VarChar(50)
+  arrvflt    String?              @db.VarChar(50)
+  arrvdest   String?              @db.VarChar(50)
+  arrvdate2  DateTime?            @db.Date
+  arrvtime2  String?              @db.VarChar(50)
+  arrvflt2   String?              @db.VarChar(50)
+  arrvdest2  String?              @db.VarChar(50)
+  discount   Decimal              @default(0) @db.Decimal(15, 2)
+  tourcode   String?              @db.VarChar(50)
+  tour       String?              @db.VarChar(50)
+  staff      String?              @db.VarChar(100)
+  status     String?              @db.VarChar(50)
+  special    String?              @db.VarChar(255)
+
+  customerData Customer?            @relation(fields: [customer], references: [customer])
+  items        ItemData[]
+  passengers   PassengerData[]
+  payments     BookingPaymentData[]
+  exchanges    ExchangeData[]
+
+  @@index([id])
+  @@index([tourcode])
+  @@map("booking_data")
+}
+
+model ExchangeData {
+  id           Int                   @id @default(autoincrement())
+  exchangeno   String                @unique @db.VarChar(50)
+  bookno       String                @db.VarChar(50)
+  exchangedate DateTime?             @db.Date
+  supplier     String                @db.VarChar(200)
+  status       String?               @db.VarChar(50)
+  bookdate     DateTime?             @db.Date
+  customer     String                @db.VarChar(200)
+  deptdate     DateTime?             @db.Date
+  depttime     String?               @db.VarChar(50)
+  deptflt      String?               @db.VarChar(50)
+  deptdest     String?               @db.VarChar(50)
+  deptdate2    DateTime?             @db.Date
+  depttime2    String?               @db.VarChar(50)
+  deptflt2     String?               @db.VarChar(50)
+  deptdest2    String?               @db.VarChar(50)
+  arrvdate     DateTime?             @db.Date
+  arrvtime     String?               @db.VarChar(50)
+  arrvflt      String?               @db.VarChar(50)
+  arrvdest     String?               @db.VarChar(50)
+  arrvdate2    DateTime?             @db.Date
+  arrvtime2    String?               @db.VarChar(50)
+  arrvflt2     String?               @db.VarChar(50)
+  arrvdest2    String?               @db.VarChar(50)
+  discount     Decimal               @default(0) @db.Decimal(15, 2)
+  tourcode     String?               @db.VarChar(50)
+  tour         String?               @db.VarChar(50)
+  staff        String?               @db.VarChar(100)
+  special      String?               @db.VarChar(255)
+
+  bookingData  BookingData?          @relation(fields: [bookno], references: [bookno])
+  supplierData Supplier?             @relation(fields: [supplier], references: [supplier])
+  customerData Customer?             @relation(fields: [customer], references: [customer])
+  items        ExchangeItemData[]
+  payments     ExchangePaymentData[]
+
+  @@index([id])
+  @@index([tourcode])
+  @@map("exchange_data")
+}
+
+model ItemData {
+  bookno     String       @db.VarChar(50)
+  item       String       @db.VarChar(50)
+  quantity   Int?
+  price      Decimal?     @db.Decimal(15, 2)
+  unitprice  Decimal?     @db.Decimal(15, 2)
+  exchangeno String?      @db.VarChar(50)
+  booking    BookingData? @relation(fields: [bookno], references: [bookno])
+
+  @@id([bookno, item])
+  @@map("item_data")
+}
+
+model ExchangeItemData {
+  exchangeno String        @db.VarChar(50)
+  item       String        @db.VarChar(50)
+  quantity   Int?
+  price      Decimal?      @db.Decimal(15, 2)
+  unitprice  Decimal?      @db.Decimal(15, 2)
+  exchange   ExchangeData? @relation(fields: [exchangeno], references: [exchangeno])
+
+  @@id([exchangeno, item])
+  @@map("exchange_item_data")
+}
+
+model PassengerData {
+  bookno     String       @db.VarChar(50)
+  paxname    String       @db.VarChar(50)
+  passport   String?      @db.VarChar(50)
+  exchangeno String?      @db.VarChar(50)
+  booking    BookingData? @relation(fields: [bookno], references: [bookno])
+
+  @@id([bookno, paxname])
+  @@map("passenger_data")
+}
+
+model BookingPaymentData {
+  id          Int          @id @default(autoincrement())
+  receiptno   String?      @db.VarChar(50)
+  bookno      String?      @db.VarChar(50)
+  receiptdate DateTime?    @db.Date
+  paytype     String?      @db.VarChar(50)
+  for         String?      @db.VarChar(50)
+  chequeno    String?      @db.VarChar(50)
+  visano      String?      @db.VarChar(50)
+  amountpaid  Decimal?     @db.Decimal(15, 2)
+  paidtext    String?      @db.VarChar(100)
+  customer    String?      @db.VarChar(100)
+  payfor      String?      @db.VarChar(255)
+  booking     BookingData? @relation(fields: [bookno], references: [bookno])
+
+  @@index([id])
+  @@index([amountpaid])
+  @@map("booking_payment_data")
+}
+
+model ExchangePaymentData {
+  id          Int           @id @default(autoincrement())
+  exchangeno  String        @db.VarChar(50)
+  bookno      String?       @db.VarChar(50)
+  receiptdate DateTime?     @db.Date
+  paytype     String?       @db.VarChar(50)
+  chequeno    String?       @db.VarChar(50)
+  amountpaid  Decimal?      @db.Decimal(15, 2)
+  remarks     String?       @db.VarChar(255)
+  issue       String?       @db.VarChar(50)
+  paidtext    String?       @db.VarChar(100)
+  exchange    ExchangeData? @relation(fields: [exchangeno], references: [exchangeno])
+
+  @@index([amountpaid])
+  @@map("exchange_payment_data")
 }

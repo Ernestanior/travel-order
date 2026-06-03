@@ -68,32 +68,26 @@ export default function PassengerInquiryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-6">
         {/* 头部 */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
+        <div className="mb-6">
           <Link
             href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-3 text-sm font-medium"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Main Menu
+            Back to Main Menu
           </Link>
-          <div className="flex items-center">
-            <Users className="w-8 h-8 text-green-600 mr-3" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Passenger Inquiry</h1>
-              <p className="text-sm text-gray-600">Search all passengers by customer name</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Passenger Inquiry</h1>
+            <p className="text-sm text-gray-500">Search all passengers by customer name</p>
           </div>
         </div>
 
         {/* 搜索区域 */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Search className="w-5 h-5 text-gray-600" />
-            <h3 className="font-semibold text-gray-900">Search by Customer</h3>
-          </div>
+        <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Search by Customer</h3>
 
           <div className="relative">
             <div className="flex items-center gap-2">
@@ -145,19 +139,19 @@ export default function PassengerInquiryPage() {
 
           {/* 显示搜索结果统计 */}
           {customerSearch && (
-            <div className="mt-3 text-sm text-gray-600">
-              Found <span className="font-bold text-green-600">{passengerResults.length}</span> booking order(s) with passengers
+            <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+              Found <span className="font-semibold text-gray-900">{passengerResults.length}</span> booking order(s) with passengers
             </div>
           )}
         </div>
 
         {/* 结果显示 */}
         {customerSearch && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {passengerResults.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Users className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                <p className="text-lg font-medium mb-1">No passengers found</p>
+              <div className="p-12 text-center text-gray-500">
+                <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-base font-medium mb-1">No passengers found</p>
                 <p className="text-sm">No booking orders found for customer "{customerSearch}"</p>
               </div>
             ) : (
@@ -165,49 +159,49 @@ export default function PassengerInquiryPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Booking #
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Customer
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Passengers
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Departure Date
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Tour
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Booking Date
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-100">
                     {passengerResults.map((result, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
+                      <tr key={index} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 whitespace-nowrap">
                           <Link
                             href={`/booking-orders/${mockBookingOrders.find(o => o.bookingNumber === result.bookingNumber)?.id}`}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                            className="text-sm font-medium text-gray-900 hover:text-gray-700"
                           >
                             {result.bookingNumber}
                           </Link>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-700">
                           {result.customerName}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-gray-700">
                           <div className="max-w-md">
                             {result.passengerNames}
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                           {result.departureDate || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">
+                        <td className="px-4 py-3 text-sm text-gray-600">
                           {result.tour || '-'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -224,15 +218,15 @@ export default function PassengerInquiryPage() {
 
         {/* 初始提示 */}
         {!customerSearch && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Users className="w-20 h-20 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <Users className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+            <h3 className="text-base font-medium text-gray-900 mb-2">
               Search for Passengers
             </h3>
-            <p className="text-gray-600 mb-1">
+            <p className="text-sm text-gray-600 mb-1">
               Enter a customer name above to view all passengers from their booking orders.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               One customer can have multiple booking orders, each with multiple passengers.
             </p>
           </div>
