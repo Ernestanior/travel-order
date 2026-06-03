@@ -40,8 +40,8 @@ function exportTable(tableName: string): any[] {
 }
 
 // 解析 CSV 行（处理引号内的逗号）
-function parseCSVLine(line: string): string[] {
-  const result = []
+function parseCSVLine(line: string): (string | null)[] {
+  const result: (string | null)[] = []
   let current = ''
   let inQuotes = false
   

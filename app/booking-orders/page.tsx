@@ -69,6 +69,11 @@ export default function BookingOrdersPage() {
     ).slice(0, 5)
   }, [customerSearch])
 
+  const handleCustomerSelect = (customerName: string) => {
+    setCustomerSearch(customerName)
+    setShowCustomerDropdown(false)
+  }
+
   const clearFilters = () => {
     setSearchType('all')
     setDepartureDate('')
