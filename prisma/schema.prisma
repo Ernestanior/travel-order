@@ -76,7 +76,7 @@ model ExchangeData {
   supplier     String                @db.VarChar(200)
   status       String?               @db.VarChar(50)
   bookdate     DateTime?             @db.Date
-  customer     String                @db.VarChar(200)
+  customer     String?               @db.VarChar(200)
   deptdate     DateTime?             @db.Date
   depttime     String?               @db.VarChar(50)
   deptflt      String?               @db.VarChar(50)
