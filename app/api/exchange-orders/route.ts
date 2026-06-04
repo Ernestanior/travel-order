@@ -33,8 +33,7 @@ export async function GET(request: Request) {
       },
       orderBy: {
         exchangedate: 'desc'
-      },
-      take: 100
+      }
     })
 
     const formatted = exchanges.map(exchange => {

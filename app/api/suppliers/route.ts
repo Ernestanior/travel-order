@@ -27,8 +27,7 @@ export async function GET(request: Request) {
       where,
       orderBy: {
         supplier: 'asc'
-      },
-      take: 100
+      }
     })
 
     const formatted = suppliers.map(supplier => ({

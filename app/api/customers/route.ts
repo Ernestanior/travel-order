@@ -27,8 +27,7 @@ export async function GET(request: Request) {
       where,
       orderBy: {
         customer: 'asc'
-      },
-      take: 100
+      }
     })
 
     const formatted = customers.map(customer => ({

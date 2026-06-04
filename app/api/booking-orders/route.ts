@@ -44,8 +44,7 @@ export async function GET(request: Request) {
       },
       orderBy: {
         bookdate: 'desc'
-      },
-      take: 100
+      }
     })
 
     const formatted = bookings.map(booking => {
