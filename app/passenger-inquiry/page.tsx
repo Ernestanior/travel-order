@@ -17,6 +17,8 @@ interface PassengerResult {
 export default function PassengerInquiryPage() {
   const [customerSearch, setCustomerSearch] = useState('')
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 50
 
   // 客户名模糊搜索
   const matchedCustomers = useMemo(() => {
@@ -29,6 +31,8 @@ export default function PassengerInquiryPage() {
   // 搜索结果：某个客户的所有订单及其乘客
   const passengerResults = useMemo(() => {
     if (!customerSearch) return []
+
+    setCurrentPage(1) // 重置到第一页
 
     const results: PassengerResult[] = []
     
@@ -61,6 +65,47 @@ export default function PassengerInquiryPage() {
 
     return results
   }, [customerSearch])
+
+  // 分页计算
+  const totalPages = Math.ceil(passengerResults.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentResults = passengerResults.slice(startIndex, endIndex)
+
+  // 分页控制
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisible = 7
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
+  }
 
   const handleCustomerSelect = (customerName: string) => {
     setCustomerSearch(customerName)
@@ -140,7 +185,7 @@ export default function PassengerInquiryPage() {
           {/* 显示搜索结果统计 */}
           {customerSearch && (
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-              Found <span className="font-semibold text-gray-900">{passengerResults.length}</span> booking order(s) with passengers
+              Found <span className="font-semibold text-gray-900">{passengerResults.length}</span> booking order(s) with passengers • Showing page {currentPage} of {totalPages}
             </div>
           )}
         </div>
@@ -180,7 +225,7 @@ export default function PassengerInquiryPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
-                    {passengerResults.map((result, index) => (
+                    {currentResults.map((result, index) => (
                       <tr key={index} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 whitespace-nowrap">
                           <Link
@@ -211,6 +256,53 @@ export default function PassengerInquiryPage() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* 分页控制 */}
+                <div className="bg-gray-50 px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                    <span className="font-medium">{Math.min(endIndex, passengerResults.length)}</span> of{' '}
+                    <span className="font-medium">{passengerResults.length}</span> results
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Previous
+                    </button>
+                    
+                    <div className="flex gap-1">
+                      {getPageNumbers().map((page, index) => (
+                        page === '...' ? (
+                          <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">...</span>
+                        ) : (
+                          <button
+                            key={page}
+                            onClick={() => goToPage(page as number)}
+                            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                              currentPage === page
+                                ? 'bg-gray-900 text-white'
+                                : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      ))}
+                    </div>
+                    
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

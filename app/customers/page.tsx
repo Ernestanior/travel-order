@@ -17,9 +17,12 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 50
 
   useEffect(() => {
     loadCustomers()
+    setCurrentPage(1) // 重置到第一页
   }, [searchTerm])
 
   const loadCustomers = async () => {
@@ -36,6 +39,47 @@ export default function CustomersPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 分页计算
+  const totalPages = Math.ceil(customers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentCustomers = customers.slice(startIndex, endIndex)
+
+  // 分页控制
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisible = 7
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
   }
 
   return (
@@ -81,33 +125,82 @@ export default function CustomersPage() {
               <p className="text-sm">No customers found</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {customers.map((customer) => (
-                <div
-                  key={customer.id}
-                  className="p-5 hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <h3 className="font-semibold text-gray-900 mb-2">{customer.name}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                    {customer.tel && (
-                      <div>
-                        <span className="font-medium text-gray-500">Tel:</span> {customer.tel}
-                      </div>
-                    )}
-                    {customer.address && (
-                      <div>
-                        <span className="font-medium text-gray-500">Address:</span> {customer.address}
-                      </div>
-                    )}
-                    {customer.fax && (
-                      <div>
-                        <span className="font-medium text-gray-500">Fax:</span> {customer.fax}
-                      </div>
-                    )}
+            <>
+              <div className="divide-y divide-gray-100">
+                {currentCustomers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="p-5 hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <h3 className="font-semibold text-gray-900 mb-2">{customer.name}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                      {customer.tel && (
+                        <div>
+                          <span className="font-medium text-gray-500">Tel:</span> {customer.tel}
+                        </div>
+                      )}
+                      {customer.address && (
+                        <div>
+                          <span className="font-medium text-gray-500">Address:</span> {customer.address}
+                        </div>
+                      )}
+                      {customer.fax && (
+                        <div>
+                          <span className="font-medium text-gray-500">Fax:</span> {customer.fax}
+                        </div>
+                      )}
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              {/* 分页控制 */}
+              <div className="bg-gray-50 px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                  <span className="font-medium">{Math.min(endIndex, customers.length)}</span> of{' '}
+                  <span className="font-medium">{customers.length}</span> customers
                 </div>
-              ))}
-            </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex gap-1">
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">...</span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => goToPage(page as number)}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? 'bg-gray-900 text-white'
+                              : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>

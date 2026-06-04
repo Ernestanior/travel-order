@@ -29,10 +29,13 @@ export default function BookingOrdersPage() {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
   const [bookingOrders, setBookingOrders] = useState<BookingOrder[]>([])
   const [loading, setLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 50
 
   // 加载订单数据
   useEffect(() => {
     loadOrders()
+    setCurrentPage(1) // 重置到第一页
   }, [searchType, departureDate, outstandingBeforeDate, customerSearch])
 
   const loadOrders = async () => {
@@ -60,6 +63,47 @@ export default function BookingOrdersPage() {
   }
 
   const filteredOrders = bookingOrders
+
+  // 分页计算
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentOrders = filteredOrders.slice(startIndex, endIndex)
+
+  // 分页控制
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisible = 7
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
+  }
 
   // 客户名模糊搜索
   const matchedCustomers = useMemo(() => {
@@ -245,7 +289,7 @@ export default function BookingOrdersPage() {
           {searchType !== 'all' && (
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
               {loading ? 'Loading...' : (
-                <>Found <span className="font-semibold text-gray-900">{filteredOrders.length}</span> order(s)</>
+                <>Found <span className="font-semibold text-gray-900">{filteredOrders.length}</span> order(s) • Showing page {currentPage} of {totalPages}</>
               )}
             </div>
           )}
@@ -301,7 +345,7 @@ export default function BookingOrdersPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((order) => (
+                  currentOrders.map((order) => (
                   <tr
                     key={order.id}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
@@ -348,9 +392,60 @@ export default function BookingOrdersPage() {
             </table>
           </div>
 
-          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-xs text-gray-500">
-            Click on any row to view details
-          </div>
+          {/* 分页控制 */}
+          {!loading && filteredOrders.length > 0 && (
+            <div className="bg-gray-50 px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                <span className="font-medium">{Math.min(endIndex, filteredOrders.length)}</span> of{' '}
+                <span className="font-medium">{filteredOrders.length}</span> results
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex gap-1">
+                  {getPageNumbers().map((page, index) => (
+                    page === '...' ? (
+                      <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">...</span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page as number)}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                          currentPage === page
+                            ? 'bg-gray-900 text-white'
+                            : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!loading && filteredOrders.length > 0 && (
+            <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-xs text-gray-500">
+              Click on any row to view details
+            </div>
+          )}
         </div>
       </div>
     </div>

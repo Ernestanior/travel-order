@@ -17,9 +17,12 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 50
 
   useEffect(() => {
     loadSuppliers()
+    setCurrentPage(1)
   }, [searchTerm])
 
   const loadSuppliers = async () => {
@@ -36,6 +39,47 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 分页计算
+  const totalPages = Math.ceil(suppliers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentSuppliers = suppliers.slice(startIndex, endIndex)
+
+  // 分页控制
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisible = 7
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1)
+        pages.push('...')
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i)
+      } else {
+        pages.push(1)
+        pages.push('...')
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i)
+        pages.push('...')
+        pages.push(totalPages)
+      }
+    }
+    
+    return pages
   }
 
   return (
@@ -104,7 +148,7 @@ export default function SuppliersPage() {
                     </td>
                   </tr>
                 ) : (
-                  suppliers.map((supplier) => (
+                  currentSuppliers.map((supplier) => (
                     <tr key={supplier.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         {supplier.name}
@@ -124,6 +168,55 @@ export default function SuppliersPage() {
               </tbody>
             </table>
           </div>
+
+          {/* 分页控制 */}
+          {!loading && suppliers.length > 0 && (
+            <div className="bg-gray-50 px-4 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                <span className="font-medium">{Math.min(endIndex, suppliers.length)}</span> of{' '}
+                <span className="font-medium">{suppliers.length}</span> suppliers
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex gap-1">
+                  {getPageNumbers().map((page, index) => (
+                    page === '...' ? (
+                      <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">...</span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page as number)}
+                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                          currentPage === page
+                            ? 'bg-gray-900 text-white'
+                            : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex justify-between items-center">
             <span className="text-xs text-gray-500">
