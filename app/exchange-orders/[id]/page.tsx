@@ -1,6 +1,5 @@
 'use client'
 
-import { use } from 'react'
 import Link from 'next/link'
 import { mockExchangeOrders } from '@/lib/mockData'
 import { ArrowLeft, Save, Printer, Plus, Minus } from 'lucide-react'
@@ -8,9 +7,9 @@ import { ArrowLeft, Save, Printer, Plus, Minus } from 'lucide-react'
 export default function ExchangeOrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = use(params)
+  const { id } = params
   const order = mockExchangeOrders.find((o) => o.id === id)
 
   if (!order) {

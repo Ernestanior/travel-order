@@ -1,6 +1,5 @@
 'use client'
 
-import { use } from 'react'
 import Link from 'next/link'
 import { mockBookingOrders } from '@/lib/mockData'
 import { ArrowLeft, Save, Printer, Plus, Minus, X } from 'lucide-react'
@@ -8,9 +7,9 @@ import { ArrowLeft, Save, Printer, Plus, Minus, X } from 'lucide-react'
 export default function BookingOrderDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
-  const { id } = use(params)
+  const { id } = params
   const order = mockBookingOrders.find((o) => o.id === id)
 
   if (!order) {
