@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Edit2, Trash2, Plus, X } from 'lucide-react'
+import { notification } from 'antd'
 
 interface Item {
   item: string
@@ -116,7 +117,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
 
   const handleSave = async () => {
     if (!formData.customerName || !formData.tel) {
-      alert('Customer Name and Tel are required')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Customer Name and Tel are required',
+        placement: 'topRight',
+      })
       return
     }
 
@@ -135,14 +140,26 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       if (response.ok) {
         await loadOrder()
         setIsEditing(false)
-        alert('Order updated successfully')
+        notification.success({
+          message: 'Success',
+          description: 'Order updated successfully',
+          placement: 'topRight',
+        })
       } else {
         const result = await response.json()
-        alert(`Failed to update order: ${result.error || 'Unknown error'}`)
+        notification.error({
+          message: 'Failed to Update Order',
+          description: result.error || 'Unknown error',
+          placement: 'topRight',
+        })
       }
     } catch (error) {
       console.error('Error saving:', error)
-      alert('Error updating order')
+      notification.error({
+        message: 'Error',
+        description: 'Error updating order',
+        placement: 'topRight',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -155,14 +172,26 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       })
       
       if (response.ok) {
-        alert('Order deleted successfully')
+        notification.success({
+          message: 'Success',
+          description: 'Order deleted successfully',
+          placement: 'topRight',
+        })
         router.push('/booking-orders')
       } else {
-        alert('Failed to delete order')
+        notification.error({
+          message: 'Failed',
+          description: 'Failed to delete order',
+          placement: 'topRight',
+        })
       }
     } catch (error) {
       console.error('Error deleting:', error)
-      alert('Error deleting order')
+      notification.error({
+        message: 'Error',
+        description: 'Error deleting order',
+        placement: 'topRight',
+      })
     } finally {
       setShowDeleteConfirm(false)
     }

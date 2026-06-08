@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
+import { notification } from 'antd'
 
 interface Item {
   item: string
@@ -102,17 +103,29 @@ export default function NewBookingOrderPage() {
   const handleSave = async () => {
     // 验证必填字段
     if (!formData.customerName || !formData.tel) {
-      alert('Please fill in Customer Name and Tel/HP (required fields)')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please fill in Customer Name and Tel/HP (required fields)',
+        placement: 'topRight',
+      })
       return
     }
     
     if (items.length === 0) {
-      alert('Please add at least one item')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please add at least one item',
+        placement: 'topRight',
+      })
       return
     }
     
     if (passengers.length === 0) {
-      alert('Please add at least one passenger')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please add at least one passenger',
+        placement: 'topRight',
+      })
       return
     }
     
@@ -131,14 +144,26 @@ export default function NewBookingOrderPage() {
       const result = await response.json()
       
       if (response.ok) {
-        alert(`Booking created successfully! Booking #: ${result.bookingNumber}`)
+        notification.success({
+          message: 'Success',
+          description: `Booking created successfully! Booking #: ${result.bookingNumber}`,
+          placement: 'topRight',
+        })
         router.push(`/booking-orders/${result.id}`)
       } else {
-        alert(`Failed to create booking: ${result.error}`)
+        notification.error({
+          message: 'Failed to Create Booking',
+          description: result.error || 'Unknown error',
+          placement: 'topRight',
+        })
       }
     } catch (error) {
       console.error('Error saving:', error)
-      alert('Error creating booking')
+      notification.error({
+        message: 'Error',
+        description: 'Error creating booking',
+        placement: 'topRight',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -214,6 +239,7 @@ export default function NewBookingOrderPage() {
                     onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     placeholder="Enter customer name"
+                    required
                   />
                 </div>
                 
@@ -241,6 +267,7 @@ export default function NewBookingOrderPage() {
                       onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                       placeholder="Phone number"
+                      required
                     />
                   </div>
                   

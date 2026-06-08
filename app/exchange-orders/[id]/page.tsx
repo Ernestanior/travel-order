@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Edit2, Trash2, Plus } from 'lucide-react'
+import { notification } from 'antd'
 
 interface Item {
   item: string
@@ -100,7 +101,11 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
 
   const handleSave = async () => {
     if (!formData.supplier) {
-      alert('Supplier is required')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Supplier is required',
+        placement: 'topRight',
+      })
       return
     }
 
@@ -118,14 +123,26 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
       if (response.ok) {
         await loadOrder()
         setIsEditing(false)
-        alert('Exchange order updated successfully')
+        notification.success({
+          message: 'Success',
+          description: 'Exchange order updated successfully',
+          placement: 'topRight',
+        })
       } else {
         const result = await response.json()
-        alert(`Failed to update: ${result.error || 'Unknown error'}`)
+        notification.error({
+          message: 'Failed to Update',
+          description: result.error || 'Unknown error',
+          placement: 'topRight',
+        })
       }
     } catch (error) {
       console.error('Error saving:', error)
-      alert('Error updating exchange order')
+      notification.error({
+        message: 'Error',
+        description: 'Error updating exchange order',
+        placement: 'topRight',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -138,14 +155,26 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
       })
       
       if (response.ok) {
-        alert('Exchange order deleted successfully')
+        notification.success({
+          message: 'Success',
+          description: 'Exchange order deleted successfully',
+          placement: 'topRight',
+        })
         router.push('/exchange-orders')
       } else {
-        alert('Failed to delete exchange order')
+        notification.error({
+          message: 'Failed',
+          description: 'Failed to delete exchange order',
+          placement: 'topRight',
+        })
       }
     } catch (error) {
       console.error('Error deleting:', error)
-      alert('Error deleting exchange order')
+      notification.error({
+        message: 'Error',
+        description: 'Error deleting exchange order',
+        placement: 'topRight',
+      })
     } finally {
       setShowDeleteConfirm(false)
     }

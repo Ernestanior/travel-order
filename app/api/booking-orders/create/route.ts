@@ -9,24 +9,71 @@ export async function POST(request: Request) {
     const { prisma } = await import('@/lib/db')
     const body = await request.json()
     
-    // 生成新的 booking number
-    const lastBooking = await prisma.bookingData.findFirst({
-      orderBy: { id: 'desc' },
-      select: { bookno: true }
+    // 生成新的唯一 booking number
+    // 查询数据库中最大的数字订单号
+    const maxBookingNumber = await prisma.$queryRaw<Array<{ max_bookno: string | null }>>`
+      SELECT MAX(CAST(bookno AS INTEGER)) as max_bookno 
+      FROM booking_data 
+      WHERE bookno ~ '^[0-9]+$'
+    `
+    
+    let nextNumber = 1043495 // 默认起始值
+    if (maxBookingNumber && maxBookingNumber[0]?.max_bookno) {
+      nextNumber = parseInt(maxBookingNumber[0].max_bookno) + 1
+    }
+    
+    // 使用重试机制确保唯一性（防止并发冲突）
+    let newBookingNumber: string = ''
+    let attempts = 0
+    const maxAttempts = 10
+    
+    while (attempts < maxAttempts) {
+      newBookingNumber = `${nextNumber + attempts}`
+      
+      // 检查是否已存在
+      const existing = await prisma.bookingData.findUnique({
+        where: { bookno: newBookingNumber },
+        select: { id: true }
+      })
+      
+      if (!existing) {
+        break // 找到唯一的订单号
+      }
+      
+      attempts++
+    }
+    
+    if (attempts >= maxAttempts) {
+      throw new Error('无法生成唯一的订单号，请稍后重试')
+    }
+    
+    // 确保客户存在（如果不存在则创建）
+    const customerName = body.customerName || ''
+    const customerTel = body.tel || ''
+    
+    if (!customerName) {
+      throw new Error('客户名称不能为空')
+    }
+    
+    if (!customerTel) {
+      throw new Error('客户电话不能为空')
+    }
+    
+    // 检查客户是否存在
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { customer: customerName }
     })
     
-    let newBookingNumber
-    if (lastBooking && lastBooking.bookno) {
-      // 从最后一个订单号提取数字并加1
-      const match = lastBooking.bookno.match(/(\d+)/)
-      if (match) {
-        const lastNumber = parseInt(match[1])
-        newBookingNumber = `${lastNumber + 1}`
-      } else {
-        newBookingNumber = `${Date.now()}`
-      }
-    } else {
-      newBookingNumber = `${Date.now()}`
+    if (!existingCustomer) {
+      // 创建新客户
+      await prisma.customer.create({
+        data: {
+          customer: customerName,
+          tel: customerTel,
+          address: body.address || null,
+          fax: body.fax || null
+        }
+      })
     }
     
     // 创建主订单
@@ -34,7 +81,7 @@ export async function POST(request: Request) {
       data: {
         bookno: newBookingNumber,
         bookdate: body.bookingDate ? new Date(body.bookingDate) : new Date(),
-        customer: body.customerName || '',
+        customer: customerName,
         deptdate: body.departureDate ? new Date(body.departureDate) : null,
         depttime: body.departureTime || null,
         deptflt: body.departureFlight || null,

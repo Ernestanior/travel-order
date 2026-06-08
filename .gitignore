@@ -25,6 +25,9 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.backup*
+.env new
+*.env.new
 
 # vercel
 .vercel
@@ -35,6 +38,13 @@ next-env.d.ts
 
 # assets folder (screenshots and database files)
 /assets
+
+# migration files and logs
+migration.log
+*.log
+
+# backup files
+*.backup
 
 # prisma
 prisma/migrations

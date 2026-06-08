@@ -9,24 +9,109 @@ export async function POST(request: Request) {
     const { prisma } = await import('@/lib/db')
     const body = await request.json()
     
-    // 生成新的 exchange number
-    const lastExchange = await prisma.exchangeData.findFirst({
-      orderBy: { id: 'desc' },
-      select: { exchangeno: true }
+    // 生成新的唯一 exchange number
+    // 查询数据库中最大的数字订单号
+    const maxExchangeNumber = await prisma.$queryRaw<Array<{ max_exchangeno: string | null }>>`
+      SELECT MAX(CAST(exchangeno AS INTEGER)) as max_exchangeno 
+      FROM exchange_data 
+      WHERE exchangeno ~ '^[0-9]+$'
+    `
+    
+    let nextNumber = 1041744 // 默认起始值
+    if (maxExchangeNumber && maxExchangeNumber[0]?.max_exchangeno) {
+      nextNumber = parseInt(maxExchangeNumber[0].max_exchangeno) + 1
+    }
+    
+    // 使用重试机制确保唯一性（防止并发冲突）
+    let newExchangeNumber: string = ''
+    let attempts = 0
+    const maxAttempts = 10
+    
+    while (attempts < maxAttempts) {
+      newExchangeNumber = `${nextNumber + attempts}`
+      
+      // 检查是否已存在
+      const existing = await prisma.exchangeData.findUnique({
+        where: { exchangeno: newExchangeNumber },
+        select: { id: true }
+      })
+      
+      if (!existing) {
+        break // 找到唯一的订单号
+      }
+      
+      attempts++
+    }
+    
+    if (attempts >= maxAttempts) {
+      throw new Error('无法生成唯一的 Exchange Order 号，请稍后重试')
+    }
+    
+    // 验证必填字段
+    if (!body.bookingNumber) {
+      throw new Error('必须选择一个 Booking Order')
+    }
+    
+    if (!body.supplier) {
+      throw new Error('供应商不能为空')
+    }
+    
+    // 验证 Booking Order 是否存在
+    const booking = await prisma.bookingData.findUnique({
+      where: { bookno: body.bookingNumber },
+      select: { bookno: true }
     })
     
-    let newExchangeNumber
-    if (lastExchange && lastExchange.exchangeno) {
-      // 从最后一个订单号提取数字并加1
-      const match = lastExchange.exchangeno.match(/(\d+)/)
-      if (match) {
-        const lastNumber = parseInt(match[1])
-        newExchangeNumber = `${lastNumber + 1}`
-      } else {
-        newExchangeNumber = `${Date.now()}`
+    if (!booking) {
+      throw new Error(`Booking Order ${body.bookingNumber} 不存在`)
+    }
+    
+    // 确保供应商存在（如果不存在则创建）
+    const existingSupplier = await prisma.supplier.findUnique({
+      where: { supplier: body.supplier }
+    })
+    
+    if (!existingSupplier) {
+      // 创建新供应商（使用默认电话号码，因为 Supplier 表的 tel 字段不能为空）
+      await prisma.supplier.create({
+        data: {
+          supplier: body.supplier,
+          tel: 'N/A',  // 默认值，稍后可以更新
+          address: null,
+          fax: null
+        }
+      })
+    }
+    
+    // 确保客户存在（如果提供了客户名称）
+    if (body.customer) {
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { customer: body.customer }
+      })
+      
+      if (!existingCustomer) {
+        // 使用 Booking Order 中的客户信息
+        const bookingWithCustomer = await prisma.bookingData.findUnique({
+          where: { bookno: body.bookingNumber },
+          include: {
+            customerData: true
+          }
+        })
+        
+        if (bookingWithCustomer?.customerData) {
+          // 客户已存在于 Booking 中，无需创建
+        } else {
+          // 创建新客户（需要电话）
+          await prisma.customer.create({
+            data: {
+              customer: body.customer,
+              tel: 'N/A',  // 默认值
+              address: null,
+              fax: null
+            }
+          })
+        }
       }
-    } else {
-      newExchangeNumber = `${Date.now()}`
     }
     
     // 创建 Exchange Order

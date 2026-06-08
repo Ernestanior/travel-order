@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Search, X } from 'lucide-react'
+import { notification } from 'antd'
 
 interface BookingOrder {
   id: number
@@ -159,24 +160,40 @@ export default function NewExchangeOrderPage() {
       setStep('fillDetails')
     } catch (error) {
       console.error('Error loading booking details:', error)
-      alert('Failed to load booking details')
+      notification.error({
+        message: 'Error',
+        description: 'Failed to load booking details',
+        placement: 'topRight',
+      })
     }
   }
 
   // 保存 Exchange Order
   const handleSave = async () => {
     if (!selectedBooking) {
-      alert('Please select a booking order')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please select a booking order',
+        placement: 'topRight',
+      })
       return
     }
     
     if (!formData.supplier) {
-      alert('Please select a supplier')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please select a supplier',
+        placement: 'topRight',
+      })
       return
     }
     
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      alert('Please enter a valid amount')
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please enter a valid amount',
+        placement: 'topRight',
+      })
       return
     }
     
@@ -216,14 +233,26 @@ export default function NewExchangeOrderPage() {
       const result = await response.json()
       
       if (response.ok) {
-        alert(`Exchange order created successfully! Exchange #: ${result.exchangeNumber}`)
+        notification.success({
+          message: 'Success',
+          description: `Exchange order created successfully! Exchange #: ${result.exchangeNumber}`,
+          placement: 'topRight',
+        })
         router.push(`/exchange-orders/${result.id}`)
       } else {
-        alert(`Failed to create exchange order: ${result.error}`)
+        notification.error({
+          message: 'Failed to Create Exchange Order',
+          description: result.error || 'Unknown error',
+          placement: 'topRight',
+        })
       }
     } catch (error) {
       console.error('Error saving:', error)
-      alert('Error creating exchange order')
+      notification.error({
+        message: 'Error',
+        description: 'Error creating exchange order',
+        placement: 'topRight',
+      })
     } finally {
       setIsSaving(false)
     }
