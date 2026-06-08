@@ -1,0 +1,63 @@
+🚀 Starting fast batch import...
+
+📊 Ensuring all customers exist...
+   Exporting table: Booking Data
+   Found 28741 rows
+   Exporting table: Exchange Data
+   Found 28669 rows
+   Found 15635 unique customer names in orders
+   Creating 15635 missing customers...
+   Created batch 1
+   Created batch 2
+   Created batch 3
+   Created batch 4
+   Created batch 5
+   Created batch 6
+   Created batch 7
+   Created batch 8
+   Created batch 9
+   Created batch 10
+   Created batch 11
+   Created batch 12
+   Created batch 13
+   Created batch 14
+   Created batch 15
+   Created batch 16
+   Created batch 17
+   Created batch 18
+   Created batch 19
+   Created batch 20
+   Created batch 21
+   Created batch 22
+   Created batch 23
+   Created batch 24
+   Created batch 25
+   Created batch 26
+   Created batch 27
+   Created batch 28
+   Created batch 29
+   Created batch 30
+   Created batch 31
+   Created batch 32
+✅ All customers ready
+
+📊 Ensuring all suppliers exist...
+   Creating 364 missing suppliers...
+✅ All suppliers ready
+
+📊 Importing booking orders...
+   Current bookings in DB: 0
+   Will import 28741 new bookings
+   Imported batch 1: 500 bookings
+   Imported batch 2: 500 bookings
+   Imported batch 3: 500 bookings
+   Imported batch 4: 500 bookings
+   Imported batch 5: 500 bookings
+   Imported batch 6: 500 bookings
+   Imported batch 7: 500 bookings
+   Imported batch 8: 500 bookings
+   Imported batch 9: 500 bookings
+   Imported batch 10: 500 bookings
+   Imported batch 11: 500 bookings
+   Imported batch 12: 500 bookings
+   Imported batch 13: 500 bookings

@@ -13,6 +13,11 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
+    
+    // 分页参数
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     let where: any = {}
 
@@ -23,12 +28,18 @@ export async function GET(request: Request) {
       }
     }
 
-    const customers = await prisma.customer.findMany({
-      where,
-      orderBy: {
-        customer: 'asc'
-      }
-    })
+    // 并行执行 count 和 findMany 以提升性能
+    const [total, customers] = await Promise.all([
+      prisma.customer.count({ where }),
+      prisma.customer.findMany({
+        where,
+        orderBy: {
+          customer: 'asc'
+        },
+        skip,
+        take: limit
+      })
+    ])
 
     const formatted = customers.map(customer => ({
       id: customer.customer,
@@ -39,7 +50,15 @@ export async function GET(request: Request) {
       email: ''
     }))
 
-    return NextResponse.json(formatted)
+    return NextResponse.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error('Error fetching customers:', error)
     return NextResponse.json({ 

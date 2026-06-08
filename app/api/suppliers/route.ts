@@ -13,6 +13,11 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
+    
+    // 分页参数
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     let where: any = {}
 
@@ -23,12 +28,18 @@ export async function GET(request: Request) {
       }
     }
 
-    const suppliers = await prisma.supplier.findMany({
-      where,
-      orderBy: {
-        supplier: 'asc'
-      }
-    })
+    // 并行执行 count 和 findMany 以提升性能
+    const [total, suppliers] = await Promise.all([
+      prisma.supplier.count({ where }),
+      prisma.supplier.findMany({
+        where,
+        orderBy: {
+          supplier: 'asc'
+        },
+        skip,
+        take: limit
+      })
+    ])
 
     const formatted = suppliers.map(supplier => ({
       id: supplier.supplier,
@@ -39,7 +50,15 @@ export async function GET(request: Request) {
       fax: supplier.fax || ''
     }))
 
-    return NextResponse.json(formatted)
+    return NextResponse.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error('Error fetching suppliers:', error)
     return NextResponse.json({ 

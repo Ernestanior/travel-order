@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
   try {
-    // Lazy import to avoid build-time execution
+    // Import prisma at the top level for better performance
     const { prisma } = await import('@/lib/db')
     
     if (!process.env.DATABASE_URL) {
@@ -19,6 +19,11 @@ export async function GET(request: Request) {
     const departureDate = searchParams.get('departureDate')
     const outstandingBeforeDate = searchParams.get('outstandingBeforeDate')
     const customer = searchParams.get('customer')
+    
+    // 分页参数
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     let where: any = {}
 
@@ -35,17 +40,45 @@ export async function GET(request: Request) {
       }
     }
 
-    const bookings = await prisma.bookingData.findMany({
-      where,
-      include: {
-        passengers: true,
-        items: true,
-        payments: true,
-      },
-      orderBy: {
-        bookdate: 'desc'
-      }
-    })
+    // 并行执行 count 和 findMany 以提升性能
+    const [total, bookings] = await Promise.all([
+      prisma.bookingData.count({ where }),
+      prisma.bookingData.findMany({
+        where,
+        select: {
+          id: true,
+          bookno: true,
+          customer: true,
+          bookdate: true,
+          deptdate: true,
+          arrvdate: true,
+          status: true,
+          tour: true,
+          // 只选择需要的字段以减少数据传输
+          passengers: {
+            select: {
+              paxname: true,
+              passport: true
+            }
+          },
+          items: {
+            select: {
+              price: true
+            }
+          },
+          payments: {
+            select: {
+              amountpaid: true
+            }
+          }
+        },
+        orderBy: {
+          bookdate: 'desc'
+        },
+        skip,
+        take: limit
+      })
+    ])
 
     const formatted = bookings.map(booking => {
       const totalCost = booking.items.reduce((sum, item) => 
@@ -65,6 +98,7 @@ export async function GET(request: Request) {
         bookingNumber: booking.bookno,
         customerName: booking.customer,
         date: booking.bookdate?.toISOString().split('T')[0] || '',
+        bookingDate: booking.bookdate?.toISOString().split('T')[0] || '',
         departureDate: booking.deptdate?.toISOString().split('T')[0] || '',
         arrivalDate: booking.arrvdate?.toISOString().split('T')[0] || '',
         totalCost,
@@ -80,7 +114,15 @@ export async function GET(request: Request) {
       }
     }).filter(Boolean)
 
-    return NextResponse.json(formatted)
+    return NextResponse.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error('Error fetching booking orders:', error)
     return NextResponse.json({ 

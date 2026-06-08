@@ -1,11 +1,17 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { mockBookingOrders, mockCustomers } from '@/lib/mockData'
 import { ArrowLeft, Users, Search, X } from 'lucide-react'
 
+interface Customer {
+  id: string
+  name: string
+  tel: string
+}
+
 interface PassengerResult {
+  id: number
   bookingNumber: string
   bookingDate: string
   customerName: string
@@ -18,59 +24,94 @@ export default function PassengerInquiryPage() {
   const [customerSearch, setCustomerSearch] = useState('')
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [passengerResults, setPassengerResults] = useState<PassengerResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const [totalRecords, setTotalRecords] = useState(0)
   const itemsPerPage = 50
 
-  // 客户名模糊搜索
-  const matchedCustomers = useMemo(() => {
-    if (!customerSearch) return []
-    return mockCustomers.filter(c =>
-      c.name.toLowerCase().includes(customerSearch.toLowerCase())
-    ).slice(0, 10)
+  // 加载客户下拉列表
+  useEffect(() => {
+    if (customerSearch && customerSearch.length > 0) {
+      loadCustomers()
+    } else {
+      setCustomers([])
+      setShowCustomerDropdown(false)
+    }
   }, [customerSearch])
 
-  // 搜索结果：某个客户的所有订单及其乘客
-  const passengerResults = useMemo(() => {
-    if (!customerSearch) return []
+  // 当搜索条件变化时重置到第一页
+  useEffect(() => {
+    if (customerSearch) {
+      setCurrentPage(1)
+    }
+  }, [customerSearch])
 
-    setCurrentPage(1) // 重置到第一页
+  // 当页码变化时加载数据
+  useEffect(() => {
+    if (customerSearch) {
+      loadPassengers()
+    }
+  }, [currentPage])
 
-    const results: PassengerResult[] = []
-    
-    // 查找匹配客户名的所有 booking orders
-    const matchedOrders = mockBookingOrders.filter(order =>
-      order.customerName.toLowerCase().includes(customerSearch.toLowerCase())
-    )
-
-    matchedOrders.forEach(order => {
-      // 获取乘客信息
-      let passengerNames = order.passengerNames || ''
+  const loadCustomers = async () => {
+    try {
+      const params = new URLSearchParams()
+      params.set('search', customerSearch)
+      params.set('limit', '10')
       
-      if (!passengerNames && order.passengers.length > 0) {
-        passengerNames = order.passengers.map(p => p.name).join(', ')
+      const response = await fetch(`/api/customers?${params}`)
+      const result = await response.json()
+      
+      if (result.data && Array.isArray(result.data)) {
+        setCustomers(result.data)
+      } else if (Array.isArray(result)) {
+        setCustomers(result)
+      } else {
+        setCustomers([])
       }
+    } catch (error) {
+      console.error('Error loading customers:', error)
+      setCustomers([])
+    }
+  }
 
-      if (!passengerNames) {
-        passengerNames = '(No passengers listed)'
+  const loadPassengers = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set('searchType', 'customer')
+      params.set('customer', customerSearch)
+      params.set('page', currentPage.toString())
+      params.set('limit', itemsPerPage.toString())
+
+      const response = await fetch(`/api/booking-orders?${params}`)
+      const result = await response.json()
+      
+      if (result.data && Array.isArray(result.data)) {
+        setPassengerResults(result.data)
+        setTotalRecords(result.pagination?.total || result.data.length)
+      } else if (Array.isArray(result)) {
+        setPassengerResults(result)
+        setTotalRecords(result.length)
+      } else {
+        setPassengerResults([])
+        setTotalRecords(0)
       }
+    } catch (error) {
+      console.error('Error loading passengers:', error)
+      setPassengerResults([])
+      setTotalRecords(0)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-      results.push({
-        bookingNumber: order.bookingNumber,
-        bookingDate: order.date,
-        customerName: order.customerName,
-        passengerNames: passengerNames,
-        departureDate: order.departureDate,
-        tour: order.tour,
-      })
-    })
-
-    return results
-  }, [customerSearch])
-
-  // 分页计算
-  const totalPages = Math.ceil(passengerResults.length / itemsPerPage)
+  // 后端分页，直接使用返回的数据
+  const totalPages = Math.ceil(totalRecords / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const currentResults = passengerResults.slice(startIndex, endIndex)
+  const currentResults = passengerResults // 后端已经分页，直接使用
 
   // 分页控制
   const goToPage = (page: number) => {
@@ -110,6 +151,11 @@ export default function PassengerInquiryPage() {
   const handleCustomerSelect = (customerName: string) => {
     setCustomerSearch(customerName)
     setShowCustomerDropdown(false)
+    setCurrentPage(1)
+    // 触发加载
+    setTimeout(() => {
+      loadPassengers()
+    }, 0)
   }
 
   return (
@@ -162,9 +208,9 @@ export default function PassengerInquiryPage() {
                 )}
 
                 {/* 客户下拉列表 */}
-                {showCustomerDropdown && matchedCustomers.length > 0 && (
+                {showCustomerDropdown && customers.length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
-                    {matchedCustomers.map((customer) => (
+                    {customers.map((customer) => (
                       <button
                         key={customer.id}
                         onClick={() => handleCustomerSelect(customer.name)}
@@ -185,7 +231,9 @@ export default function PassengerInquiryPage() {
           {/* 显示搜索结果统计 */}
           {customerSearch && (
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-              Found <span className="font-semibold text-gray-900">{passengerResults.length}</span> booking order(s) with passengers • Showing page {currentPage} of {totalPages}
+              {loading ? 'Loading...' : (
+                <>Found <span className="font-semibold text-gray-900">{totalRecords}</span> booking order(s) with passengers • Showing page {currentPage} of {totalPages}</>
+              )}
             </div>
           )}
         </div>
@@ -193,7 +241,14 @@ export default function PassengerInquiryPage() {
         {/* 结果显示 */}
         {customerSearch && (
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            {passengerResults.length === 0 ? (
+            {loading ? (
+              <div className="p-12 text-center">
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  <span className="ml-3 text-gray-600">Loading passengers...</span>
+                </div>
+              </div>
+            ) : passengerResults.length === 0 ? (
               <div className="p-12 text-center text-gray-500">
                 <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p className="text-base font-medium mb-1">No passengers found</p>
@@ -225,11 +280,11 @@ export default function PassengerInquiryPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
-                    {currentResults.map((result, index) => (
-                      <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    {currentResults.map((result) => (
+                      <tr key={result.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3 whitespace-nowrap">
                           <Link
-                            href={`/booking-orders/${mockBookingOrders.find(o => o.bookingNumber === result.bookingNumber)?.id}`}
+                            href={`/booking-orders/${result.id}`}
                             className="text-sm font-medium text-gray-900 hover:text-gray-700"
                           >
                             {result.bookingNumber}
@@ -261,8 +316,8 @@ export default function PassengerInquiryPage() {
                 <div className="bg-gray-50 px-4 py-4 border-t border-gray-200 flex items-center justify-between">
                   <div className="text-sm text-gray-700">
                     Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                    <span className="font-medium">{Math.min(endIndex, passengerResults.length)}</span> of{' '}
-                    <span className="font-medium">{passengerResults.length}</span> results
+                    <span className="font-medium">{Math.min(endIndex, totalRecords)}</span> of{' '}
+                    <span className="font-medium">{totalRecords}</span> results
                   </div>
                   
                   <div className="flex items-center gap-2">

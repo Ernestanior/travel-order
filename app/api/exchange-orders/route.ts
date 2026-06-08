@@ -15,6 +15,11 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const supplier = searchParams.get('supplier')
+    
+    // 分页参数
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     let where: any = {}
 
@@ -25,16 +30,39 @@ export async function GET(request: Request) {
       }
     }
 
-    const exchanges = await prisma.exchangeData.findMany({
-      where,
-      include: {
-        items: true,
-        payments: true,
-      },
-      orderBy: {
-        exchangedate: 'desc'
-      }
-    })
+    // 并行执行 count 和 findMany 以提升性能
+    const [total, exchanges] = await Promise.all([
+      prisma.exchangeData.count({ where }),
+      prisma.exchangeData.findMany({
+        where,
+        select: {
+          id: true,
+          exchangeno: true,
+          bookno: true,
+          supplier: true,
+          exchangedate: true,
+          deptdate: true,
+          arrvdate: true,
+          status: true,
+          // 只选择需要的字段以减少数据传输
+          items: {
+            select: {
+              price: true
+            }
+          },
+          payments: {
+            select: {
+              amountpaid: true
+            }
+          }
+        },
+        orderBy: {
+          exchangedate: 'desc'
+        },
+        skip,
+        take: limit
+      })
+    ])
 
     const formatted = exchanges.map(exchange => {
       const totalCost = exchange.items.reduce((sum, item) => 
@@ -63,7 +91,15 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json(formatted)
+    return NextResponse.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error('Error fetching exchange orders:', error)
     return NextResponse.json({ 

@@ -65,6 +65,9 @@ model BookingData {
 
   @@index([id])
   @@index([tourcode])
+  @@index([bookdate])
+  @@index([deptdate])
+  @@index([customer])
   @@map("booking_data")
 }
 
@@ -107,6 +110,9 @@ model ExchangeData {
 
   @@index([id])
   @@index([tourcode])
+  @@index([exchangedate])
+  @@index([supplier])
+  @@index([bookno])
   @@map("exchange_data")
 }
 
@@ -139,6 +145,7 @@ model PassengerData {
   bookno     String       @db.VarChar(50)
   paxname    String       @db.VarChar(50)
   passport   String?      @db.VarChar(50)
+  birthdate  DateTime?    @db.Date
   exchangeno String?      @db.VarChar(50)
   booking    BookingData? @relation(fields: [bookno], references: [bookno])
 

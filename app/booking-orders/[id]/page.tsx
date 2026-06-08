@@ -1,468 +1,711 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { mockBookingOrders } from '@/lib/mockData'
-import { ArrowLeft, Save, Printer, Plus, Minus, X } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, X } from 'lucide-react'
 
-export default function BookingOrderDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  const { id } = params
-  const order = mockBookingOrders.find((o) => o.id === id)
+interface Item {
+  item: string
+  quantity: number
+  unitPrice: number
+  price: number
+}
+
+interface Passenger {
+  name: string
+  passport: string
+  birthdate: string
+}
+
+interface Payment {
+  id: number
+  receiptNo: string
+  date: string
+  type: string
+  for: string
+  amount: number
+}
+
+interface BookingOrder {
+  id: number
+  bookingNumber: string
+  bookingDate: string
+  customerName: string
+  address: string
+  tel: string
+  fax: string
+  discount: number
+  staff: string
+  tourCode: string
+  tour: string
+  special: string
+  status: string
+  departureDate: string
+  departureTime: string
+  departureFlight: string
+  departureDest: string
+  departureDate2: string
+  departureTime2: string
+  departureFlight2: string
+  departureDest2: string
+  arrivalDate: string
+  arrivalTime: string
+  arrivalFlight: string
+  arrivalDest: string
+  arrivalDate2: string
+  arrivalTime2: string
+  arrivalFlight2: string
+  arrivalDest2: string
+  totalCost: number
+  paid: number
+  outstanding: number
+  items: Item[]
+  passengers: Passenger[]
+  payments: Payment[]
+}
+
+export default function BookingOrderDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
+  const [order, setOrder] = useState<BookingOrder | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  
+  // 编辑状态的表单数据
+  const [formData, setFormData] = useState<Partial<BookingOrder>>({})
+  const [editItems, setEditItems] = useState<Item[]>([])
+  const [editPassengers, setEditPassengers] = useState<Passenger[]>([])
+
+  useEffect(() => {
+    loadOrder()
+  }, [params.id])
+
+  const loadOrder = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/booking-orders/${params.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setOrder(data)
+        setFormData(data)
+        setEditItems(data.items || [])
+        setEditPassengers(data.passengers || [])
+      }
+    } catch (error) {
+      console.error('Error loading order:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEdit = () => {
+    setIsEditing(true)
+    setFormData(order || {})
+    setEditItems(order?.items || [])
+    setEditPassengers(order?.passengers || [])
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setFormData(order || {})
+    setEditItems(order?.items || [])
+    setEditPassengers(order?.passengers || [])
+  }
+
+  const handleSave = async () => {
+    if (!formData.customerName || !formData.tel) {
+      alert('Customer Name and Tel are required')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const response = await fetch(`/api/booking-orders/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          items: editItems,
+          passengers: editPassengers
+        })
+      })
+      
+      if (response.ok) {
+        await loadOrder()
+        setIsEditing(false)
+        alert('Order updated successfully')
+      } else {
+        const result = await response.json()
+        alert(`Failed to update order: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error saving:', error)
+      alert('Error updating order')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/booking-orders/${params.id}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        alert('Order deleted successfully')
+        router.push('/booking-orders')
+      } else {
+        alert('Failed to delete order')
+      }
+    } catch (error) {
+      console.error('Error deleting:', error)
+      alert('Error deleting order')
+    } finally {
+      setShowDeleteConfirm(false)
+    }
+  }
+
+  // Items 管理
+  const addItem = () => {
+    setEditItems([...editItems, { item: '', quantity: 1, unitPrice: 0, price: 0 }])
+  }
+
+  const updateItem = (index: number, field: keyof Item, value: any) => {
+    const newItems = [...editItems]
+    newItems[index] = { ...newItems[index], [field]: value }
+    if (field === 'quantity' || field === 'unitPrice') {
+      newItems[index].price = newItems[index].quantity * newItems[index].unitPrice
+    }
+    setEditItems(newItems)
+  }
+
+  const removeItem = (index: number) => {
+    setEditItems(editItems.filter((_, i) => i !== index))
+  }
+
+  // Passengers 管理
+  const addPassenger = () => {
+    setEditPassengers([...editPassengers, { name: '', passport: '', birthdate: '' }])
+  }
+
+  const updatePassenger = (index: number, field: keyof Passenger, value: string) => {
+    const newPassengers = [...editPassengers]
+    newPassengers[index] = { ...newPassengers[index], [field]: value }
+    setEditPassengers(newPassengers)
+  }
+
+  const removePassenger = (index: number) => {
+    setEditPassengers(editPassengers.filter((_, i) => i !== index))
+  }
+
+  const totalAmount = (isEditing ? editItems : order?.items || [])
+    .reduce((sum, item) => sum + item.price, 0)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    )
+  }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">订单未找到</h1>
-          <Link href="/booking-orders" className="text-blue-600 hover:text-blue-800">
-            返回订单列表
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Order Not Found</h2>
+          <Link href="/booking-orders" className="text-blue-600 hover:text-blue-700">
+            Back to Orders
           </Link>
         </div>
       </div>
     )
   }
 
+  const displayData = isEditing ? formData : order
+  const displayItems = isEditing ? editItems : order.items
+  const displayPassengers = isEditing ? editPassengers : order.passengers
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-6">
-        {/* 头部 */}
-        <div className="mb-4 bg-white rounded-lg shadow p-4">
-          <Link
-            href="/booking-orders"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-3 text-sm font-medium"
-          >
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <Link href="/booking-orders" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
             <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to List
+            Back to Booking Orders
           </Link>
+          
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Booking Order Detail</h1>
-            <div className="flex gap-2">
-              <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center text-sm">
-                <Printer className="w-4 h-4 mr-1" />
-                Print
-              </button>
-              <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
-                Unlock Record
-              </button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Booking #{order.bookingNumber}
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Created on {order.bookingDate}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 text-sm font-medium rounded ${
+                order.status === 'Close' ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
+              }`}>
+                {order.status}
+              </span>
+              
+              {isEditing ? (
+                <>
+                  <button onClick={handleSave} disabled={isSaving}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <Save className="w-4 h-4" />
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button onClick={handleCancelEdit}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={handleEdit}
+                    className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button onClick={() => setShowDeleteConfirm(true)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* 左侧 - 客户信息 */}
-          <div className="bg-white rounded-lg shadow p-5">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-blue-700 mb-1">
-                  Booking #:
-                </label>
-                <input
-                  type="text"
-                  value={order.bookingNumber}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Date:
-                </label>
-                <input
-                  type="text"
-                  value={order.date}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Customer
-              </label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded text-sm">
-                <option>{order.customerName}</option>
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="block text-sm font-semibold text-blue-700 mb-1">
-                *Customer:
-              </label>
-              <input
-                type="text"
-                value={order.customerName}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Address:
-              </label>
-              <textarea
-                value={order.address || ''}
-                readOnly
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-blue-700 mb-1">
-                  *Tel / HP:
-                </label>
-                <input
-                  type="text"
-                  value={order.tel || ''}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Fax:
-                </label>
-                <input
-                  type="text"
-                  value={order.fax || ''}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Customer Information */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+                  {isEditing ? (
+                    <input type="text" value={displayData.customerName || ''}
+                      onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.customerName}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  {isEditing ? (
+                    <textarea value={displayData.address || ''} rows={2}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.address || '-'}</p>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tel / HP *</label>
+                    {isEditing ? (
+                      <input type="text" value={displayData.tel || ''}
+                        onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    ) : (
+                      <p className="text-sm text-gray-900">{order.tel}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fax</label>
+                    {isEditing ? (
+                      <input type="text" value={displayData.fax || ''}
+                        onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    ) : (
+                      <p className="text-sm text-gray-900">{order.fax || '-'}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Discount</label>
+                    {isEditing ? (
+                      <input type="number" step="0.01" value={displayData.discount || 0}
+                        onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    ) : (
+                      <p className="text-sm text-gray-900">${order.discount.toFixed(2)}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Staff</label>
+                    {isEditing ? (
+                      <input type="text" value={displayData.staff || ''}
+                        onChange={(e) => setFormData({ ...formData, staff: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    ) : (
+                      <p className="text-sm text-gray-900">{order.staff || '-'}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-x-4 gap-y-3 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Discount:
-                </label>
-                <input
-                  type="text"
-                  value={`$${order.discount.toFixed(2)}`}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
+            {/* Items */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Items</h2>
+                {isEditing && (
+                  <button onClick={addItem} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1">
+                    <Plus className="w-4 h-4" /> Add Item
+                  </button>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Staff:
-                </label>
-                <input
-                  type="text"
-                  value={order.staff || ''}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
+              
+              {displayItems.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">No items</p>
+              ) : (
+                <div className="space-y-3">
+                  {displayItems.map((item, index) => (
+                    <div key={index} className={isEditing ? "border border-gray-200 rounded-lg p-3" : "flex justify-between py-2 border-b border-gray-100 last:border-0"}>
+                      {isEditing ? (
+                        <div className="grid grid-cols-12 gap-2 items-start">
+                          <div className="col-span-5">
+                            <input type="text" value={item.item} placeholder="Item name"
+                              onChange={(e) => updateItem(index, 'item', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-2">
+                            <input type="number" value={item.quantity}
+                              onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-2">
+                            <input type="number" step="0.01" value={item.unitPrice}
+                              onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-2">
+                            <input type="text" value={`$${item.price.toFixed(2)}`} readOnly
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 font-medium" />
+                          </div>
+                          <div className="col-span-1 flex items-center">
+                            <button onClick={() => removeItem(index)} className="p-1.5 text-red-600 hover:bg-red-50 rounded">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{item.item}</p>
+                            <p className="text-xs text-gray-500">{item.quantity} × ${item.unitPrice.toFixed(2)}</p>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">${item.price.toFixed(2)}</p>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                  <span className="text-lg font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
+                </div>
               </div>
-              <div></div>
             </div>
 
-            <div className="flex gap-2 mb-3">
-              <button className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded text-sm">
-                Item Data
-              </button>
-              <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Booking Total Amount:
-                </label>
-                <input
-                  type="text"
-                  value={`$${order.bookingTotalAmount.toFixed(2)}`}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm font-bold"
-                />
-              </div>
-            </div>
-
-            {/* Item Data 表格 */}
-            {order.items && order.items.length > 0 && (
-              <div className="mb-4">
-                <table className="w-full text-sm border border-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                        Item
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 text-center font-semibold w-16">
-                        Qty
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 text-right font-semibold w-24">
-                        Unit Price
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 text-right font-semibold w-24">
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {order.items.map((item) => (
-                      <tr key={item.id}>
-                        <td className="border border-gray-300 px-2 py-1">
-                          {item.description}
-                          {item.note && (
-                            <span className="text-xs text-gray-500 ml-2">({item.note})</span>
-                          )}
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 text-center">
-                          {item.quantity}
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
-                          ${item.unitPrice.toFixed(2)}
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right font-medium">
-                          ${item.total.toFixed(2)}
-                        </td>
-                      </tr>
+            {/* Payments */}
+            {!isEditing && (
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Payments</h2>
+                {order.payments.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">No payments yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {order.payments.map((payment) => (
+                      <div key={payment.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{payment.receiptNo}</p>
+                          <p className="text-xs text-gray-500">{payment.date} • {payment.type} • {payment.for}</p>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">${payment.amount.toFixed(2)}</p>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                )}
               </div>
             )}
-
-            {/* Receipt 表格 */}
-            <div className="mb-4">
-              <table className="w-full text-sm border border-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                      Receipt #
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                      Date
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                      Type
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 text-right font-semibold">
-                      Paid
-                    </th>
-                    <th className="border border-gray-300 px-2 py-1 text-right font-semibold">
-                      Balance Amt
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.receipts.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="border border-gray-300 px-2 py-4 text-center text-gray-500">
-                        No receipts
-                      </td>
-                    </tr>
-                  ) : (
-                    order.receipts.map((receipt) => (
-                      <tr key={receipt.id}>
-                        <td className="border border-gray-300 px-2 py-1">{receipt.receiptNumber}</td>
-                        <td className="border border-gray-300 px-2 py-1">{receipt.date}</td>
-                        <td className="border border-gray-300 px-2 py-1">{receipt.type}</td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
-                          ${receipt.paid.toFixed(2)}
-                        </td>
-                        <td className="border border-gray-300 px-2 py-1 text-right">
-                          ${receipt.balanceAmt.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* 按钮 */}
-            <div className="flex gap-2 justify-between">
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">
-                  Account
-                </button>
-                <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm">
-                  Refund
-                </button>
-              </div>
-              <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
-                Make Payment
-              </button>
-            </div>
           </div>
 
-          {/* 右侧 - 航班和乘客信息 */}
-          <div className="space-y-4">
-            {/* Tour 信息 */}
-            <div className="bg-white rounded-lg shadow p-5">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-4">
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Tour Information */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tour Information</h2>
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Tour Code:
-                  </label>
-                  <input
-                    type="text"
-                    value={order.tourCode || ''}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tour Code</label>
+                  {isEditing ? (
+                    <input type="text" value={displayData.tourCode || ''}
+                      onChange={(e) => setFormData({ ...formData, tourCode: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.tourCode || '-'}</p>
+                  )}
                 </div>
-                <div></div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Tour:
-                </label>
-                <input
-                  type="text"
-                  value={order.tour || ''}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
-              </div>
-
-              {/* 航班信息表格 */}
-              <div className="mb-4">
-                <table className="w-full text-sm border border-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold w-16"></th>
-                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                        Date
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                        Time
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                        Flight
-                      </th>
-                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold">
-                        Dest
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="border border-gray-300 px-2 py-1 font-semibold">Departure:</td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.departureDate || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.departureTime || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.departureFlight || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.departureDest || ''}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-2 py-1 font-semibold">Depart2:</td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.depart2Date || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.depart2Time || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.depart2Flight || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.depart2Dest || ''}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-2 py-1 font-semibold">Arrival:</td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrivalDate || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrivalTime || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrivalFlight || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrivalDest || ''}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-2 py-1 font-semibold">Arrival 2:</td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrival2Date || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrival2Time || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrival2Flight || ''}
-                      </td>
-                      <td className="border border-gray-300 px-2 py-1">
-                        {order.arrival2Dest || ''}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tour</label>
+                  {isEditing ? (
+                    <input type="text" value={displayData.tour || ''}
+                      onChange={(e) => setFormData({ ...formData, tour: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.tour || '-'}</p>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* 乘客信息 */}
-            <div className="bg-white rounded-lg shadow p-5">
-              <div className="flex justify-between items-center mb-3">
-                <label className="text-sm font-semibold text-gray-700">
-                  Passenger Data
-                </label>
-                <div className="flex gap-1">
-                  <button className="p-1 bg-gray-200 hover:bg-gray-300 rounded">
-                    <Plus className="w-4 h-4" />
-                  </button>
-                  <button className="p-1 bg-gray-200 hover:bg-gray-300 rounded">
-                    <Minus className="w-4 h-4" />
-                  </button>
+            {/* Flight Information */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Flight Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Departure</h3>
+                  {isEditing ? (
+                    <div className="grid grid-cols-4 gap-2">
+                      <input type="date" value={displayData.departureDate || ''}
+                        onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      <input type="text" value={displayData.departureTime || ''} placeholder="Time"
+                        onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      <input type="text" value={displayData.departureFlight || ''} placeholder="Flight"
+                        onChange={(e) => setFormData({ ...formData, departureFlight: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      <input type="text" value={displayData.departureDest || ''} placeholder="Dest"
+                        onChange={(e) => setFormData({ ...formData, departureDest: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-900">
+                      {order.departureDate || '-'} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
+                    </p>
+                  )}
                 </div>
+                
+                {(isEditing || order.departureDate2) && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Departure 2</h3>
+                    {isEditing ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        <input type="date" value={displayData.departureDate2 || ''}
+                          onChange={(e) => setFormData({ ...formData, departureDate2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.departureTime2 || ''}
+                          onChange={(e) => setFormData({ ...formData, departureTime2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.departureFlight2 || ''}
+                          onChange={(e) => setFormData({ ...formData, departureFlight2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.departureDest2 || ''}
+                          onChange={(e) => setFormData({ ...formData, departureDest2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {order.departureDate2 || '-'} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Arrival</h3>
+                  {isEditing ? (
+                    <div className="grid grid-cols-4 gap-2">
+                      <input type="date" value={displayData.arrivalDate || ''}
+                        onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      <input type="text" value={displayData.arrivalTime || ''}
+                        onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      <input type="text" value={displayData.arrivalFlight || ''}
+                        onChange={(e) => setFormData({ ...formData, arrivalFlight: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      <input type="text" value={displayData.arrivalDest || ''}
+                        onChange={(e) => setFormData({ ...formData, arrivalDest: e.target.value })}
+                        className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-900">
+                      {order.arrivalDate || '-'} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
+                    </p>
+                  )}
+                </div>
+                
+                {(isEditing || order.arrivalDate2) && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Arrival 2</h3>
+                    {isEditing ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        <input type="date" value={displayData.arrivalDate2 || ''}
+                          onChange={(e) => setFormData({ ...formData, arrivalDate2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.arrivalTime2 || ''}
+                          onChange={(e) => setFormData({ ...formData, arrivalTime2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.arrivalFlight2 || ''}
+                          onChange={(e) => setFormData({ ...formData, arrivalFlight2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.arrivalDest2 || ''}
+                          onChange={(e) => setFormData({ ...formData, arrivalDest2: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {order.arrivalDate2 || '-'} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
+            </div>
 
-              <div className="mb-3">
-                <label className="block text-sm font-semibold text-blue-700 mb-1">
-                  Name:
-                </label>
-                <textarea
-                  value={order.passengerNames || order.passengers.map(p => p.name).join('\n')}
-                  readOnly
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-                />
+            {/* Passengers */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Passengers</h2>
+                {isEditing && (
+                  <button onClick={addPassenger} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1">
+                    <Plus className="w-4 h-4" /> Add
+                  </button>
+                )}
               </div>
+              
+              {displayPassengers.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No passengers</p>
+              ) : (
+                <div className="space-y-3">
+                  {displayPassengers.map((passenger, index) => (
+                    <div key={index} className={isEditing ? "border border-gray-200 rounded-lg p-3" : "py-2 border-b border-gray-100 last:border-0"}>
+                      {isEditing ? (
+                        <div className="grid grid-cols-12 gap-2 items-start">
+                          <div className="col-span-5">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                            <input type="text" value={passenger.name} placeholder="Passenger name"
+                              onChange={(e) => updatePassenger(index, 'name', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Passport</label>
+                            <input type="text" value={passenger.passport || ''} placeholder="Passport #"
+                              onChange={(e) => updatePassenger(index, 'passport', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Birth Date</label>
+                            <input type="date" value={passenger.birthdate || ''}
+                              onChange={(e) => updatePassenger(index, 'birthdate', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-1 flex items-end">
+                            <button onClick={() => removePassenger(index)} className="p-1.5 text-red-600 hover:bg-red-50 rounded">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{passenger.name}</p>
+                          {(passenger.passport || passenger.birthdate) && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {passenger.passport && `Passport: ${passenger.passport}`}
+                              {passenger.passport && passenger.birthdate && ' • '}
+                              {passenger.birthdate && `DOB: ${passenger.birthdate}`}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Special Instruction */}
-            <div className="bg-white rounded-lg shadow p-5">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Special Instruction:
-              </label>
-              <textarea
-                value={order.specialInstruction || ''}
-                readOnly
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
-              />
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Special Instruction</h2>
+              {isEditing ? (
+                <textarea value={displayData.special || ''} rows={4}
+                  onChange={(e) => setFormData({ ...formData, special: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              ) : (
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{order.special || '-'}</p>
+              )}
             </div>
 
-            {/* 底部按钮 */}
-            <div className="flex gap-2 justify-end">
-              <button className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded flex items-center">
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </button>
-              <Link
-                href="/booking-orders"
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
-              >
-                Exit
-              </Link>
-            </div>
+            {/* Financial Summary */}
+            {!isEditing && (
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h2>
+                <dl className="space-y-3">
+                  <div className="flex justify-between">
+                    <dt className="text-sm text-gray-600">Total Cost</dt>
+                    <dd className="text-sm font-medium text-gray-900">${order.totalCost.toFixed(2)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-sm text-gray-600">Paid</dt>
+                    <dd className="text-sm font-medium text-green-600">${order.paid.toFixed(2)}</dd>
+                  </div>
+                  <div className="pt-3 border-t border-gray-200 flex justify-between">
+                    <dt className="text-base font-medium text-gray-900">Outstanding</dt>
+                    <dd className={`text-base font-semibold ${order.outstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      ${order.outstanding.toFixed(2)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Booking Order</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to delete booking #{order.bookingNumber}? This action cannot be undone and will delete all related items, passengers, and payment records.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button onClick={handleDelete}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
