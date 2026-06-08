@@ -96,10 +96,18 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
         const paymentsResponse = await fetch(`/api/booking-orders/${params.id}/payments`)
         if (paymentsResponse.ok) {
           const paymentsData = await paymentsResponse.json()
-          data.payments = paymentsData.data || []
+          // Map database field names to interface field names
+          data.payments = (paymentsData.data || []).map((p: any) => ({
+            id: p.id,
+            receiptNo: p.receiptno || 'N/A',
+            date: p.receiptdate,
+            type: p.paytype || 'N/A',
+            for: p.for || '',
+            amount: parseFloat(p.amountpaid) || 0
+          }))
           
           // Calculate paid amount
-          const totalPaid = data.payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amountpaid) || 0), 0)
+          const totalPaid = data.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
           data.paid = totalPaid
           data.outstanding = data.totalCost - totalPaid
         }
