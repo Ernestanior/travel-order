@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       tel: customer.tel,
       address: customer.address || '',
       fax: customer.fax || '',
-      email: ''
+      email: customer.email || ''
     }))
 
     return NextResponse.json({

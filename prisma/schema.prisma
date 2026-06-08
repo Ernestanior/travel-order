@@ -12,6 +12,7 @@ model Customer {
   address   String?       @db.VarChar(255)
   tel       String        @db.VarChar(50)
   fax       String?       @db.VarChar(50)
+  email     String?       @db.VarChar(255)
   bookings  BookingData[]
   exchanges ExchangeData[]
 

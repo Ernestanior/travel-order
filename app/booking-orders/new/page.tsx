@@ -6,6 +6,15 @@ import Link from 'next/link'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
 import { notification } from 'antd'
 
+interface Customer {
+  id: string
+  name: string
+  tel: string
+  address?: string
+  fax?: string
+  email?: string
+}
+
 interface Item {
   item: string
   quantity: number
@@ -23,6 +32,11 @@ export default function NewBookingOrderPage() {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
   
+  // Customer search
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+  
   // 表单数据
   const [formData, setFormData] = useState({
     bookingDate: new Date().toISOString().split('T')[0],
@@ -30,6 +44,7 @@ export default function NewBookingOrderPage() {
     address: '',
     tel: '',
     fax: '',
+    email: '',
     discount: 0,
     staff: '',
     tourCode: '',
@@ -59,6 +74,45 @@ export default function NewBookingOrderPage() {
   
   const [items, setItems] = useState<Item[]>([])
   const [passengers, setPassengers] = useState<Passenger[]>([])
+  
+  // Load customers when searching
+  const loadCustomers = async (search: string) => {
+    if (!search || search.length < 2) {
+      setCustomers([])
+      setShowCustomerDropdown(false)
+      return
+    }
+    
+    try {
+      const params = new URLSearchParams()
+      params.set('search', search)
+      params.set('limit', '10')
+      
+      const response = await fetch(`/api/customers?${params}`)
+      const result = await response.json()
+      
+      if (result.data && Array.isArray(result.data)) {
+        setCustomers(result.data)
+        setShowCustomerDropdown(true)
+      }
+    } catch (error) {
+      console.error('Error loading customers:', error)
+    }
+  }
+  
+  // Select customer from dropdown
+  const selectCustomer = (customer: Customer) => {
+    setFormData({
+      ...formData,
+      customerName: customer.name,
+      tel: customer.tel || '',
+      address: customer.address || '',
+      fax: customer.fax || '',
+      email: customer.email || ''
+    })
+    setCustomerSearch('')
+    setShowCustomerDropdown(false)
+  }
   
   // Items 管理
   const addItem = () => {
@@ -124,6 +178,27 @@ export default function NewBookingOrderPage() {
       notification.error({
         message: 'Validation Error',
         description: 'Please add at least one passenger',
+        placement: 'topRight',
+      })
+      return
+    }
+    
+    // 验证每个 passenger 必须有 name
+    const emptyPassenger = passengers.find(p => !p.name || p.name.trim() === '')
+    if (emptyPassenger) {
+      notification.error({
+        message: 'Validation Error',
+        description: 'All passengers must have a name',
+        placement: 'topRight',
+      })
+      return
+    }
+    
+    // 验证至少有 Tour Code 或 Tour Description
+    if (!formData.tourCode && !formData.tour) {
+      notification.error({
+        message: 'Validation Error',
+        description: 'Please fill in Tour Code or Tour Description',
         placement: 'topRight',
       })
       return
@@ -233,13 +308,59 @@ export default function NewBookingOrderPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Customer Name <span className="text-red-500">*</span>
                   </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={customerSearch || formData.customerName}
+                      onChange={(e) => {
+                        setCustomerSearch(e.target.value)
+                        setFormData({ ...formData, customerName: e.target.value })
+                        loadCustomers(e.target.value)
+                      }}
+                      onFocus={() => {
+                        if (customerSearch.length >= 2) {
+                          loadCustomers(customerSearch)
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="Type to search or enter new customer"
+                      required
+                    />
+                    
+                    {/* Customer dropdown */}
+                    {showCustomerDropdown && customers.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {customers.map((customer) => (
+                          <button
+                            key={customer.id}
+                            type="button"
+                            onClick={() => selectCustomer(customer)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium text-gray-900">{customer.name}</div>
+                            <div className="text-xs text-gray-500">
+                              Tel: {customer.tel} {customer.email && `• Email: ${customer.email}`}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Start typing to search existing customers or enter a new name
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
                   <input
-                    type="text"
-                    value={formData.customerName}
-                    onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="Enter customer name"
-                    required
+                    placeholder="customer@example.com"
                   />
                 </div>
                 
@@ -414,7 +535,9 @@ export default function NewBookingOrderPage() {
           <div className="space-y-6">
             {/* Tour Information */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tour Information</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Tour Information <span className="text-sm text-red-500">(At least one required)</span>
+              </h2>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -427,6 +550,7 @@ export default function NewBookingOrderPage() {
                       value={formData.tourCode}
                       onChange={(e) => setFormData({ ...formData, tourCode: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="e.g., TW001"
                     />
                   </div>
                 </div>
@@ -605,14 +729,15 @@ export default function NewBookingOrderPage() {
                       <div className="grid grid-cols-12 gap-2 items-start">
                         <div className="col-span-5">
                           <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Name
+                            Name <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="text"
                             value={passenger.name}
                             onChange={(e) => updatePassenger(index, 'name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                            placeholder="Passenger name"
+                            placeholder="Passenger name (required)"
+                            required
                           />
                         </div>
                         <div className="col-span-3">

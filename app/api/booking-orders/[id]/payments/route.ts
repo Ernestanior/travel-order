@@ -3,18 +3,18 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// POST - 添加付款记录
-export async function POST(
+// GET - 获取订单的所有付款记录
+export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const { prisma } = await import('@/lib/db')
-    const body = await request.json()
+    const id = parseInt(params.id)
     
     // 获取订单信息
     const booking = await prisma.bookingData.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id },
       select: { bookno: true }
     })
     
@@ -22,46 +22,74 @@ export async function POST(
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
     
-    // 生成 receipt number
-    const lastPayment = await prisma.bookingPaymentData.findFirst({
-      orderBy: { id: 'desc' },
-      select: { receiptno: true }
+    // 获取所有付款记录
+    const payments = await prisma.bookingPaymentData.findMany({
+      where: { bookno: booking.bookno },
+      orderBy: { receiptdate: 'desc' }
     })
     
-    let newReceiptNumber
-    if (lastPayment && lastPayment.receiptno) {
-      const match = lastPayment.receiptno.match(/(\d+)/)
-      if (match) {
-        const lastNumber = parseInt(match[1])
-        newReceiptNumber = `${lastNumber + 1}`
-      } else {
-        newReceiptNumber = `R${Date.now()}`
+    return NextResponse.json({ data: payments })
+  } catch (error) {
+    console.error('Error fetching payments:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch payments',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
+  }
+}
+
+// POST - 添加新的付款记录
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { prisma } = await import('@/lib/db')
+    const id = parseInt(params.id)
+    const body = await request.json()
+    
+    // 获取订单信息
+    const booking = await prisma.bookingData.findUnique({
+      where: { id },
+      select: { 
+        bookno: true,
+        customer: true
       }
-    } else {
-      newReceiptNumber = `R${Date.now()}`
+    })
+    
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+    
+    // 验证必填字段
+    if (!body.amountPaid || parseFloat(body.amountPaid) <= 0) {
+      throw new Error('Amount Paid must be greater than 0')
+    }
+    
+    if (!body.receiptDate) {
+      throw new Error('Receipt Date is required')
     }
     
     // 创建付款记录
     const payment = await prisma.bookingPaymentData.create({
       data: {
-        receiptno: newReceiptNumber,
         bookno: booking.bookno,
-        receiptdate: body.receiptDate ? new Date(body.receiptDate) : new Date(),
-        paytype: body.paymentType || '',
-        for: body.for || '',
+        receiptno: body.receiptNo || null,
+        receiptdate: new Date(body.receiptDate),
+        paytype: body.paymentType || null,
+        for: body.paymentFor || null,
         chequeno: body.chequeNo || null,
         visano: body.visaNo || null,
-        amountpaid: body.amountPaid || 0,
-        customer: body.customer || '',
-        payfor: body.paymentOf || '',
-        paidtext: body.paidText || null
+        amountpaid: parseFloat(body.amountPaid),
+        paidtext: body.amountPaidText || null,
+        customer: booking.customer || body.receiveFrom || null,
+        payfor: body.paymentOf || null,
       }
     })
-
+    
     return NextResponse.json({ 
-      success: true, 
-      id: payment.id,
-      receiptNumber: newReceiptNumber
+      success: true,
+      payment
     })
   } catch (error) {
     console.error('Error creating payment:', error)

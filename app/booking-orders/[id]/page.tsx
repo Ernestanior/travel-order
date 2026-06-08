@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus, X } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign } from 'lucide-react'
 import { notification } from 'antd'
+import MakePaymentModal from './MakePaymentModal'
 
 interface Item {
   item: string
@@ -73,6 +74,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   
   // 编辑状态的表单数据
   const [formData, setFormData] = useState<Partial<BookingOrder>>({})
@@ -89,6 +91,19 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       const response = await fetch(`/api/booking-orders/${params.id}`)
       if (response.ok) {
         const data = await response.json()
+        
+        // Load payments
+        const paymentsResponse = await fetch(`/api/booking-orders/${params.id}/payments`)
+        if (paymentsResponse.ok) {
+          const paymentsData = await paymentsResponse.json()
+          data.payments = paymentsData.data || []
+          
+          // Calculate paid amount
+          const totalPaid = data.payments.reduce((sum: number, p: any) => sum + (parseFloat(p.amountpaid) || 0), 0)
+          data.paid = totalPaid
+          data.outstanding = data.totalCost - totalPaid
+        }
+        
         setOrder(data)
         setFormData(data)
         setEditItems(data.items || [])
@@ -304,6 +319,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                     <Edit2 className="w-4 h-4" />
                     Edit
                   </button>
+                  <button onClick={() => setShowPaymentModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    Make Payment
+                  </button>
                   <button onClick={() => setShowDeleteConfirm(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                     <Trash2 className="w-4 h-4" />
@@ -461,18 +481,59 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
             {/* Payments */}
             {!isEditing && (
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Payments</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Payment History</h2>
+                  <button 
+                    onClick={() => setShowPaymentModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1">
+                    <Plus className="w-4 h-4" /> Add Payment
+                  </button>
+                </div>
+                
+                {/* Payment Summary */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Amount:</span>
+                    <span className="text-sm font-medium text-gray-900">${totalAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Paid:</span>
+                    <span className="text-sm font-medium text-green-600">${(order.paid || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="text-sm font-semibold text-gray-700">Outstanding:</span>
+                    <span className={`text-lg font-bold ${(order.outstanding || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      ${(order.outstanding || 0).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Payment List */}
                 {order.payments.length === 0 ? (
                   <p className="text-sm text-gray-500 text-center py-4">No payments yet</p>
                 ) : (
                   <div className="space-y-2">
                     {order.payments.map((payment) => (
-                      <div key={payment.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{payment.receiptNo}</p>
-                          <p className="text-xs text-gray-500">{payment.date} • {payment.type} • {payment.for}</p>
+                      <div key={payment.id} className="flex justify-between items-start py-3 border-b border-gray-100 last:border-0">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              {payment.receiptNo || 'N/A'}
+                            </p>
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded ${
+                              payment.type === 'Cash' ? 'bg-green-100 text-green-700' :
+                              payment.type === 'Cheque' ? 'bg-blue-100 text-blue-700' :
+                              payment.type === 'Credit Card' ? 'bg-purple-100 text-purple-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {payment.type}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {new Date(payment.date).toLocaleDateString()} {payment.for ? `• ${payment.for}` : ''}
+                          </p>
                         </div>
-                        <p className="text-sm font-medium text-gray-900">${payment.amount.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-gray-900">${payment.amount.toFixed(2)}</p>
                       </div>
                     ))}
                   </div>
@@ -735,6 +796,18 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
             </div>
           </div>
         )}
+
+        {/* Make Payment Modal */}
+        <MakePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          bookingId={order.id}
+          bookingNumber={order.bookingNumber}
+          customerName={order.customerName}
+          tour={order.tour || 'N/A'}
+          totalAmount={totalAmount}
+          onPaymentAdded={loadOrder}
+        />
       </div>
     </div>
   )

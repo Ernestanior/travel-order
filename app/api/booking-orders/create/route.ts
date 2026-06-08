@@ -71,8 +71,15 @@ export async function POST(request: Request) {
           customer: customerName,
           tel: customerTel,
           address: body.address || null,
-          fax: body.fax || null
+          fax: body.fax || null,
+          email: body.email || null
         }
+      })
+    } else if (body.email && existingCustomer.email !== body.email) {
+      // 如果客户已存在但 email 不同，更新 email
+      await prisma.customer.update({
+        where: { customer: customerName },
+        data: { email: body.email }
       })
     }
     
