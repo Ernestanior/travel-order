@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign, Calculator } from 'lucide-react'
 import { notification } from 'antd'
 import MakePaymentModal from './MakePaymentModal'
+import AccountModal from './AccountModal'
 
 interface Item {
   item: string
@@ -75,6 +76,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [isSaving, setIsSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showAccountModal, setShowAccountModal] = useState(false)
   
   // 编辑状态的表单数据
   const [formData, setFormData] = useState<Partial<BookingOrder>>({})
@@ -326,6 +328,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                     className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                     <Edit2 className="w-4 h-4" />
                     Edit
+                  </button>
+                  <button onClick={() => setShowAccountModal(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <Calculator className="w-4 h-4" />
+                    Account
                   </button>
                   <button onClick={() => setShowPaymentModal(true)}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
@@ -825,8 +832,17 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           bookingNumber={order.bookingNumber}
           customerName={order.customerName}
           tour={order.tour || 'N/A'}
-          totalAmount={totalAmount}
+          totalAmount={order.totalAfterDiscount}
           onPaymentAdded={loadOrder}
+        />
+
+        {/* Account Modal */}
+        <AccountModal
+          isOpen={showAccountModal}
+          onClose={() => setShowAccountModal(false)}
+          bookingId={order.id}
+          bookingNumber={order.bookingNumber}
+          totalAmount={order.totalAfterDiscount}
         />
       </div>
     </div>
