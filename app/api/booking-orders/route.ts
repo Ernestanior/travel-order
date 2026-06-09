@@ -106,10 +106,6 @@ export async function GET(request: Request) {
       )
       const outstanding = totalCost - paid
 
-      if (searchType === 'outstanding' && outstanding <= 0) {
-        return null
-      }
-
       return {
         id: booking.id,
         bookingNumber: booking.bookno,
@@ -129,15 +125,20 @@ export async function GET(request: Request) {
         })),
         passengerNames: booking.passengers.map(p => p.paxname).join(', ')
       }
-    }).filter(Boolean)
+    })
+
+    // 如果是 outstanding 筛选，过滤掉 outstanding <= 0 的订单
+    const filteredResults = searchType === 'outstanding' 
+      ? formatted.filter(order => order.outstanding > 0)
+      : formatted
 
     return NextResponse.json({
-      data: formatted,
+      data: filteredResults,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+        total: searchType === 'outstanding' ? filteredResults.length : total,
+        totalPages: Math.ceil((searchType === 'outstanding' ? filteredResults.length : total) / limit)
       }
     })
   } catch (error) {
