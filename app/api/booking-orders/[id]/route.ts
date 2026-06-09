@@ -28,10 +28,12 @@ export async function GET(
     const totalCost = booking.items.reduce((sum, item) => 
       sum + Number(item.price || 0), 0
     )
+    const discount = Number(booking.discount || 0)
     const paid = booking.payments.reduce((sum, payment) => 
       sum + Number(payment.amountpaid || 0), 0
     )
-    const outstanding = totalCost - paid
+    const totalAfterDiscount = totalCost - discount
+    const outstanding = totalAfterDiscount - paid
 
     const formatted = {
       id: booking.id,
@@ -40,7 +42,6 @@ export async function GET(
       customerName: booking.customer,
       address: booking.customerData?.address || '',
       tel: booking.customerData?.tel || '',
-      fax: booking.customerData?.fax || '',
       discount: Number(booking.discount),
       staff: booking.staff || '',
       tourCode: booking.tourcode || '',
@@ -70,6 +71,8 @@ export async function GET(
       
       // Financial
       totalCost,
+      discount,
+      totalAfterDiscount,
       paid,
       outstanding,
       

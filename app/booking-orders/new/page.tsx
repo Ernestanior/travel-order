@@ -11,7 +11,6 @@ interface Customer {
   name: string
   tel: string
   address?: string
-  fax?: string
   email?: string
 }
 
@@ -43,7 +42,6 @@ export default function NewBookingOrderPage() {
     customerName: '',
     address: '',
     tel: '',
-    fax: '',
     email: '',
     discount: 0,
     staff: '',
@@ -107,7 +105,6 @@ export default function NewBookingOrderPage() {
       customerName: customer.name,
       tel: customer.tel || '',
       address: customer.address || '',
-      fax: customer.fax || '',
       email: customer.email || ''
     })
     setCustomerSearch('')
@@ -394,14 +391,14 @@ export default function NewBookingOrderPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Fax
+                      Email
                     </label>
                     <input
-                      type="text"
-                      value={formData.fax}
-                      onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Fax number"
+                      placeholder="Email address"
                     />
                   </div>
                 </div>

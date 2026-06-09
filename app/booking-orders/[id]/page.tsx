@@ -36,7 +36,6 @@ interface BookingOrder {
   customerName: string
   address: string
   tel: string
-  fax: string
   discount: number
   staff: string
   tourCode: string
@@ -60,6 +59,7 @@ interface BookingOrder {
   arrivalFlight2: string
   arrivalDest2: string
   totalCost: number
+  totalAfterDiscount: number
   paid: number
   outstanding: number
   items: Item[]
@@ -372,27 +372,15 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                   )}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tel / HP *</label>
-                    {isEditing ? (
-                      <input type="text" value={displayData.tel || ''}
-                        onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                    ) : (
-                      <p className="text-sm text-gray-900">{order.tel}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fax</label>
-                    {isEditing ? (
-                      <input type="text" value={displayData.fax || ''}
-                        onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                    ) : (
-                      <p className="text-sm text-gray-900">{order.fax || '-'}</p>
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tel / HP *</label>
+                  {isEditing ? (
+                    <input type="text" value={displayData.tel || ''}
+                      onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.tel}</p>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -504,6 +492,18 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                     <span className="text-sm text-gray-600">Total Amount:</span>
                     <span className="text-sm font-medium text-gray-900">${totalAmount.toFixed(2)}</span>
                   </div>
+                  {order.discount > 0 && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Discount:</span>
+                        <span className="text-sm font-medium text-orange-600">-${order.discount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700">Amount Due:</span>
+                        <span className="text-sm font-bold text-gray-900">${order.totalAfterDiscount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total Paid:</span>
                     <span className="text-sm font-medium text-green-600">${(order.paid || 0).toFixed(2)}</span>
@@ -767,6 +767,18 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                     <dt className="text-sm text-gray-600">Total Cost</dt>
                     <dd className="text-sm font-medium text-gray-900">${order.totalCost.toFixed(2)}</dd>
                   </div>
+                  {order.discount > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <dt className="text-sm text-gray-600">Discount</dt>
+                        <dd className="text-sm font-medium text-orange-600">-${order.discount.toFixed(2)}</dd>
+                      </div>
+                      <div className="flex justify-between pb-3 border-b border-gray-200">
+                        <dt className="text-sm font-semibold text-gray-700">Amount Due</dt>
+                        <dd className="text-sm font-bold text-gray-900">${order.totalAfterDiscount.toFixed(2)}</dd>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between">
                     <dt className="text-sm text-gray-600">Paid</dt>
                     <dd className="text-sm font-medium text-green-600">${order.paid.toFixed(2)}</dd>
