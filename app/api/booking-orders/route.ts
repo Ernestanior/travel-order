@@ -19,6 +19,7 @@ export async function GET(request: Request) {
     const departureDate = searchParams.get('departureDate')
     const outstandingBeforeDate = searchParams.get('outstandingBeforeDate')
     const customer = searchParams.get('customer')
+    const bookingNumber = searchParams.get('bookingNumber')
     
     // 分页参数
     const page = parseInt(searchParams.get('page') || '1')
@@ -27,6 +28,22 @@ export async function GET(request: Request) {
 
     let where: any = {}
 
+    // 直接搜索参数（优先级更高）
+    if (bookingNumber) {
+      where.bookno = {
+        contains: bookingNumber,
+        mode: 'insensitive'
+      }
+    }
+
+    if (customer && searchType !== 'customer') {
+      where.customer = {
+        contains: customer,
+        mode: 'insensitive'
+      }
+    }
+
+    // 筛选类型参数
     if (searchType === 'date' && departureDate) {
       where.deptdate = new Date(departureDate)
     } else if (searchType === 'outstanding' && outstandingBeforeDate) {

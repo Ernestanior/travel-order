@@ -26,6 +26,7 @@ export default function BookingOrdersPage() {
   const [departureDate, setDepartureDate] = useState('')
   const [outstandingBeforeDate, setOutstandingBeforeDate] = useState('')
   const [customerSearch, setCustomerSearch] = useState('')
+  const [bookingNumberSearch, setBookingNumberSearch] = useState('')
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
   const [bookingOrders, setBookingOrders] = useState<BookingOrder[]>([])
   const [loading, setLoading] = useState(false)
@@ -45,6 +46,11 @@ export default function BookingOrdersPage() {
     }
   }, [currentPage])
 
+  // 当搜索条件变化时重置到第一页
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [bookingNumberSearch, customerSearch])
+
   const loadOrders = async () => {
     setLoading(true)
     try {
@@ -53,6 +59,15 @@ export default function BookingOrdersPage() {
       params.set('page', currentPage.toString())
       params.set('limit', itemsPerPage.toString())
       
+      // 直接搜索栏的参数（优先级更高）
+      if (bookingNumberSearch) {
+        params.set('bookingNumber', bookingNumberSearch)
+      }
+      if (customerSearch && searchType !== 'customer') {
+        params.set('customer', customerSearch)
+      }
+      
+      // 筛选类型参数
       if (searchType === 'date' && departureDate) {
         params.set('departureDate', departureDate)
       } else if (searchType === 'outstanding' && outstandingBeforeDate) {
@@ -96,6 +111,7 @@ export default function BookingOrdersPage() {
     setDepartureDate('')
     setOutstandingBeforeDate('')
     setCustomerSearch('')
+    setBookingNumberSearch('')
     setCurrentPage(1)
     // 需要延迟一下让状态更新
     setTimeout(() => {
@@ -187,6 +203,86 @@ export default function BookingOrdersPage() {
         <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5">
           <h3 className="text-sm font-medium text-gray-900 mb-4">Search & Filters</h3>
 
+          {/* 直接搜索栏 */}
+          <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+            {/* Booking Number 搜索 */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 w-32">Booking #:</label>
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={bookingNumberSearch}
+                  onChange={(e) => setBookingNumberSearch(e.target.value)}
+                  placeholder="Type booking number..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+                {bookingNumberSearch && (
+                  <button
+                    onClick={() => setBookingNumberSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Customer 搜索 */}
+            <div className="relative">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 w-32">Customer:</label>
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={customerSearch}
+                    onChange={(e) => {
+                      setCustomerSearch(e.target.value)
+                      setShowCustomerDropdown(true)
+                    }}
+                    onFocus={() => setShowCustomerDropdown(true)}
+                    placeholder="Type customer name..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                  />
+                  {customerSearch && (
+                    <button
+                      onClick={() => {
+                        setCustomerSearch('')
+                        setShowCustomerDropdown(false)
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* 客户下拉列表 */}
+                  {showCustomerDropdown && matchedCustomers.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                      {matchedCustomers.map((customer) => (
+                        <button
+                          key={customer.id}
+                          onClick={() => handleCustomerSelect(customer.name)}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                        >
+                          {customer.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 显示搜索结果统计 */}
+            {(bookingNumberSearch || customerSearch) && (
+              <div className="pt-3 border-t border-gray-200 text-sm text-gray-600">
+                {loading ? 'Loading...' : (
+                  <>Found <span className="font-semibold text-gray-900">{totalRecords}</span> order(s) • Showing page {currentPage} of {totalPages}</>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* 搜索类型选择 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
             <button
@@ -272,53 +368,6 @@ export default function BookingOrdersPage() {
               <span className="text-xs text-gray-500 ml-2">
                 (Shows unpaid orders departing before this date)
               </span>
-            </div>
-          )}
-
-          {searchType === 'customer' && (
-            <div className="relative">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 w-32">Customer:</label>
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={customerSearch}
-                    onChange={(e) => {
-                      setCustomerSearch(e.target.value)
-                      setShowCustomerDropdown(true)
-                    }}
-                    onFocus={() => setShowCustomerDropdown(true)}
-                    placeholder="Type customer name..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                  />
-                  {customerSearch && (
-                    <button
-                      onClick={() => {
-                        setCustomerSearch('')
-                        setShowCustomerDropdown(false)
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                  
-                  {/* 客户下拉列表 */}
-                  {showCustomerDropdown && matchedCustomers.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                      {matchedCustomers.map((customer) => (
-                        <button
-                          key={customer.id}
-                          onClick={() => handleCustomerSelect(customer.name)}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
-                        >
-                          {customer.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           )}
 
