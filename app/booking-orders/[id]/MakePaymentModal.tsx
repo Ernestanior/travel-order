@@ -257,9 +257,9 @@ export default function MakePaymentModal({
                   onChange={(e) => setFormData({ ...formData, paymentFor: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 >
-                  <option value="Full Payment">1. Full Payment</option>
-                  <option value="Deposit">2. Deposit</option>
-                  <option value="Balance">3. Balance</option>
+                  <option value="Full Payment">Full Payment</option>
+                  <option value="Deposit">Deposit</option>
+                  <option value="Balance">Balance</option>
                 </select>
               </div>
             </div>
