@@ -26,18 +26,35 @@ export default function MakePaymentModal({
   onPaymentAdded
 }: MakePaymentModalProps) {
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingReceiptNo, setIsLoadingReceiptNo] = useState(false)
   const [formData, setFormData] = useState({
     receiptNo: '',
     receiptDate: new Date().toISOString().split('T')[0],
     receiveFrom: customerName,
     paymentOf: tour,
     paymentType: 'Cash',
-    paymentFor: '',
+    paymentFor: 'Full Payment',
     chequeNo: '',
     visaNo: '',
     amountPaid: '',
     discount: '0'
   })
+  
+  // 获取下一个 Receipt No
+  const fetchNextReceiptNo = async () => {
+    setIsLoadingReceiptNo(true)
+    try {
+      const response = await fetch('/api/payments/next-receipt-no')
+      if (response.ok) {
+        const data = await response.json()
+        setFormData(prev => ({ ...prev, receiptNo: data.nextReceiptNo }))
+      }
+    } catch (error) {
+      console.error('Error fetching next receipt no:', error)
+    } finally {
+      setIsLoadingReceiptNo(false)
+    }
+  }
   
   // 重置表单当模态框打开时
   useEffect(() => {
@@ -48,12 +65,14 @@ export default function MakePaymentModal({
         receiveFrom: customerName,
         paymentOf: tour,
         paymentType: 'Cash',
-        paymentFor: '',
+        paymentFor: 'Full Payment',
         chequeNo: '',
         visaNo: '',
         amountPaid: '',
         discount: '0'
       })
+      // 自动获取下一个 Receipt No
+      fetchNextReceiptNo()
     }
   }, [isOpen, customerName, tour])
   
@@ -147,17 +166,18 @@ export default function MakePaymentModal({
             </div>
           </div>
           
-          {/* Receipt # */}
+          {/* Receipt # - Auto generated */}
           <div className="grid grid-cols-3 gap-4 items-center">
             <label className="text-sm font-medium text-gray-700">Receipt #:</label>
             <div className="col-span-2">
               <input
                 type="text"
                 value={formData.receiptNo}
-                onChange={(e) => setFormData({ ...formData, receiptNo: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                placeholder="Enter receipt number"
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm font-medium"
+                placeholder={isLoadingReceiptNo ? 'Loading...' : 'Auto-generated'}
               />
+              <p className="text-xs text-gray-500 mt-1">Automatically generated in sequence</p>
             </div>
           </div>
           
@@ -200,16 +220,17 @@ export default function MakePaymentModal({
             </div>
           </div>
           
-          {/* Payment of */}
+          {/* Payment of - From tour information (Read only) */}
           <div className="grid grid-cols-3 gap-4 items-center">
             <label className="text-sm font-medium text-gray-700">Payment of:</label>
             <div className="col-span-2">
               <input
                 type="text"
                 value={formData.paymentOf}
-                onChange={(e) => setFormData({ ...formData, paymentOf: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm"
               />
+              <p className="text-xs text-gray-500 mt-1">Copied from tour information</p>
             </div>
           </div>
           
@@ -231,13 +252,15 @@ export default function MakePaymentModal({
               
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">For:</label>
-                <input
-                  type="text"
+                <select
                   value={formData.paymentFor}
                   onChange={(e) => setFormData({ ...formData, paymentFor: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
-                  placeholder="Purpose"
-                />
+                >
+                  <option value="Full Payment">1. Full Payment</option>
+                  <option value="Deposit">2. Deposit</option>
+                  <option value="Balance">3. Balance</option>
+                </select>
               </div>
             </div>
           </div>
