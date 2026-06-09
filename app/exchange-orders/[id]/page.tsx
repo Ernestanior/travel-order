@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, FileDown } from 'lucide-react'
 import { notification } from 'antd'
+import { generateExchangeInvoicePDF } from '@/lib/pdfGenerator'
 
 interface Item {
   item: string
@@ -180,6 +181,39 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
     }
   }
 
+  const handleExportPDF = () => {
+    if (!order) return
+    
+    generateExchangeInvoicePDF({
+      exchangeNumber: order.exchangeNumber,
+      bookingNumber: order.bookingNumber,
+      date: order.exchangeDate,
+      supplier: order.supplier,
+      customer: order.customer,
+      tourCode: order.tourCode,
+      tour: order.tour,
+      departureDate: order.departureDate,
+      departureTime: order.departureTime,
+      departureFlight: order.departureFlight,
+      departureDest: order.departureDest,
+      arrivalDate: order.arrivalDate,
+      arrivalTime: order.arrivalTime,
+      arrivalFlight: order.arrivalFlight,
+      arrivalDest: order.arrivalDest,
+      items: order.items,
+      totalPrice: order.totalCost,
+      discount: 0, // Exchange orders don't have discount field
+      payment: order.paid,
+      balance: order.outstanding
+    })
+    
+    notification.success({
+      message: 'Success',
+      description: 'Invoice PDF generated successfully',
+      placement: 'topRight',
+    })
+  }
+
   const addItem = () => {
     setEditItems([...editItems, { item: '', quantity: 1, unitPrice: 0, price: 0 }])
   }
@@ -269,6 +303,11 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                     className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                     <Edit2 className="w-4 h-4" />
                     Edit
+                  </button>
+                  <button onClick={handleExportPDF}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <FileDown className="w-4 h-4" />
+                    Export PDF
                   </button>
                   <button onClick={() => setShowDeleteConfirm(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Search, X, Receipt, Printer } from 'lucide-react'
+import { ArrowLeft, Search, X, Receipt, Printer, FileDown } from 'lucide-react'
+import { generateReceiptPDF } from '@/lib/pdfGenerator'
 
 interface ReceiptData {
   id: number
@@ -10,7 +11,7 @@ interface ReceiptData {
   bookingNumber: string
   receiptDate: string
   paymentType: string
-  for: string
+  'for': string
   chequeNo: string
   visaNo: string
   amountPaid: number
@@ -147,6 +148,23 @@ export default function ReceiptsPage() {
       // TODO: 可以改进为直接跳转到对应的booking详情页
       window.location.href = `/booking-orders`
     }
+  }
+
+  const handleExportReceipt = (receipt: ReceiptData, e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止行点击事件
+    
+    generateReceiptPDF({
+      receiptNo: receipt.receiptNo,
+      bookingNumber: receipt.bookingNumber,
+      date: receipt.receiptDate,
+      customer: receipt.customer,
+      paymentType: receipt.paymentType,
+      'for': receipt['for'],
+      amount: receipt.amountPaid,
+      chequeNo: receipt.chequeNo,
+      visaNo: receipt.visaNo,
+      paidText: receipt.paidText
+    })
   }
 
   return (
@@ -328,12 +346,15 @@ export default function ReceiptsPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Cheque / Visa No
                   </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                         <span className="ml-3">Loading receipts...</span>
@@ -342,7 +363,7 @@ export default function ReceiptsPage() {
                   </tr>
                 ) : receipts.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                       <Receipt className="w-10 h-10 mx-auto mb-2 text-gray-300" />
                       <p className="text-sm">No receipts found matching your search criteria</p>
                     </td>
@@ -351,8 +372,7 @@ export default function ReceiptsPage() {
                   receipts.map((receipt) => (
                     <tr
                       key={receipt.id}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => handleViewReceipt(receipt.bookingNumber, receipt.id)}
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                         {receipt.receiptNo}
@@ -370,13 +390,22 @@ export default function ReceiptsPage() {
                         {receipt.paymentType}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {receipt.for}
+                        {receipt['for']}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                         ${receipt.amountPaid.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                         {receipt.chequeNo || receipt.visaNo || '-'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <button
+                          onClick={(e) => handleExportReceipt(receipt, e)}
+                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition-colors"
+                        >
+                          <FileDown className="w-3 h-3" />
+                          PDF
+                        </button>
                       </td>
                     </tr>
                   ))

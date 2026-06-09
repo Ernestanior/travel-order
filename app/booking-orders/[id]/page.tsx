@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign, Calculator } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign, Calculator, FileDown } from 'lucide-react'
 import { notification } from 'antd'
 import MakePaymentModal from './MakePaymentModal'
 import AccountModal from './AccountModal'
+import { generateBookingInvoicePDF } from '@/lib/pdfGenerator'
 
 interface Item {
   item: string
@@ -222,6 +223,49 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     }
   }
 
+  const handleExportPDF = () => {
+    if (!order) return
+    
+    generateBookingInvoicePDF({
+      bookingNumber: order.bookingNumber,
+      date: order.bookingDate,
+      customerName: order.customerName,
+      address: order.address,
+      tel: order.tel,
+      tourCode: order.tourCode,
+      tour: order.tour,
+      departureDate: order.departureDate,
+      departureTime: order.departureTime,
+      departureFlight: order.departureFlight,
+      departureDest: order.departureDest,
+      departureDate2: order.departureDate2,
+      departureTime2: order.departureTime2,
+      departureFlight2: order.departureFlight2,
+      departureDest2: order.departureDest2,
+      arrivalDate: order.arrivalDate,
+      arrivalTime: order.arrivalTime,
+      arrivalFlight: order.arrivalFlight,
+      arrivalDest: order.arrivalDest,
+      arrivalDate2: order.arrivalDate2,
+      arrivalTime2: order.arrivalTime2,
+      arrivalFlight2: order.arrivalFlight2,
+      arrivalDest2: order.arrivalDest2,
+      staff: order.staff,
+      items: order.items,
+      passengers: order.passengers,
+      totalPrice: order.totalCost,
+      discount: order.discount,
+      payment: order.paid,
+      balance: order.outstanding
+    })
+    
+    notification.success({
+      message: 'Success',
+      description: 'Invoice PDF generated successfully',
+      placement: 'topRight',
+    })
+  }
+
   // Items 管理
   const addItem = () => {
     setEditItems([...editItems, { item: '', quantity: 1, unitPrice: 0, price: 0 }])
@@ -328,6 +372,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                     className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                     <Edit2 className="w-4 h-4" />
                     Edit
+                  </button>
+                  <button onClick={handleExportPDF}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <FileDown className="w-4 h-4" />
+                    Export PDF
                   </button>
                   <button onClick={() => setShowAccountModal(true)}
                     className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">

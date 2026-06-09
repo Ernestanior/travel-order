@@ -45,7 +45,16 @@ export async function GET(request: Request) {
 
     // 筛选类型参数
     if (searchType === 'date' && departureDate) {
-      where.deptdate = new Date(departureDate)
+      // 使用日期范围匹配，从当天00:00:00到23:59:59
+      const startOfDay = new Date(departureDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(departureDate)
+      endOfDay.setHours(23, 59, 59, 999)
+      
+      where.deptdate = {
+        gte: startOfDay,
+        lte: endOfDay
+      }
     } else if (searchType === 'outstanding' && outstandingBeforeDate) {
       where.deptdate = {
         lte: new Date(outstandingBeforeDate)
