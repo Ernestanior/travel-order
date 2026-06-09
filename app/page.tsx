@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { FileText, RefreshCw, Users, Building2, Search, BarChart3 } from 'lucide-react'
+import { FileText, RefreshCw, Users, Building2, Search, BarChart3, Receipt } from 'lucide-react'
 
 export default function HomePage() {
   const [stats, setStats] = useState({
@@ -131,6 +131,23 @@ export default function HomePage() {
                 <h2 className="text-base font-semibold text-gray-900 mb-1">Supplier</h2>
                 <p className="text-sm text-gray-500 leading-relaxed">
                   供应商（航空公司）信息管理
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/receipts"
+            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-start mb-3">
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
+                <Receipt className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 mb-1">Payment Receipts</h2>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  查看和打印所有付款收据
                 </p>
               </div>
             </div>

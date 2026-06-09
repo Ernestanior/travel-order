@@ -42,7 +42,6 @@ export async function GET(
       customerName: booking.customer,
       address: booking.customerData?.address || '',
       tel: booking.customerData?.tel || '',
-      discount: Number(booking.discount),
       staff: booking.staff || '',
       tourCode: booking.tourcode || '',
       tour: booking.tour || '',
