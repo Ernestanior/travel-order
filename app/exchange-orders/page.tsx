@@ -24,6 +24,9 @@ interface ExchangeOrder {
 
 export default function ExchangeOrdersPage() {
   const [supplierSearch, setSupplierSearch] = useState('')
+  const [orderNumberSearch, setOrderNumberSearch] = useState('')
+  const [dateFromSearch, setDateFromSearch] = useState('')
+  const [dateToSearch, setDateToSearch] = useState('')
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [exchangeOrders, setExchangeOrders] = useState<ExchangeOrder[]>([])
@@ -34,7 +37,7 @@ export default function ExchangeOrdersPage() {
   // 当搜索条件变化时重置到第一页
   useEffect(() => {
     setCurrentPage(1)
-  }, [supplierSearch])
+  }, [supplierSearch, orderNumberSearch, dateFromSearch, dateToSearch])
 
   // 当页码变化时加载数据
   useEffect(() => {
@@ -46,6 +49,9 @@ export default function ExchangeOrdersPage() {
     try {
       const params = new URLSearchParams()
       if (supplierSearch) params.set('supplier', supplierSearch)
+      if (orderNumberSearch) params.set('orderNumber', orderNumberSearch)
+      if (dateFromSearch) params.set('dateFrom', dateFromSearch)
+      if (dateToSearch) params.set('dateTo', dateToSearch)
       params.set('page', currentPage.toString())
       params.set('limit', itemsPerPage.toString())
 
@@ -150,53 +156,111 @@ export default function ExchangeOrdersPage() {
         <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5">
           <h3 className="text-sm font-medium text-gray-900 mb-4">Exchange Inquiry (Supplier)</h3>
 
-          <div className="relative">
+          <div className="space-y-4">
+            {/* Supplier 搜索 */}
+            <div className="relative">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 w-32">Supplier:</label>
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={supplierSearch}
+                    onChange={(e) => {
+                      setSupplierSearch(e.target.value)
+                      setShowSupplierDropdown(true)
+                    }}
+                    onFocus={() => setShowSupplierDropdown(true)}
+                    placeholder="Type supplier name..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                  />
+                  {supplierSearch && (
+                    <button
+                      onClick={() => {
+                        setSupplierSearch('')
+                        setShowSupplierDropdown(false)
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* 供应商下拉列表 */}
+                  {showSupplierDropdown && matchedSuppliers.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                      {matchedSuppliers.map((supplier) => (
+                        <button
+                          key={supplier.id}
+                          onClick={() => handleSupplierSelect(supplier.name)}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-purple-50 transition-colors"
+                        >
+                          {supplier.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Exchange # / Booking # 搜索 */}
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 w-24">Supplier:</label>
+              <label className="text-sm font-medium text-gray-700 w-32">Exchange # / Booking #:</label>
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  value={supplierSearch}
-                  onChange={(e) => {
-                    setSupplierSearch(e.target.value)
-                    setShowSupplierDropdown(true)
-                  }}
-                  onFocus={() => setShowSupplierDropdown(true)}
-                  placeholder="Type supplier name..."
+                  value={orderNumberSearch}
+                  onChange={(e) => setOrderNumberSearch(e.target.value)}
+                  placeholder="Type exchange or booking number..."
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 />
-                {supplierSearch && (
+                {orderNumberSearch && (
                   <button
-                    onClick={() => {
-                      setSupplierSearch('')
-                      setShowSupplierDropdown(false)
-                    }}
+                    onClick={() => setOrderNumberSearch('')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 )}
-                
-                {/* 供应商下拉列表 */}
-                {showSupplierDropdown && matchedSuppliers.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                    {matchedSuppliers.map((supplier) => (
-                      <button
-                        key={supplier.id}
-                        onClick={() => handleSupplierSelect(supplier.name)}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-purple-50 transition-colors"
-                      >
-                        {supplier.name}
-                      </button>
-                    ))}
-                  </div>
+              </div>
+            </div>
+
+            {/* Date Range 搜索 */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700 w-32">Departure Date:</label>
+              <div className="flex-1 flex items-center gap-2">
+                <input
+                  type="date"
+                  value={dateFromSearch}
+                  onChange={(e) => setDateFromSearch(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                  placeholder="From"
+                />
+                <span className="text-gray-500 text-sm">to</span>
+                <input
+                  type="date"
+                  value={dateToSearch}
+                  onChange={(e) => setDateToSearch(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                  placeholder="To"
+                />
+                {(dateFromSearch || dateToSearch) && (
+                  <button
+                    onClick={() => {
+                      setDateFromSearch('')
+                      setDateToSearch('')
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
               </div>
             </div>
           </div>
 
           {/* 显示筛选结果统计 */}
-          {supplierSearch && (
+          {(supplierSearch || orderNumberSearch || dateFromSearch || dateToSearch) && (
             <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
               {loading ? 'Loading...' : (
                 <>Found <span className="font-semibold text-gray-900">{totalRecords}</span> exchange order(s) • Showing page {currentPage} of {totalPages}</>

@@ -15,6 +15,9 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const supplier = searchParams.get('supplier')
+    const orderNumber = searchParams.get('orderNumber')
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
     
     // 分页参数
     const page = parseInt(searchParams.get('page') || '1')
@@ -27,6 +30,38 @@ export async function GET(request: Request) {
       where.supplier = {
         contains: supplier,
         mode: 'insensitive'
+      }
+    }
+
+    // Exchange # 或 Booking # 搜索
+    if (orderNumber) {
+      where.OR = [
+        {
+          exchangeno: {
+            contains: orderNumber,
+            mode: 'insensitive'
+          }
+        },
+        {
+          bookno: {
+            contains: orderNumber,
+            mode: 'insensitive'
+          }
+        }
+      ]
+    }
+
+    // 日期范围搜索
+    if (dateFrom || dateTo) {
+      where.deptdate = {}
+      if (dateFrom) {
+        where.deptdate.gte = new Date(dateFrom)
+      }
+      if (dateTo) {
+        // 包含结束日期的全天
+        const endDate = new Date(dateTo)
+        endDate.setHours(23, 59, 59, 999)
+        where.deptdate.lte = endDate
       }
     }
 
