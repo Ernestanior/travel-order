@@ -74,20 +74,24 @@ export default function NewExchangeOrderPage() {
     try {
       const params = new URLSearchParams()
       params.set('searchType', 'all')
-      params.set('limit', '20')
-      if (bookingSearch) {
-        // 尝试按客户名或订单号搜索
-        params.set('customer', bookingSearch)
-      }
+      params.set('limit', '50')
+      
+      // 同时按booking number和customer搜索
+      // API会返回匹配任一条件的结果
+      params.set('bookingNumber', bookingSearch)
+      params.set('customer', bookingSearch)
       
       const response = await fetch(`/api/booking-orders?${params}`)
       const result = await response.json()
       
       if (result.data && Array.isArray(result.data)) {
         setBookingOrders(result.data)
+      } else {
+        setBookingOrders([])
       }
     } catch (error) {
       console.error('Error loading bookings:', error)
+      setBookingOrders([])
     } finally {
       setLoadingBookings(false)
     }

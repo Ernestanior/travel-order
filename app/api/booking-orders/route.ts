@@ -29,17 +29,36 @@ export async function GET(request: Request) {
     let where: any = {}
 
     // 直接搜索参数（优先级更高）
-    if (bookingNumber) {
-      where.bookno = {
-        contains: bookingNumber,
-        mode: 'insensitive'
+    // 如果同时提供了bookingNumber和customer（用于exchange order创建时搜索），使用OR逻辑
+    if (bookingNumber && customer) {
+      where.OR = [
+        {
+          bookno: {
+            contains: bookingNumber,
+            mode: 'insensitive'
+          }
+        },
+        {
+          customer: {
+            contains: customer,
+            mode: 'insensitive'
+          }
+        }
+      ]
+    } else {
+      // 单独搜索参数
+      if (bookingNumber) {
+        where.bookno = {
+          contains: bookingNumber,
+          mode: 'insensitive'
+        }
       }
-    }
 
-    if (customer && searchType !== 'customer') {
-      where.customer = {
-        contains: customer,
-        mode: 'insensitive'
+      if (customer && searchType !== 'customer') {
+        where.customer = {
+          contains: customer,
+          mode: 'insensitive'
+        }
       }
     }
 
