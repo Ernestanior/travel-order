@@ -112,7 +112,8 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           // Calculate paid amount
           const totalPaid = data.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
           data.paid = totalPaid
-          data.outstanding = data.totalCost - totalPaid
+          // outstanding应该是扣除discount后的金额减去已付款
+          data.outstanding = (data.totalCost - (data.discount || 0)) - totalPaid
         }
         
         setOrder(data)
