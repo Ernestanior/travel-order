@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus, FileDown } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, FileDown, DollarSign } from 'lucide-react'
 import { notification } from 'antd'
 import { generateExchangeInvoicePDF } from '@/lib/pdfGenerator'
+import MakePaymentModal from './MakePaymentModal'
 
 interface Item {
   item: string
@@ -63,6 +64,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   
   const [formData, setFormData] = useState<Partial<ExchangeOrder>>({})
   const [editItems, setEditItems] = useState<Item[]>([])
@@ -309,6 +311,11 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                     <FileDown className="w-4 h-4" />
                     Export PDF
                   </button>
+                  <button onClick={() => setShowPaymentModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    Make Payment
+                  </button>
                   <button onClick={() => setShowDeleteConfirm(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                     <Trash2 className="w-4 h-4" />
@@ -546,6 +553,17 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
             )}
           </div>
         </div>
+
+        {/* Make Payment Modal */}
+        <MakePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          exchangeId={order.id}
+          exchangeNumber={order.exchangeNumber}
+          supplier={order.supplier}
+          totalAmount={order.totalCost}
+          onPaymentAdded={loadOrder}
+        />
       </div>
     </div>
   )
