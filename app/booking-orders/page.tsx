@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { mockCustomers } from '@/lib/mockData'
-import { ArrowLeft, FileText, Plus, Search, Filter, X } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Search, Filter, X, Download } from 'lucide-react'
+import { generateOutstandingReportPDF } from '@/lib/pdfGenerator'
 
 interface BookingOrder {
   id: number
@@ -17,6 +18,7 @@ interface BookingOrder {
   outstanding: number
   status: string
   tour: string
+  staff: string
   passengers: { name: string; passport: string }[]
   passengerNames: string
 }
@@ -117,6 +119,46 @@ export default function BookingOrdersPage() {
     setTimeout(() => {
       loadOrders()
     }, 0)
+  }
+
+  // 导出PDF
+  const handleExportOutstandingPDF = async () => {
+    if (!outstandingBeforeDate) {
+      alert('Please select a date first')
+      return
+    }
+
+    try {
+      // 获取所有outstanding数据（不分页）
+      const params = new URLSearchParams()
+      params.set('searchType', 'outstanding')
+      params.set('outstandingBeforeDate', outstandingBeforeDate)
+      params.set('limit', '1000') // 获取所有记录
+      
+      const response = await fetch(`/api/booking-orders?${params}`)
+      const result = await response.json()
+      
+      const orders = result.data || result || []
+      
+      // 准备PDF数据
+      const pdfData = {
+        beforeDate: outstandingBeforeDate,
+        orders: orders.map((order: BookingOrder) => ({
+          bookingNumber: order.bookingNumber,
+          date: order.date,
+          customer: order.customerName,
+          staff: order.staff || '-',
+          outstandingAmount: order.outstanding
+        })),
+        totalOutstanding: orders.reduce((sum: number, order: BookingOrder) => sum + order.outstanding, 0)
+      }
+      
+      // 生成PDF
+      await generateOutstandingReportPDF(pdfData)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Failed to export PDF')
+    }
   }
 
   const filteredOrders = bookingOrders
@@ -349,25 +391,38 @@ export default function BookingOrdersPage() {
           )}
 
           {searchType === 'outstanding' && (
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 w-32">Before Date:</label>
-              <input
-                type="date"
-                value={outstandingBeforeDate}
-                onChange={(e) => setOutstandingBeforeDate(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
-              />
-              {outstandingBeforeDate && (
-                <button
-                  onClick={() => setOutstandingBeforeDate('')}
-                  className="p-2 text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-              <span className="text-xs text-gray-500 ml-2">
-                (Shows unpaid orders departing before this date)
-              </span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 w-32">Before Date:</label>
+                <input
+                  type="date"
+                  value={outstandingBeforeDate}
+                  onChange={(e) => setOutstandingBeforeDate(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+                {outstandingBeforeDate && (
+                  <button
+                    onClick={() => setOutstandingBeforeDate('')}
+                    className="p-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">
+                  (Shows unpaid orders departing before this date)
+                </span>
+                {outstandingBeforeDate && bookingOrders.length > 0 && (
+                  <button
+                    onClick={handleExportOutstandingPDF}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export PDF with Summary Total
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

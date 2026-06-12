@@ -16,6 +16,7 @@ export async function GET(
       include: {
         items: true,
         payments: true,
+        supplierData: true,
         bookingData: {
           select: {
             bookno: true,
@@ -43,6 +44,8 @@ export async function GET(
       bookingNumber: exchange.bookno,
       exchangeDate: exchange.exchangedate?.toISOString().split('T')[0] || '',
       supplier: exchange.supplier,
+      supplierAddress: exchange.supplierData?.address || '',
+      supplierTel: exchange.supplierData?.tel || '',
       status: exchange.status || 'Open',
       
       // Customer info
@@ -122,6 +125,22 @@ export async function PUT(
     
     if (!existingExchange) {
       return NextResponse.json({ error: 'Exchange order not found' }, { status: 404 })
+    }
+    
+    // 先更新或创建 Supplier 记录（如果提供了 tel 或 address）
+    if (body.supplier && (body.supplierTel || body.supplierAddress)) {
+      await prisma.supplier.upsert({
+        where: { supplier: body.supplier },
+        update: {
+          address: body.supplierAddress || null,
+          tel: body.supplierTel || null,
+        },
+        create: {
+          supplier: body.supplier,
+          address: body.supplierAddress || null,
+          tel: body.supplierTel || null,
+        }
+      })
     }
     
     // 更新主订单信息

@@ -99,6 +99,8 @@ export async function GET(request: Request) {
           arrvdate: true,
           status: true,
           tour: true,
+          staff: true,
+          discount: true,  // 添加discount字段
           // 只选择需要的字段以减少数据传输
           passengers: {
             select: {
@@ -129,10 +131,11 @@ export async function GET(request: Request) {
       const totalCost = booking.items.reduce((sum, item) => 
         sum + Number(item.price || 0), 0
       )
+      const discount = Number(booking.discount || 0)
       const paid = booking.payments.reduce((sum, payment) => 
         sum + Number(payment.amountpaid || 0), 0
       )
-      const outstanding = totalCost - paid
+      const outstanding = (totalCost - discount) - paid
 
       return {
         id: booking.id,
@@ -147,6 +150,7 @@ export async function GET(request: Request) {
         outstanding,
         status: booking.status || 'Open',
         tour: booking.tour || '',
+        staff: booking.staff || '',
         passengers: booking.passengers.map(p => ({
           name: p.paxname,
           passport: p.passport || ''

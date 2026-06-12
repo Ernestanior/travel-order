@@ -25,6 +25,7 @@ interface Passenger {
   name: string
   passport: string
   birthdate: string
+  passportExpiryDate: string
 }
 
 export default function NewBookingOrderPage() {
@@ -134,7 +135,7 @@ export default function NewBookingOrderPage() {
   
   // Passengers 管理
   const addPassenger = () => {
-    setPassengers([...passengers, { name: '', passport: '', birthdate: '' }])
+    setPassengers([...passengers, { name: '', passport: '', birthdate: '', passportExpiryDate: '' }])
   }
   
   const updatePassenger = (index: number, field: keyof Passenger, value: string) => {
@@ -724,7 +725,7 @@ export default function NewBookingOrderPage() {
                   {passengers.map((passenger, index) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-3">
                       <div className="grid grid-cols-12 gap-2 items-start">
-                        <div className="col-span-5">
+                        <div className="col-span-4">
                           <label className="block text-xs font-medium text-gray-600 mb-1">
                             Name <span className="text-red-500">*</span>
                           </label>
@@ -737,9 +738,9 @@ export default function NewBookingOrderPage() {
                             required
                           />
                         </div>
-                        <div className="col-span-3">
+                        <div className="col-span-2">
                           <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Passport (Optional)
+                            Passport
                           </label>
                           <input
                             type="text"
@@ -749,14 +750,25 @@ export default function NewBookingOrderPage() {
                             placeholder="Passport #"
                           />
                         </div>
-                        <div className="col-span-3">
+                        <div className="col-span-2">
                           <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Birth Date (Optional)
+                            Birth Date
                           </label>
                           <input
                             type="date"
                             value={passenger.birthdate}
                             onChange={(e) => updatePassenger(index, 'birthdate', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Passport Expiry Date
+                          </label>
+                          <input
+                            type="date"
+                            value={passenger.passportExpiryDate}
+                            onChange={(e) => updatePassenger(index, 'passportExpiryDate', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                           />
                         </div>

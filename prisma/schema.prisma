@@ -143,12 +143,13 @@ model ExchangeItemData {
 }
 
 model PassengerData {
-  bookno     String       @db.VarChar(50)
-  paxname    String       @db.VarChar(50)
-  passport   String?      @db.VarChar(50)
-  birthdate  DateTime?    @db.Date
-  exchangeno String?      @db.VarChar(50)
-  booking    BookingData? @relation(fields: [bookno], references: [bookno])
+  bookno              String       @db.VarChar(50)
+  paxname             String       @db.VarChar(50)
+  passport            String?      @db.VarChar(50)
+  birthdate           DateTime?    @db.Date
+  passport_expiry_date DateTime?   @db.Date
+  exchangeno          String?      @db.VarChar(50)
+  booking             BookingData? @relation(fields: [bookno], references: [bookno])
 
   @@id([bookno, paxname])
   @@map("passenger_data")

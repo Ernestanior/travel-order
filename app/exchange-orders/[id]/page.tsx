@@ -29,6 +29,8 @@ interface ExchangeOrder {
   bookingNumber: string
   exchangeDate: string
   supplier: string
+  supplierAddress: string
+  supplierTel: string
   status: string
   customer: string
   departureDate: string
@@ -183,10 +185,10 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
     }
   }
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!order) return
     
-    generateExchangeInvoicePDF({
+    await generateExchangeInvoicePDF({
       exchangeNumber: order.exchangeNumber,
       bookingNumber: order.bookingNumber,
       date: order.exchangeDate,
@@ -375,6 +377,28 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                   ) : (
                     <p className="text-sm text-gray-900">{order.supplier}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Address</label>
+                  {isEditing ? (
+                    <textarea value={displayData.supplierAddress || ''} rows={2}
+                      onChange={(e) => setFormData({ ...formData, supplierAddress: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.supplierAddress || '-'}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Tel</label>
+                  {isEditing ? (
+                    <input type="text" value={displayData.supplierTel || ''}
+                      onChange={(e) => setFormData({ ...formData, supplierTel: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.supplierTel || '-'}</p>
                   )}
                 </div>
                 

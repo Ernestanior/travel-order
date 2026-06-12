@@ -79,7 +79,8 @@ export async function GET(
       passengers: booking.passengers.map(p => ({
         name: p.paxname,
         passport: p.passport || '',
-        birthdate: p.birthdate?.toISOString().split('T')[0] || ''
+        birthdate: p.birthdate?.toISOString().split('T')[0] || '',
+        passportExpiryDate: p.passport_expiry_date?.toISOString().split('T')[0] || ''
       })),
       
       items: booking.items.map(item => ({
@@ -130,6 +131,22 @@ export async function PUT(
     
     if (!existingBooking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+    
+    // 先更新或创建 Customer 记录（如果提供了 address 或 tel）
+    if (body.customerName && body.tel) {
+      await prisma.customer.upsert({
+        where: { customer: body.customerName },
+        update: {
+          address: body.address || null,
+          tel: body.tel,
+        },
+        create: {
+          customer: body.customerName,
+          address: body.address || null,
+          tel: body.tel,
+        }
+      })
     }
     
     // 更新主订单信息
@@ -198,7 +215,8 @@ export async function PUT(
             bookno: existingBooking.bookno,
             paxname: p.name,
             passport: p.passport || null,
-            birthdate: p.birthdate ? new Date(p.birthdate) : null
+            birthdate: p.birthdate ? new Date(p.birthdate) : null,
+            passport_expiry_date: p.passportExpiryDate ? new Date(p.passportExpiryDate) : null
           }))
         })
       }

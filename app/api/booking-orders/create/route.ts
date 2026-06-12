@@ -121,7 +121,8 @@ export async function POST(request: Request) {
           bookno: newBookingNumber,
           paxname: p.name,
           passport: p.passport || null,
-          birthdate: p.birthdate ? new Date(p.birthdate) : null
+          birthdate: p.birthdate ? new Date(p.birthdate) : null,
+          passport_expiry_date: p.passportExpiryDate ? new Date(p.passportExpiryDate) : null
         }))
       })
     }

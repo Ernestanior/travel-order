@@ -150,10 +150,10 @@ export default function ReceiptsPage() {
     }
   }
 
-  const handleExportReceipt = (receipt: ReceiptData, e: React.MouseEvent) => {
+  const handleExportReceipt = async (receipt: ReceiptData, e: React.MouseEvent) => {
     e.stopPropagation() // 阻止行点击事件
     
-    generateReceiptPDF({
+    await generateReceiptPDF({
       receiptNo: receipt.receiptNo,
       bookingNumber: receipt.bookingNumber,
       date: receipt.receiptDate,

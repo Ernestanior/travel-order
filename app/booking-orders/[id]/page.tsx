@@ -20,6 +20,7 @@ interface Passenger {
   name: string
   passport: string
   birthdate: string
+  passportExpiryDate: string
 }
 
 interface Payment {
@@ -78,6 +79,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
+  const [includeTerms, setIncludeTerms] = useState(false)
   
   // 编辑状态的表单数据
   const [formData, setFormData] = useState<Partial<BookingOrder>>({})
@@ -224,10 +226,10 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     }
   }
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!order) return
     
-    generateBookingInvoicePDF({
+    await generateBookingInvoicePDF({
       bookingNumber: order.bookingNumber,
       date: order.bookingDate,
       customerName: order.customerName,
@@ -252,6 +254,8 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       arrivalFlight2: order.arrivalFlight2,
       arrivalDest2: order.arrivalDest2,
       staff: order.staff,
+      special: order.special,
+      includeTerms: includeTerms,
       items: order.items,
       passengers: order.passengers,
       totalPrice: order.totalCost,
@@ -287,7 +291,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
 
   // Passengers 管理
   const addPassenger = () => {
-    setEditPassengers([...editPassengers, { name: '', passport: '', birthdate: '' }])
+    setEditPassengers([...editPassengers, { name: '', passport: '', birthdate: '', passportExpiryDate: '' }])
   }
 
   const updatePassenger = (index: number, field: keyof Passenger, value: string) => {
@@ -348,54 +352,69 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 text-sm font-medium rounded ${
-                order.status === 'Close' ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
-              }`}>
-                {order.status}
-              </span>
-              
-              {isEditing ? (
-                <>
-                  <button onClick={handleSave} disabled={isSaving}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <Save className="w-4 h-4" />
-                    {isSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button onClick={handleCancelEdit}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={handleEdit}
-                    className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <Edit2 className="w-4 h-4" />
-                    Edit
-                  </button>
-                  <button onClick={handleExportPDF}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <FileDown className="w-4 h-4" />
-                    Export PDF
-                  </button>
-                  <button onClick={() => setShowAccountModal(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <Calculator className="w-4 h-4" />
-                    Account
-                  </button>
-                  <button onClick={() => setShowPaymentModal(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <DollarSign className="w-4 h-4" />
-                    Make Payment
-                  </button>
-                  <button onClick={() => setShowDeleteConfirm(true)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                </>
+            <div className="flex flex-col items-end gap-3">
+              {/* Terms & Conditions Toggle */}
+              {!isEditing && (
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeTerms}
+                    onChange={(e) => setIncludeTerms(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span>Include Terms & Conditions in PDF</span>
+                </label>
               )}
+              
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 text-sm font-medium rounded ${
+                  order.status === 'Close' ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'
+                }`}>
+                  {order.status}
+                </span>
+                
+                {isEditing ? (
+                  <>
+                    <button onClick={handleSave} disabled={isSaving}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <Save className="w-4 h-4" />
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={handleCancelEdit}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={handleEdit}
+                      className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button onClick={handleExportPDF}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <FileDown className="w-4 h-4" />
+                      Export PDF
+                    </button>
+                    <button onClick={() => setShowAccountModal(true)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <Calculator className="w-4 h-4" />
+                      Account
+                    </button>
+                    <button onClick={() => setShowPaymentModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      Make Payment
+                    </button>
+                    <button onClick={() => setShowDeleteConfirm(true)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -761,22 +780,28 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                     <div key={index} className={isEditing ? "border border-gray-200 rounded-lg p-3" : "py-2 border-b border-gray-100 last:border-0"}>
                       {isEditing ? (
                         <div className="grid grid-cols-12 gap-2 items-start">
-                          <div className="col-span-5">
+                          <div className="col-span-4">
                             <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
                             <input type="text" value={passenger.name} placeholder="Passenger name"
                               onChange={(e) => updatePassenger(index, 'name', e.target.value)}
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                           </div>
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                             <label className="block text-xs font-medium text-gray-600 mb-1">Passport</label>
                             <input type="text" value={passenger.passport || ''} placeholder="Passport #"
                               onChange={(e) => updatePassenger(index, 'passport', e.target.value)}
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                           </div>
-                          <div className="col-span-3">
+                          <div className="col-span-2">
                             <label className="block text-xs font-medium text-gray-600 mb-1">Birth Date</label>
                             <input type="date" value={passenger.birthdate || ''}
                               onChange={(e) => updatePassenger(index, 'birthdate', e.target.value)}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          </div>
+                          <div className="col-span-3">
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Passport Expiry</label>
+                            <input type="date" value={passenger.passportExpiryDate || ''}
+                              onChange={(e) => updatePassenger(index, 'passportExpiryDate', e.target.value)}
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                           </div>
                           <div className="col-span-1 flex items-end">
@@ -788,11 +813,13 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                       ) : (
                         <div>
                           <p className="text-sm font-medium text-gray-900">{passenger.name}</p>
-                          {(passenger.passport || passenger.birthdate) && (
+                          {(passenger.passport || passenger.birthdate || passenger.passportExpiryDate) && (
                             <p className="text-xs text-gray-500 mt-1">
                               {passenger.passport && `Passport: ${passenger.passport}`}
-                              {passenger.passport && passenger.birthdate && ' • '}
+                              {passenger.passport && (passenger.birthdate || passenger.passportExpiryDate) && ' • '}
                               {passenger.birthdate && `DOB: ${passenger.birthdate}`}
+                              {passenger.birthdate && passenger.passportExpiryDate && ' • '}
+                              {passenger.passportExpiryDate && `Expiry: ${passenger.passportExpiryDate}`}
                             </p>
                           )}
                         </div>
