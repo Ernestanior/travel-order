@@ -400,107 +400,149 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     // 添加新页面用于 Terms & Conditions
     doc.addPage()
     
-    // 尝试加载Terms & Conditions图片
-    const termsImage = await loadTermsImageAsBase64()
+    let tcY = 15
+    const leftMargin = 15
+    const rightMargin = 195
+    const col1Width = 65
+    const col2Width = 60
+    const col3Width = 55
     
-    if (termsImage) {
-      // 使用图片 - 完美显示中文
-      // A4 size: 210mm x 297mm
-      doc.addImage(termsImage, 'JPEG', 0, 0, 210, 297)
-    } else {
-      // 如果图片加载失败，显示英文版本作为后备
-      let tcY = 20
-      
-      // 标题
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
-      doc.text('TERMS & CONDITIONS', 105, tcY, { align: 'center' })
-      
-      tcY += 15
-      
-      // Travel Documents 部分
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.text('TRAVEL DOCUMENTS', 15, tcY)
-      
-      tcY += 5
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'normal')
-      
-      const travelDocsText = [
-        'It is the passenger\'s responsibility to ensure that they have a valid international passport with the',
-        'minimum six months validity from the date of departure. Our tour vouchers must be presented to',
-        'the hotels and will be endorsed on the passport at the point of embarkation.',
-        '',
-        'Relevant visas and vaccinations may be required. Ample times must be given to us for application',
-        'of visas prior to departure. Please note that he issuance of visa is subject to approval by the',
-        'respective foreign embassies and we will not be held responsible in the event of rejection.',
-        '',
-        'You are responsible for your own eligibility of all permits for National Service including those who',
-        'are on Reservist and National Servicemen.'
-      ]
-      
-      travelDocsText.forEach(line => {
-        doc.text(line, 15, tcY)
-        tcY += 4
-      })
-      
-      tcY += 10
-      
-      // Cancellation Charge 部分
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.text('CANCELLATION CHARGE', 15, tcY)
-      
-      tcY += 5
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'normal')
-      
-      const cancellationText = [
-        'Once payment paid is non-refundable. Once ticket is issued 100% of the tour/ticket fare will be charged.',
-        'During peak season, school holiday, eve and public holiday, no cancellation could be made. 100% of the',
-        'tour price would be charged.',
-        '',
-        'I/on behalf of the passengers at stated have read, understood and agreed to be bound by the Terms and',
-        'Conditions printed overleaf. I undertake to bring the attention and notice of the above mentioned to',
-        'the said Terms and Conditions.'
-      ]
-      
-      cancellationText.forEach(line => {
-        doc.text(line, 15, tcY)
-        tcY += 4
-      })
-      
-      tcY += 10
-      
-      // 签名部分
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'italic')
-      doc.text('Yours faithfully,', 15, tcY)
-      tcY += 5
-      doc.setFont('helvetica', 'bold')
-      doc.text('Travel GSH Pte Ltd', 15, tcY)
-      
-      tcY += 15
-      
-      // Signature lines
-      doc.setLineWidth(0.5)
-      doc.line(15, tcY, 90, tcY)
-      doc.line(120, tcY, 195, tcY)
-      
-      tcY += 5
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'normal')
-      doc.text('Authorised Signature', 15, tcY)
-      doc.text('Signature:                           Date:', 120, tcY)
-      
-      // 提示信息
-      doc.setFontSize(7)
-      doc.setFont('helvetica', 'italic')
-      doc.setTextColor(200, 0, 0)
-      doc.text('Note: T&C image not found. Please add terms-and-conditions.jpg to /public/images/', 15, 280)
-      doc.setTextColor(0, 0, 0)
-    }
+    // 标题
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('TERMS & CONDITIONS', 105, tcY, { align: 'center' })
+    
+    tcY += 12
+    
+    // 左栏 - TRAVEL DOCUMENTS
+    let leftY = tcY
+    const col1X = leftMargin
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text('TRAVEL DOCUMENTS', col1X, leftY)
+    
+    leftY += 5
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    
+    const travelDocsText = `It is the passenger's responsibility to ensure that they have a valid international passport with the minimum six months validity from the date of departure. Our tour vouchers must be presented to the hotels and will be endorsed on the passport at the point of embarkation.
+
+Relevant visas and vaccinations may be required. Ample times must be given to us for application of visas prior to departure. Please note that he issuance of visa is subject to approval by the respective foreign embassies and we will not be held responsible in the event of rejection.
+
+You are responsible for your own eligibility of all permits for National Service including those who are on Reservist and National Servicemen.`
+    
+    const travelLines = doc.splitTextToSize(travelDocsText, col1Width)
+    doc.text(travelLines, col1X, leftY)
+    leftY += travelLines.length * 3.5
+    
+    leftY += 5
+    
+    // 中文段落占位
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'italic')
+    const chineseText = `[Chinese Text - Best viewed in image format]
+Passport & visa requirements for smooth travel.
+Tour vouchers must be presented to hotels.
+Visas & vaccinations arranged in advance.
+Non-refundable if visa rejected or entry denied.
+Military personnel arrange own exit permits.`
+    
+    const chineseLines = doc.splitTextToSize(chineseText, col1Width)
+    doc.text(chineseLines, col1X, leftY)
+    leftY += chineseLines.length * 3.5
+    
+    leftY += 5
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'italic')
+    doc.text('Yours faithfully,', col1X, leftY)
+    leftY += 4
+    doc.setFont('helvetica', 'bold')
+    doc.text('Travel GSH Pte Ltd', col1X, leftY)
+    
+    // 中栏 - CANCELLATION CHARGE
+    let midY = tcY
+    const col2X = col1X + col1Width + 5
+    
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text('CANCELLATION CHARGE', col2X, midY)
+    
+    midY += 5
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    
+    const cancellationText = `Once payment paid is non-refundable. Once ticket is issued 100% of the tour/ticket fare will be charged. During peak season, school holiday, eve and public holiday, no cancellation could be made. 100% of the tour price would be charged.
+
+I/on behalf of the passengers at stated have read, understood and agreed to be bound by the Terms and Conditions printed overleaf. I undertake to bring the attention and notice of the above mentioned to the said Terms and Conditions.`
+    
+    const cancelLines = doc.splitTextToSize(cancellationText, col2Width)
+    doc.text(cancelLines, col2X, midY)
+    
+    // 右栏 - Travel Insurance Question
+    let rightY = tcY
+    const col3X = col2X + col2Width + 5
+    
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'bold')
+    const questionLines = doc.splitTextToSize('Do you wish to purchase the travel insurance from us?', col3Width)
+    doc.text(questionLines, col3X, rightY)
+    rightY += questionLines.length * 4
+    
+    rightY += 3
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    
+    // Checkbox 1
+    doc.rect(col3X, rightY, 3, 3)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Yes', col3X + 5, rightY + 2.5)
+    doc.setFont('helvetica', 'normal')
+    const option1 = doc.splitTextToSize('I wish to purchase such travel insurance through the travel agent.', col3Width - 6)
+    doc.text(option1, col3X + 5, rightY + 6)
+    rightY += 6 + (option1.length * 3.5)
+    
+    rightY += 3
+    
+    // Checkbox 2
+    doc.rect(col3X, rightY, 3, 3)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Yes', col3X + 5, rightY + 2.5)
+    doc.setFont('helvetica', 'normal')
+    const option2Text = `I wish to purchase such travel insurance myself with reference to the Board's list of insurers at
+https://www.sib.gov.sg/business-focus-areas/general-insurance/documents/TravelInsurance.pdf`
+    const option2 = doc.splitTextToSize(option2Text, col3Width - 6)
+    doc.text(option2, col3X + 5, rightY + 6)
+    rightY += 6 + (option2.length * 3)
+    
+    rightY += 3
+    
+    // Checkbox 3
+    doc.rect(col3X, rightY, 3, 3)
+    doc.setFont('helvetica', 'bold')
+    doc.text('No', col3X + 5, rightY + 2.5)
+    doc.setFont('helvetica', 'normal')
+    const option3Text = `Reasons include "I will purchase such travel insurance later", "I have already purchased such travel insurance" or "I do not wish to be insured"`
+    const option3 = doc.splitTextToSize(option3Text, col3Width - 6)
+    doc.text(option3, col3X + 5, rightY + 6)
+    
+    // 底部签名栏
+    const bottomY = 260
+    doc.setLineWidth(0.5)
+    doc.line(leftMargin, bottomY, 90, bottomY)
+    doc.line(110, bottomY, rightMargin, bottomY)
+    
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Authorised Signature', leftMargin, bottomY + 5)
+    doc.text('Signature:', 110, bottomY + 5)
+    doc.text('Date:', 170, bottomY + 5)
+    
+    // 注释
+    doc.setFontSize(6)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(100, 100, 100)
+    doc.text('Note: Chinese characters displayed as placeholder. For perfect display, add image to /public/images/terms-and-conditions.jpg', leftMargin, 285)
+    doc.setTextColor(0, 0, 0)
   }
   
   // Save
