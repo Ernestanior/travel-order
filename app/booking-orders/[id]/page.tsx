@@ -79,6 +79,8 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
+  const [showDeletePaymentModal, setShowDeletePaymentModal] = useState(false)
+  const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null)
   const [includeTerms, setIncludeTerms] = useState(false)
   
   // 编辑状态的表单数据
@@ -223,6 +225,41 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       })
     } finally {
       setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleDeletePayment = async () => {
+    if (!paymentToDelete) return
+
+    try {
+      const response = await fetch(`/api/booking-orders/${params.id}/payments/${paymentToDelete.id}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        notification.success({
+          message: 'Success',
+          description: 'Payment deleted successfully',
+          placement: 'topRight',
+        })
+        setShowDeletePaymentModal(false)
+        setPaymentToDelete(null)
+        await loadOrder()
+      } else {
+        const result = await response.json()
+        notification.error({
+          message: 'Error',
+          description: result.error || 'Failed to delete payment',
+          placement: 'topRight',
+        })
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error)
+      notification.error({
+        message: 'Error',
+        description: 'Failed to delete payment',
+        placement: 'topRight',
+      })
     }
   }
 
@@ -598,7 +635,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 ) : (
                   <div className="space-y-2">
                     {order.payments.map((payment) => (
-                      <div key={payment.id} className="flex justify-between items-start py-3 border-b border-gray-100 last:border-0">
+                      <div key={payment.id} className="flex justify-between items-start py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors group">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-medium text-gray-900">
@@ -617,7 +654,19 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                             {new Date(payment.date).toLocaleDateString()} {payment.for ? `• ${payment.for}` : ''}
                           </p>
                         </div>
-                        <p className="text-sm font-bold text-gray-900">${payment.amount.toFixed(2)}</p>
+                        <div className="flex items-center gap-3">
+                          <p className="text-sm font-bold text-gray-900">${payment.amount.toFixed(2)}</p>
+                          <button
+                            onClick={() => {
+                              setPaymentToDelete(payment)
+                              setShowDeletePaymentModal(true)
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-red-600 hover:bg-red-50 rounded"
+                            title="Delete payment"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -921,6 +970,67 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           bookingNumber={order.bookingNumber}
           totalAmount={order.totalAfterDiscount}
         />
+
+        {/* Delete Payment Modal */}
+        {showDeletePaymentModal && paymentToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete Payment</h3>
+                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Receipt No:</span>
+                  <span className="text-sm font-medium text-gray-900">{paymentToDelete.receiptNo}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Payment Type:</span>
+                  <span className="text-sm font-medium text-gray-900">{paymentToDelete.type}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Date:</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {new Date(paymentToDelete.date).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-gray-200">
+                  <span className="text-sm font-semibold text-gray-700">Amount:</span>
+                  <span className="text-base font-bold text-gray-900">${paymentToDelete.amount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                确定要删除这条付款记录吗？删除后outstanding金额将会相应增加。
+              </p>
+
+              <div className="flex gap-3 justify-end">
+                <button 
+                  onClick={() => {
+                    setShowDeletePaymentModal(false)
+                    setPaymentToDelete(null)
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDeletePayment}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Payment
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
