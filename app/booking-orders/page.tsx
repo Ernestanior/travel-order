@@ -78,8 +78,18 @@ export default function BookingOrdersPage() {
         params.set('customer', customerSearch)
       }
 
-      const response = await fetch(`/api/booking-orders?${params}`)
+      const apiUrl = `/api/booking-orders?${params}`
+      console.log('Loading orders with URL:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
+        cache: 'no-store', // 禁用缓存
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      })
       const result = await response.json()
+      
+      console.log('API Response:', result.data?.length, 'orders, searchType:', searchType)
       
       if (result.data && Array.isArray(result.data)) {
         setBookingOrders(result.data)

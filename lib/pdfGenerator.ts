@@ -44,6 +44,8 @@ interface BookingInvoiceData {
   passengers: Array<{
     name: string
     passport: string
+    birthdate?: string
+    passportExpiryDate?: string
   }>
   totalPrice: number
   discount: number
@@ -215,70 +217,86 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   y += 5
   if (data.address) {
     doc.text(`Address: ${data.address}`, 15, y)
+    y += 5
   }
-  y += 5
   doc.text(`Telephone: ${data.tel}`, 15, y)
   
   y += 10
   
-  // Tour Information
+  // Tour Information (修改为显示 Tour Code 和 Tour)
   doc.setFont('helvetica', 'bold')
   doc.text('Tour Information:', 15, y)
   y += 5
   doc.setFont('helvetica', 'normal')
-  doc.text(`Tour: ${data.tour || 'N/A'}`, 15, y)
+  doc.text(`Tour Code : ${data.tourCode || '-'}`, 15, y)
+  y += 5
+  doc.text(`Tour: ${data.tour || '-'}`, 15, y)
   
   y += 10
   
-  // Flight Information Box
+  // Flight Information Box (修改为每行显示完整信息，右边对齐)
   doc.setDrawColor(0, 0, 0)
   doc.setLineWidth(0.5)
   const boxY = y
-  const boxHeight = 25
-  doc.rect(15, boxY, 180, boxHeight)
+  const boxWidth = 180  // 固定宽度
+  
+  // 计算需要多少行
+  let flightCount = 0
+  if (data.departureDate) flightCount++
+  if (data.departureDate2) flightCount++
+  if (data.arrivalDate) flightCount++
+  if (data.arrivalDate2) flightCount++
+  
+  const boxHeight = Math.max(15, flightCount * 5 + 5)
+  doc.rect(15, boxY, boxWidth, boxHeight)
   
   y += 5
   doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Departure Date 1:', 20, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.departureDate || '-', 60, y)
-  y += 5
-  doc.setFont('helvetica', 'bold')
-  doc.text('Time 1:', 20, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.departureTime || '-', 40, y)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Flight 1:', 80, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.departureFlight || '-', 100, y)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Destination 1:', 130, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.departureDest || '-', 160, y)
   
-  y += 6
-  doc.setFont('helvetica', 'bold')
-  doc.text('Arrival Date 1:', 20, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.arrivalDate || '-', 60, y)
-  y += 5
-  doc.setFont('helvetica', 'bold')
-  doc.text('Time 1:', 20, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.arrivalTime || '-', 40, y)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Flight 1:', 80, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.arrivalFlight || '-', 100, y)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Destination 1:', 130, y)
-  doc.setFont('helvetica', 'normal')
-  doc.text(data.arrivalDest || '-', 160, y)
+  // Departure 1
+  if (data.departureDate) {
+    doc.setFont('helvetica', 'bold')
+    doc.text('Departure Date 1:', 20, y)
+    doc.setFont('helvetica', 'normal')
+    const dep1Line = `${data.departureDate} • ${data.departureTime || '-'} • ${data.departureFlight || '-'} • ${data.departureDest || '-'}`
+    doc.text(dep1Line, 70, y)
+    y += 5
+  }
+  
+  // Departure 2
+  if (data.departureDate2) {
+    doc.setFont('helvetica', 'bold')
+    doc.text('Departure Date 2:', 20, y)
+    doc.setFont('helvetica', 'normal')
+    const dep2Line = `${data.departureDate2} • ${data.departureTime2 || '-'} • ${data.departureFlight2 || '-'} • ${data.departureDest2 || '-'}`
+    doc.text(dep2Line, 70, y)
+    y += 5
+  }
+  
+  // Arrival 1
+  if (data.arrivalDate) {
+    doc.setFont('helvetica', 'bold')
+    doc.text('Arrival Date 1:', 20, y)
+    doc.setFont('helvetica', 'normal')
+    const arr1Line = `${data.arrivalDate} • ${data.arrivalTime || '-'} • ${data.arrivalFlight || '-'} • ${data.arrivalDest || '-'}`
+    doc.text(arr1Line, 70, y)
+    y += 5
+  }
+  
+  // Arrival 2
+  if (data.arrivalDate2) {
+    doc.setFont('helvetica', 'bold')
+    doc.text('Arrival Date 2:', 20, y)
+    doc.setFont('helvetica', 'normal')
+    const arr2Line = `${data.arrivalDate2} • ${data.arrivalTime2 || '-'} • ${data.arrivalFlight2 || '-'} • ${data.arrivalDest2 || '-'}`
+    doc.text(arr2Line, 70, y)
+    y += 5
+  }
   
   y = boxY + boxHeight + 10
   
-  // Items Table
+  // Items Table (修改宽度使其右边对齐到195)
   const itemRows = data.items.map(item => [
     item.item,
     item.quantity.toString(),
@@ -300,24 +318,32 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     columnStyles: {
       0: { cellWidth: 100 },
       1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 30, halign: 'right' },
-      3: { cellWidth: 30, halign: 'right' }
-    }
+      2: { cellWidth: 25, halign: 'right' },
+      3: { cellWidth: 25, halign: 'right' }
+    },
+    margin: { left: 15, right: 15 },
+    tableWidth: 180
   })
   
   y = (doc as any).lastAutoTable.finalY + 10
   
-  // Passengers Table
+  // Passengers Table (修改为包含 DOB 和 DOE 列)
   if (data.passengers.length > 0) {
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
     doc.text('Passengers:', 15, y)
     y += 5
     
-    const passengerRows = data.passengers.map(p => [p.name, p.passport || '-'])
+    const passengerRows = data.passengers.map(p => [
+      p.name, 
+      p.passport || '-',
+      p.birthdate || '-',  // DOB
+      p.passportExpiryDate || '-'  // DOE
+    ])
+    
     autoTable(doc, {
       startY: y,
-      head: [['Name', 'Passport']],
+      head: [['Name', 'Passport', 'DOB', 'DOE']],
       body: passengerRows,
       theme: 'grid',
       headStyles: { 
@@ -325,7 +351,15 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
         fontSize: 9,
         fontStyle: 'bold'
       },
-      styles: { fontSize: 9 }
+      styles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 65 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 32.5, halign: 'center' },
+        3: { cellWidth: 32.5, halign: 'center' }
+      },
+      margin: { left: 15, right: 15 },
+      tableWidth: 180
     })
     
     y = (doc as any).lastAutoTable.finalY + 10
@@ -356,36 +390,36 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   doc.setFont('helvetica', 'normal')
   doc.text('Bank: Maybank', 15, y)
   y += 4
-  doc.text('Name: TRAVEL GSH PTE LTD Pte Ltd', 18, y)
+  doc.text('Name: TRAVEL GSH PTE LTD Pte Ltd', 15, y)
   y += 4
   doc.text('Account: 0417-100-3306', 15, y)
   y += 4
   doc.text('Paynow : UEN 199540', 15, y)
   
-  // Financial Summary (右下角)
+  // Financial Summary (右下角，对齐到 x=195)
   const rightX = 140
   let summaryY = (doc as any).lastAutoTable.finalY + 10
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
   doc.text('Total Price:', rightX, summaryY)
-  doc.text(`$${data.totalPrice.toFixed(2)}`, 190, summaryY, { align: 'right' })
+  doc.text(`$${data.totalPrice.toFixed(2)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Discount:', rightX, summaryY)
-  doc.text(`$${data.discount.toFixed(2)}`, 190, summaryY, { align: 'right' })
+  doc.text(`$${data.discount.toFixed(2)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Payment:', rightX, summaryY)
-  doc.text(`$${data.payment.toFixed(2)}`, 190, summaryY, { align: 'right' })
+  doc.text(`$${data.payment.toFixed(2)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Balance:', rightX, summaryY)
-  doc.text(`$${data.balance.toFixed(2)}`, 190, summaryY, { align: 'right' })
+  doc.text(`$${data.balance.toFixed(2)}`, 195, summaryY, { align: 'right' })
   
   // Attended By (底部)
   y += 20
-  if (y > 270) {
+  if (y > 260) {
     doc.addPage()
     y = 20
   }
@@ -394,6 +428,13 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   doc.text('Attended By:', 15, y)
   doc.setFont('helvetica', 'normal')
   doc.text(data.staff || 'N/A', 50, y)
+  
+  // Footer - Computer Generated Notice
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'italic')
+  doc.setTextColor(150, 150, 150)
+  doc.text('This is computer generated invoice no signature required', 105, 285, { align: 'center' })
+  doc.setTextColor(0, 0, 0)
   
   // Terms & Conditions (如果开关开启)
   if (data.includeTerms) {
@@ -615,7 +656,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   
   y += 10
   
-  // Tour Information
+  // Tour Information (改为和Booking Invoice一样的格式)
   doc.setFont('helvetica', 'bold')
   doc.text('Tour Information:', 15, y)
   y += 5
@@ -624,38 +665,44 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   
   y += 10
   
-  // Flight Information Box
+  // Flight Information Box (改进布局)
   doc.setDrawColor(0, 0, 0)
   doc.setLineWidth(0.5)
   const boxY = y
-  const boxHeight = 20
+  const boxHeight = 18
   doc.rect(15, boxY, 180, boxHeight)
   
   y += 5
   doc.setFontSize(9)
+  
+  // Departure 行
   doc.setFont('helvetica', 'bold')
   doc.text('Departure Date:', 20, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.departureDate || '-', 60, y)
-  y += 5
+  doc.text(data.departureDate || '-', 65, y)
+  
   doc.setFont('helvetica', 'bold')
-  doc.text('Time:', 20, y)
+  doc.text('Time:', 95, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.departureTime || '-', 40, y)
+  doc.text(data.departureTime || '-', 110, y)
+  
   doc.setFont('helvetica', 'bold')
-  doc.text('Flight:', 80, y)
+  doc.text('Flight:', 125, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.departureFlight || '-', 100, y)
+  doc.text(data.departureFlight || '-', 140, y)
+  
   doc.setFont('helvetica', 'bold')
-  doc.text('Destination:', 130, y)
+  doc.text('Destination:', 160, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.departureDest || '-', 160, y)
+  doc.text(data.departureDest || '-', 185, y)
   
   y += 6
+  
+  // Arrival 行
   doc.setFont('helvetica', 'bold')
   doc.text('Arrival Date:', 20, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.arrivalDate || '-', 60, y)
+  doc.text(data.arrivalDate || '-', 65, y)
   
   y = boxY + boxHeight + 10
   
@@ -688,7 +735,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   
   y = (doc as any).lastAutoTable.finalY + 10
   
-  // Notes Section (左下角)
+  // Notes Section (左下角) - 修正对齐
   doc.setFontSize(9)
   doc.setFont('helvetica', 'bold')
   doc.text('Notes', 15, y)
@@ -696,14 +743,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   doc.setFont('helvetica', 'normal')
   doc.text('Bank: Maybank', 15, y)
   y += 4
-  doc.text('Name: TRAVEL GSH PTE LTD Pte Ltd', 18, y)
+  doc.text('Name: TRAVEL GSH PTE LTD Pte Ltd', 15, y)
   y += 4
   doc.text('Account: 0417-100-3306', 15, y)
   y += 4
   doc.text('Paynow : UEN 199540', 15, y)
   
-  // Financial Summary (右下角)
-  const rightX = 140
+  // Financial Summary (右下角) - 修正对齐
+  const rightX = 160
   let summaryY = (doc as any).lastAutoTable.finalY + 10
   
   doc.setFontSize(10)
@@ -748,68 +795,76 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   doc.text(companyInfo.gst, textStartX, 35)
   
   // Payment Receipt 标题
-  doc.setFontSize(16)
+  doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
   doc.text('Payment Receipt', 20, 70)
   
-  // Receipt details
-  doc.setFontSize(10)
+  // Receipt details - 更新格式
+  doc.setFontSize(11)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Receipt No : ${data.receiptNo}`, 20, 80)
-  doc.text(`Booking No: ${data.bookingNumber}`, 20, 87)
-  doc.text(`Date  :  ${data.date}`, 20, 94)
+  doc.text(`Receipt No : ${data.receiptNo}`, 20, 82)
+  doc.text(`Booking No: ${data.bookingNumber}`, 20, 90)
+  doc.text(`Date  :  ${data.date}`, 20, 98)
   
   // 横线
-  doc.setLineWidth(0.5)
-  doc.line(20, 100, 190, 100)
+  doc.setLineWidth(0.8)
+  doc.line(20, 105, 190, 105)
   
-  let y = 115
+  let y = 122
   
-  // Payment details
+  // Payment details - 更新格式和间距
+  doc.setFontSize(11)
   doc.setFont('helvetica', 'bold')
   doc.text('Received From', 20, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(`: ${data.customer}`, 60, y)
+  doc.text(`: ${data.customer}`, 65, y)
   
-  y += 10
+  y += 12
   doc.setFont('helvetica', 'bold')
   doc.text('Payment For', 20, y)
   doc.setFont('helvetica', 'normal')
-  const paymentFor = data.for || 'Tour'
-  doc.text(`: ${paymentFor}`, 60, y)
+  const paymentFor = data.for || 'Full Payment'
+  doc.text(`: ${paymentFor}`, 65, y)
   
-  y += 10
+  y += 12
   doc.setFont('helvetica', 'bold')
   doc.text('Departure Date', 20, y)
   doc.setFont('helvetica', 'normal')
   // Try to extract date from "for" field, otherwise use booking date
-  const departureMatch = data.for ? data.for.match(/\d{2}-\d{2}-\d{4}/) : null
+  const departureMatch = data.for ? data.for.match(/\d{4}-\d{2}-\d{2}/) : null
   const departureDate = departureMatch ? departureMatch[0] : (data.date || '-')
-  doc.text(`: ${departureDate}`, 60, y)
+  doc.text(`: ${departureDate}`, 65, y)
   
-  y += 10
+  y += 12
   doc.setFont('helvetica', 'bold')
   doc.text('Payment Type', 20, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(`: ${data.paymentType}`, 60, y)
+  doc.text(`: ${data.paymentType}`, 65, y)
   
-  y += 25
+  y += 30
   
-  // Amount Paid Box
+  // Amount Paid Box - 双层边框（外层红色，内层黑色）
+  // 外层红色边框
+  doc.setDrawColor(220, 50, 50) // 红色
+  doc.setLineWidth(3)
+  doc.rect(17, y, 176, 35)
+  
+  // 内层黑色边框
+  doc.setDrawColor(0, 0, 0) // 黑色
   doc.setLineWidth(2)
-  doc.rect(20, y, 170, 30)
+  doc.rect(22, y + 5, 166, 25)
   
   doc.setFontSize(14)
   doc.setFont('helvetica', 'bold')
-  doc.text('Amount Paid:', 25, y + 18)
+  doc.text('Amount Paid:', 28, y + 19)
   
   doc.setFontSize(18)
-  doc.text(`$${data.amount.toFixed(2)}`, 185, y + 18, { align: 'right' })
+  doc.text(`$${data.amount.toFixed(2)}`, 182, y + 19, { align: 'right' })
   
-  y += 45
+  y += 50
   
   // Thank you message
-  doc.setFontSize(10)
+  doc.setFontSize(11)
   doc.setFont('helvetica', 'italic')
   doc.text('Thank you for your payment', 105, y, { align: 'center' })
   

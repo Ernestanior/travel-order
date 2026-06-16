@@ -85,7 +85,100 @@ export async function GET(request: Request) {
       }
     }
 
-    // 并行执行 count 和 findMany 以提升性能
+    // 对于outstanding搜索，需要获取所有数据然后过滤（因为outstanding是计算字段）
+    if (searchType === 'outstanding') {
+      // 获取所有符合日期条件的订单
+      const allBookings = await prisma.bookingData.findMany({
+        where,
+        select: {
+          id: true,
+          bookno: true,
+          customer: true,
+          bookdate: true,
+          deptdate: true,
+          arrvdate: true,
+          status: true,
+          tour: true,
+          staff: true,
+          discount: true,
+          passengers: {
+            select: {
+              paxname: true,
+              passport: true
+            }
+          },
+          items: {
+            select: {
+              price: true
+            }
+          },
+          payments: {
+            select: {
+              amountpaid: true
+            }
+          }
+        },
+        orderBy: {
+          bookdate: 'desc'
+        }
+      })
+
+      // 格式化并过滤outstanding > 0的订单
+      const allFormatted = allBookings.map(booking => {
+        const totalCost = booking.items.reduce((sum, item) => 
+          sum + Number(item.price || 0), 0
+        )
+        const discount = Number(booking.discount || 0)
+        const paid = booking.payments.reduce((sum, payment) => 
+          sum + Number(payment.amountpaid || 0), 0
+        )
+        const outstanding = (totalCost - discount) - paid
+
+        return {
+          id: booking.id,
+          bookingNumber: booking.bookno,
+          customerName: booking.customer,
+          date: booking.bookdate?.toISOString().split('T')[0] || '',
+          bookingDate: booking.bookdate?.toISOString().split('T')[0] || '',
+          departureDate: booking.deptdate?.toISOString().split('T')[0] || '',
+          arrivalDate: booking.arrvdate?.toISOString().split('T')[0] || '',
+          totalCost,
+          paid,
+          outstanding,
+          status: booking.status || 'Open',
+          tour: booking.tour || '',
+          staff: booking.staff || '',
+          passengers: booking.passengers.map(p => ({
+            name: p.paxname,
+            passport: p.passport || ''
+          })),
+          passengerNames: booking.passengers.map(p => p.paxname).join(', ')
+        }
+      }).filter(order => {
+        // 只保留outstanding > 0的订单（考虑浮点数精度问题）
+        const hasOutstanding = order.outstanding > 0.001
+        if (!hasOutstanding) {
+          console.log(`Filtering out order ${order.bookingNumber}: outstanding = ${order.outstanding}`)
+        }
+        return hasOutstanding
+      })
+
+      // 应用分页
+      const total = allFormatted.length
+      const paginatedResults = allFormatted.slice(skip, skip + limit)
+
+      return NextResponse.json({
+        data: paginatedResults,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      })
+    }
+
+    // 其他搜索类型的常规处理
     const [total, bookings] = await Promise.all([
       prisma.bookingData.count({ where }),
       prisma.bookingData.findMany({
@@ -100,8 +193,7 @@ export async function GET(request: Request) {
           status: true,
           tour: true,
           staff: true,
-          discount: true,  // 添加discount字段
-          // 只选择需要的字段以减少数据传输
+          discount: true,
           passengers: {
             select: {
               paxname: true,
@@ -159,18 +251,13 @@ export async function GET(request: Request) {
       }
     })
 
-    // 如果是 outstanding 筛选，过滤掉 outstanding <= 0 的订单
-    const filteredResults = searchType === 'outstanding' 
-      ? formatted.filter(order => order.outstanding > 0)
-      : formatted
-
     return NextResponse.json({
-      data: filteredResults,
+      data: formatted,
       pagination: {
         page,
         limit,
-        total: searchType === 'outstanding' ? filteredResults.length : total,
-        totalPages: Math.ceil((searchType === 'outstanding' ? filteredResults.length : total) / limit)
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     })
   } catch (error) {
