@@ -786,9 +786,9 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   doc.text(companyInfo.gst, textStartX, 36)
   
   // EXCHANGE ORDER INVOICE 标题 (右上角)
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'bold')
-  doc.text('EXCHANGE ORDER INVOICE', 200, 20, { align: 'right' })
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text('EXCHANGE ORDER', 200, 20, { align: 'right' })
   
   // Invoice Number and Date (右上角)
   doc.setFontSize(10)
