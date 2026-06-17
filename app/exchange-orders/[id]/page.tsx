@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus, FileDown, DollarSign } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, FileDown, DollarSign, X } from 'lucide-react'
 import { notification } from 'antd'
 import { generateExchangeInvoicePDF } from '@/lib/pdfGenerator'
 import MakePaymentModal from './MakePaymentModal'
@@ -41,6 +41,10 @@ interface ExchangeOrder {
   departureTime2: string
   departureFlight2: string
   departureDest2: string
+  departureDate3: string
+  departureTime3: string
+  departureFlight3: string
+  departureDest3: string
   arrivalDate: string
   arrivalTime: string
   arrivalFlight: string
@@ -49,6 +53,10 @@ interface ExchangeOrder {
   arrivalTime2: string
   arrivalFlight2: string
   arrivalDest2: string
+  arrivalDate3: string
+  arrivalTime3: string
+  arrivalFlight3: string
+  arrivalDest3: string
   tourCode: string
   tour: string
   special: string
@@ -200,10 +208,26 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
       departureTime: order.departureTime,
       departureFlight: order.departureFlight,
       departureDest: order.departureDest,
+      departureDate2: order.departureDate2,
+      departureTime2: order.departureTime2,
+      departureFlight2: order.departureFlight2,
+      departureDest2: order.departureDest2,
+      departureDate3: order.departureDate3,
+      departureTime3: order.departureTime3,
+      departureFlight3: order.departureFlight3,
+      departureDest3: order.departureDest3,
       arrivalDate: order.arrivalDate,
       arrivalTime: order.arrivalTime,
       arrivalFlight: order.arrivalFlight,
       arrivalDest: order.arrivalDest,
+      arrivalDate2: order.arrivalDate2,
+      arrivalTime2: order.arrivalTime2,
+      arrivalFlight2: order.arrivalFlight2,
+      arrivalDest2: order.arrivalDest2,
+      arrivalDate3: order.arrivalDate3,
+      arrivalTime3: order.arrivalTime3,
+      arrivalFlight3: order.arrivalFlight3,
+      arrivalDest3: order.arrivalDest3,
       items: order.items,
       totalPrice: order.totalCost,
       discount: 0, // Exchange orders don't have discount field
@@ -518,38 +542,239 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
             {/* Flight Information */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Flight Information</h2>
+              
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Departure</h3>
-                  <p className="text-sm text-gray-900">
-                    {order.departureDate || '-'} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
-                  </p>
+                {/* Departures */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Departures</h3>
+                  
+                  {/* Departure 1 - Always show */}
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-600">Departure 1</span>
+                    </div>
+                    {isEditing ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        <input type="date" value={displayData.departureDate || ''}
+                          onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.departureTime || ''} placeholder="Time"
+                          onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.departureFlight || ''} placeholder="Flight"
+                          onChange={(e) => setFormData({ ...formData, departureFlight: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.departureDest || ''} placeholder="Dest"
+                          onChange={(e) => setFormData({ ...formData, departureDest: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {order.departureDate || '-'} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Departure 2 */}
+                  {(order.departureDate2 || (isEditing && displayData.departureDate)) && (
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-600">Departure 2</span>
+                        {isEditing && (
+                          <button
+                            onClick={() => setFormData({ 
+                              ...formData, 
+                              departureDate2: '', 
+                              departureTime2: '', 
+                              departureFlight2: '', 
+                              departureDest2: '' 
+                            })}
+                            className="text-red-600 hover:bg-red-50 p-1 rounded">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          <input type="date" value={displayData.departureDate2 || ''}
+                            onChange={(e) => setFormData({ ...formData, departureDate2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.departureTime2 || ''} placeholder="Time"
+                            onChange={(e) => setFormData({ ...formData, departureTime2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.departureFlight2 || ''} placeholder="Flight"
+                            onChange={(e) => setFormData({ ...formData, departureFlight2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.departureDest2 || ''} placeholder="Dest"
+                            onChange={(e) => setFormData({ ...formData, departureDest2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-900">
+                          {order.departureDate2 || '-'} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Departure 3 */}
+                  {(order.departureDate3 || (isEditing && displayData.departureDate2)) && (
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-600">Departure 3</span>
+                        {isEditing && (
+                          <button
+                            onClick={() => setFormData({ 
+                              ...formData, 
+                              departureDate3: '', 
+                              departureTime3: '', 
+                              departureFlight3: '', 
+                              departureDest3: '' 
+                            })}
+                            className="text-red-600 hover:bg-red-50 p-1 rounded">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          <input type="date" value={displayData.departureDate3 || ''}
+                            onChange={(e) => setFormData({ ...formData, departureDate3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.departureTime3 || ''} placeholder="Time"
+                            onChange={(e) => setFormData({ ...formData, departureTime3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.departureFlight3 || ''} placeholder="Flight"
+                            onChange={(e) => setFormData({ ...formData, departureFlight3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.departureDest3 || ''} placeholder="Dest"
+                            onChange={(e) => setFormData({ ...formData, departureDest3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-900">
+                          {order.departureDate3 || '-'} • {order.departureTime3 || '-'} • {order.departureFlight3 || '-'} • {order.departureDest3 || '-'}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
-                {order.departureDate2 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Departure 2</h3>
-                    <p className="text-sm text-gray-900">
-                      {order.departureDate2 || '-'} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
-                    </p>
+                {/* Arrivals */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Arrivals</h3>
+                  
+                  {/* Arrival 1 - Always show */}
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-600">Arrival 1</span>
+                    </div>
+                    {isEditing ? (
+                      <div className="grid grid-cols-4 gap-2">
+                        <input type="date" value={displayData.arrivalDate || ''}
+                          onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.arrivalTime || ''} placeholder="Time"
+                          onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.arrivalFlight || ''} placeholder="Flight"
+                          onChange={(e) => setFormData({ ...formData, arrivalFlight: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        <input type="text" value={displayData.arrivalDest || ''} placeholder="Dest"
+                          onChange={(e) => setFormData({ ...formData, arrivalDest: e.target.value })}
+                          className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {order.arrivalDate || '-'} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
+                      </p>
+                    )}
                   </div>
-                )}
-                
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Arrival</h3>
-                  <p className="text-sm text-gray-900">
-                    {order.arrivalDate || '-'} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
-                  </p>
+                  
+                  {/* Arrival 2 */}
+                  {(order.arrivalDate2 || (isEditing && displayData.arrivalDate)) && (
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-600">Arrival 2</span>
+                        {isEditing && (
+                          <button
+                            onClick={() => setFormData({ 
+                              ...formData, 
+                              arrivalDate2: '', 
+                              arrivalTime2: '', 
+                              arrivalFlight2: '', 
+                              arrivalDest2: '' 
+                            })}
+                            className="text-red-600 hover:bg-red-50 p-1 rounded">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          <input type="date" value={displayData.arrivalDate2 || ''}
+                            onChange={(e) => setFormData({ ...formData, arrivalDate2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.arrivalTime2 || ''} placeholder="Time"
+                            onChange={(e) => setFormData({ ...formData, arrivalTime2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.arrivalFlight2 || ''} placeholder="Flight"
+                            onChange={(e) => setFormData({ ...formData, arrivalFlight2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.arrivalDest2 || ''} placeholder="Dest"
+                            onChange={(e) => setFormData({ ...formData, arrivalDest2: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-900">
+                          {order.arrivalDate2 || '-'} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Arrival 3 */}
+                  {(order.arrivalDate3 || (isEditing && displayData.arrivalDate2)) && (
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-600">Arrival 3</span>
+                        {isEditing && (
+                          <button
+                            onClick={() => setFormData({ 
+                              ...formData, 
+                              arrivalDate3: '', 
+                              arrivalTime3: '', 
+                              arrivalFlight3: '', 
+                              arrivalDest3: '' 
+                            })}
+                            className="text-red-600 hover:bg-red-50 p-1 rounded">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          <input type="date" value={displayData.arrivalDate3 || ''}
+                            onChange={(e) => setFormData({ ...formData, arrivalDate3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.arrivalTime3 || ''} placeholder="Time"
+                            onChange={(e) => setFormData({ ...formData, arrivalTime3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.arrivalFlight3 || ''} placeholder="Flight"
+                            onChange={(e) => setFormData({ ...formData, arrivalFlight3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                          <input type="text" value={displayData.arrivalDest3 || ''} placeholder="Dest"
+                            onChange={(e) => setFormData({ ...formData, arrivalDest3: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-900">
+                          {order.arrivalDate3 || '-'} • {order.arrivalTime3 || '-'} • {order.arrivalFlight3 || '-'} • {order.arrivalDest3 || '-'}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
-                
-                {order.arrivalDate2 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Arrival 2</h3>
-                    <p className="text-sm text-gray-900">
-                      {order.arrivalDate2 || '-'} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
 

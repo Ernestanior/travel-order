@@ -136,6 +136,10 @@ export async function POST(request: Request) {
         depttime2: body.departureTime2 || null,
         deptflt2: body.departureFlight2 || null,
         deptdest2: body.departureDest2 || null,
+        deptdate3: body.departureDate3 ? new Date(body.departureDate3) : null,
+        depttime3: body.departureTime3 || null,
+        deptflt3: body.departureFlight3 || null,
+        deptdest3: body.departureDest3 || null,
         
         arrvdate: body.arrivalDate ? new Date(body.arrivalDate) : null,
         arrvtime: body.arrivalTime || null,
@@ -145,6 +149,10 @@ export async function POST(request: Request) {
         arrvtime2: body.arrivalTime2 || null,
         arrvflt2: body.arrivalFlight2 || null,
         arrvdest2: body.arrivalDest2 || null,
+        arrvdate3: body.arrivalDate3 ? new Date(body.arrivalDate3) : null,
+        arrvtime3: body.arrivalTime3 || null,
+        arrvflt3: body.arrivalFlight3 || null,
+        arrvdest3: body.arrivalDest3 || null,
         
         // Tour info
         tourcode: body.tourCode || null,

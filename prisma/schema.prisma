@@ -43,6 +43,10 @@ model BookingData {
   depttime2  String?              @db.VarChar(50)
   deptflt2   String?              @db.VarChar(50)
   deptdest2  String?              @db.VarChar(50)
+  deptdate3  DateTime?            @db.Date
+  depttime3  String?              @db.VarChar(50)
+  deptflt3   String?              @db.VarChar(50)
+  deptdest3  String?              @db.VarChar(50)
   arrvdate   DateTime?            @db.Date
   arrvtime   String?              @db.VarChar(50)
   arrvflt    String?              @db.VarChar(50)
@@ -51,6 +55,10 @@ model BookingData {
   arrvtime2  String?              @db.VarChar(50)
   arrvflt2   String?              @db.VarChar(50)
   arrvdest2  String?              @db.VarChar(50)
+  arrvdate3  DateTime?            @db.Date
+  arrvtime3  String?              @db.VarChar(50)
+  arrvflt3   String?              @db.VarChar(50)
+  arrvdest3  String?              @db.VarChar(50)
   discount   Decimal              @default(0) @db.Decimal(15, 2)
   tourcode   String?              @db.VarChar(50)
   tour       String?              @db.VarChar(50)
@@ -67,7 +75,6 @@ model BookingData {
   @@index([id])
   @@index([tourcode])
   @@index([bookdate])
-  @@index([deptdate])
   @@index([customer])
   @@map("booking_data")
 }
@@ -89,6 +96,10 @@ model ExchangeData {
   depttime2    String?               @db.VarChar(50)
   deptflt2     String?               @db.VarChar(50)
   deptdest2    String?               @db.VarChar(50)
+  deptdate3    DateTime?             @db.Date
+  depttime3    String?               @db.VarChar(50)
+  deptflt3     String?               @db.VarChar(50)
+  deptdest3    String?               @db.VarChar(50)
   arrvdate     DateTime?             @db.Date
   arrvtime     String?               @db.VarChar(50)
   arrvflt      String?               @db.VarChar(50)
@@ -97,6 +108,10 @@ model ExchangeData {
   arrvtime2    String?               @db.VarChar(50)
   arrvflt2     String?               @db.VarChar(50)
   arrvdest2    String?               @db.VarChar(50)
+  arrvdate3    DateTime?             @db.Date
+  arrvtime3    String?               @db.VarChar(50)
+  arrvflt3     String?               @db.VarChar(50)
+  arrvdest3    String?               @db.VarChar(50)
   discount     Decimal               @default(0) @db.Decimal(15, 2)
   tourcode     String?               @db.VarChar(50)
   tour         String?               @db.VarChar(50)

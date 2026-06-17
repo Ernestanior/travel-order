@@ -57,6 +57,10 @@ export async function GET(
       departureTime2: booking.depttime2 || '',
       departureFlight2: booking.deptflt2 || '',
       departureDest2: booking.deptdest2 || '',
+      departureDate3: booking.deptdate3?.toISOString().split('T')[0] || '',
+      departureTime3: booking.depttime3 || '',
+      departureFlight3: booking.deptflt3 || '',
+      departureDest3: booking.deptdest3 || '',
       
       // Arrival info
       arrivalDate: booking.arrvdate?.toISOString().split('T')[0] || '',
@@ -67,6 +71,10 @@ export async function GET(
       arrivalTime2: booking.arrvtime2 || '',
       arrivalFlight2: booking.arrvflt2 || '',
       arrivalDest2: booking.arrvdest2 || '',
+      arrivalDate3: booking.arrvdate3?.toISOString().split('T')[0] || '',
+      arrivalTime3: booking.arrvtime3 || '',
+      arrivalFlight3: booking.arrvflt3 || '',
+      arrivalDest3: booking.arrvdest3 || '',
       
       // Financial
       totalCost,
@@ -163,6 +171,10 @@ export async function PUT(
         depttime2: body.departureTime2 || null,
         deptflt2: body.departureFlight2 || null,
         deptdest2: body.departureDest2 || null,
+        deptdate3: body.departureDate3 ? new Date(body.departureDate3) : null,
+        depttime3: body.departureTime3 || null,
+        deptflt3: body.departureFlight3 || null,
+        deptdest3: body.departureDest3 || null,
         arrvdate: body.arrivalDate ? new Date(body.arrivalDate) : null,
         arrvtime: body.arrivalTime || null,
         arrvflt: body.arrivalFlight || null,
@@ -171,6 +183,10 @@ export async function PUT(
         arrvtime2: body.arrivalTime2 || null,
         arrvflt2: body.arrivalFlight2 || null,
         arrvdest2: body.arrivalDest2 || null,
+        arrvdate3: body.arrivalDate3 ? new Date(body.arrivalDate3) : null,
+        arrvtime3: body.arrivalTime3 || null,
+        arrvflt3: body.arrivalFlight3 || null,
+        arrvdest3: body.arrivalDest3 || null,
         discount: body.discount || 0,
         tourcode: body.tourCode || null,
         tour: body.tour || null,
