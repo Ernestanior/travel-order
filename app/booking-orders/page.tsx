@@ -57,25 +57,32 @@ export default function BookingOrdersPage() {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      params.set('searchType', searchType)
-      params.set('page', currentPage.toString())
-      params.set('limit', itemsPerPage.toString())
       
-      // 直接搜索栏的参数（优先级更高）
-      if (bookingNumberSearch) {
-        params.set('bookingNumber', bookingNumberSearch)
-      }
-      if (customerSearch && searchType !== 'customer') {
-        params.set('customer', customerSearch)
-      }
-      
-      // 筛选类型参数
-      if (searchType === 'date' && departureDate) {
-        params.set('departureDate', departureDate)
-      } else if (searchType === 'outstanding' && outstandingBeforeDate) {
-        params.set('outstandingBeforeDate', outstandingBeforeDate)
-      } else if (searchType === 'customer' && customerSearch) {
-        params.set('customer', customerSearch)
+      // 如果有直接搜索（booking number 或 customer），优先使用直接搜索
+      if (bookingNumberSearch || (customerSearch && searchType !== 'customer')) {
+        params.set('searchType', 'all')
+        params.set('page', currentPage.toString())
+        params.set('limit', itemsPerPage.toString())
+        
+        if (bookingNumberSearch) {
+          params.set('bookingNumber', bookingNumberSearch)
+        }
+        if (customerSearch && searchType !== 'customer') {
+          params.set('customer', customerSearch)
+        }
+      } else {
+        // 否则使用筛选类型
+        params.set('searchType', searchType)
+        params.set('page', currentPage.toString())
+        params.set('limit', itemsPerPage.toString())
+        
+        if (searchType === 'date' && departureDate) {
+          params.set('departureDate', departureDate)
+        } else if (searchType === 'outstanding' && outstandingBeforeDate) {
+          params.set('outstandingBeforeDate', outstandingBeforeDate)
+        } else if (searchType === 'customer' && customerSearch) {
+          params.set('customer', customerSearch)
+        }
       }
 
       const apiUrl = `/api/booking-orders?${params}`
@@ -116,6 +123,13 @@ export default function BookingOrdersPage() {
     setCurrentPage(1)
     loadOrders()
   }
+
+  // 当searchType变化时，如果是customer类型且已有customerSearch，自动搜索
+  useEffect(() => {
+    if (searchType === 'customer' && customerSearch) {
+      handleSearch()
+    }
+  }, [searchType])
 
   // 清空筛选
   const clearFilters = () => {
@@ -265,6 +279,11 @@ export default function BookingOrdersPage() {
                   type="text"
                   value={bookingNumberSearch}
                   onChange={(e) => setBookingNumberSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch()
+                    }
+                  }}
                   placeholder="Type booking number..."
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 />
@@ -290,6 +309,12 @@ export default function BookingOrdersPage() {
                     onChange={(e) => {
                       setCustomerSearch(e.target.value)
                       setShowCustomerDropdown(true)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setShowCustomerDropdown(false)
+                        handleSearch()
+                      }
                     }}
                     onFocus={() => setShowCustomerDropdown(true)}
                     placeholder="Type customer name..."
@@ -336,7 +361,7 @@ export default function BookingOrdersPage() {
           </div>
 
           {/* 搜索类型选择 */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
             <button
               onClick={() => clearFilters()}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -366,16 +391,6 @@ export default function BookingOrdersPage() {
               }`}
             >
               Outstanding (Before Date)
-            </button>
-            <button
-              onClick={() => setSearchType('customer')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                searchType === 'customer'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-              }`}
-            >
-              By Customer
             </button>
           </div>
 
@@ -433,6 +448,12 @@ export default function BookingOrdersPage() {
                   </button>
                 )}
               </div>
+            </div>
+          )}
+
+          {searchType === 'customer' && (
+            <div className="text-xs text-gray-500">
+              Please use the Customer search box above to search by customer name
             </div>
           )}
 

@@ -17,6 +17,13 @@ interface BookingOrder {
   totalCost: number
 }
 
+interface BookingItem {
+  item: string
+  quantity: number
+  unitPrice: number
+  price: number
+}
+
 interface Supplier {
   id: string
   name: string
@@ -33,6 +40,7 @@ export default function NewExchangeOrderPage() {
   const [bookingOrders, setBookingOrders] = useState<BookingOrder[]>([])
   const [loadingBookings, setLoadingBookings] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState<BookingOrder | null>(null)
+  const [bookingItems, setBookingItems] = useState<BookingItem[]>([])
   
   // Step 2: 填写 Exchange 详情
   const [supplierSearch, setSupplierSearch] = useState('')
@@ -143,6 +151,9 @@ export default function NewExchangeOrderPage() {
     try {
       const response = await fetch(`/api/booking-orders/${booking.id}`)
       const fullBooking = await response.json()
+      
+      // 存储 booking items
+      setBookingItems(fullBooking.items || [])
       
       // 自动填充表单
       setFormData({
@@ -316,6 +327,7 @@ export default function NewExchangeOrderPage() {
                   onClick={() => {
                     setStep('selectBooking')
                     setSelectedBooking(null)
+                    setBookingItems([])
                   }}
                   className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
                 >
@@ -441,6 +453,24 @@ export default function NewExchangeOrderPage() {
                   <span className="ml-2 font-medium text-blue-900">${selectedBooking.totalCost.toFixed(2)}</span>
                 </div>
               </div>
+              
+              {/* Items 显示 */}
+              {bookingItems.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-2">Items</h4>
+                  <div className="space-y-2">
+                    {bookingItems.map((item, index) => (
+                      <div key={index} className="flex justify-between items-start text-sm bg-white rounded px-3 py-2">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{item.item}</p>
+                          <p className="text-xs text-gray-600">{item.quantity} × ${item.unitPrice.toFixed(2)}</p>
+                        </div>
+                        <p className="font-medium text-gray-900">${item.price.toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Exchange 基本信息 */}

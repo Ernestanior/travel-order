@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Building2, Search } from 'lucide-react'
+import { ArrowLeft, Building2, Search, Plus, Edit, Trash2, X } from 'lucide-react'
+import { notification } from 'antd'
 
 interface Supplier {
   id: string
@@ -11,6 +12,7 @@ interface Supplier {
   tel: string
   address: string
   fax: string
+  email: string
 }
 
 export default function SuppliersPage() {
@@ -21,15 +23,32 @@ export default function SuppliersPage() {
   const [totalRecords, setTotalRecords] = useState(0)
   const itemsPerPage = 50
 
+  // 模态框状态
+  const [showModal, setShowModal] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  // 表单数据
+  const [formData, setFormData] = useState({
+    name: '',
+    tel: '',
+    fax: '',
+    address: '',
+    email: ''
+  })
+
   // 当搜索条件变化时重置到第一页
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm])
 
-  // 当页码变化时加载数据
+  // 当页码或搜索条件变化时加载数据
   useEffect(() => {
     loadSuppliers()
-  }, [currentPage])
+  }, [currentPage, searchTerm])
 
   const loadSuppliers = async () => {
     setLoading(true)
@@ -102,6 +121,147 @@ export default function SuppliersPage() {
     return pages
   }
 
+  // 打开新增模态框
+  const handleAdd = () => {
+    setIsEditing(false)
+    setSelectedSupplier(null)
+    setFormData({
+      name: '',
+      tel: '',
+      fax: '',
+      address: '',
+      email: ''
+    })
+    setShowModal(true)
+  }
+
+  // 打开编辑模态框
+  const handleEdit = (supplier: Supplier) => {
+    setIsEditing(true)
+    setSelectedSupplier(supplier)
+    setFormData({
+      name: supplier.name,
+      tel: supplier.tel || supplier.telephone || '',
+      fax: supplier.fax || '',
+      address: supplier.address || '',
+      email: supplier.email || ''
+    })
+    setShowModal(true)
+  }
+
+  // 保存供应商
+  const handleSave = async () => {
+    if (!formData.name.trim()) {
+      notification.error({
+        message: 'Validation Error',
+        description: 'Supplier name is required',
+        placement: 'topRight',
+      })
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const url = isEditing 
+        ? `/api/suppliers/${encodeURIComponent(selectedSupplier!.name)}`
+        : '/api/suppliers/create'
+      
+      const method = isEditing ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        notification.success({
+          message: 'Success',
+          description: `Supplier ${isEditing ? 'updated' : 'created'} successfully`,
+          placement: 'topRight',
+        })
+        setShowModal(false)
+        loadSuppliers() // 重新加载列表
+      } else {
+        notification.error({
+          message: 'Error',
+          description: result.error || `Failed to ${isEditing ? 'update' : 'create'} supplier`,
+          placement: 'topRight',
+        })
+      }
+    } catch (error) {
+      console.error('Error saving supplier:', error)
+      notification.error({
+        message: 'Error',
+        description: 'An error occurred while saving',
+        placement: 'topRight',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // 关闭模态框
+  const handleCloseModal = () => {
+    setShowModal(false)
+    setSelectedSupplier(null)
+    setFormData({
+      name: '',
+      tel: '',
+      fax: '',
+      address: '',
+      email: ''
+    })
+  }
+
+  // 打开删除确认框
+  const handleDelete = (supplier: Supplier) => {
+    setSelectedSupplier(supplier)
+    setShowDeleteModal(true)
+  }
+
+  // 确认删除
+  const confirmDelete = async () => {
+    if (!selectedSupplier) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/suppliers/${encodeURIComponent(selectedSupplier.name)}`, {
+        method: 'DELETE'
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        notification.success({
+          message: 'Success',
+          description: 'Supplier deleted successfully',
+          placement: 'topRight',
+        })
+        setShowDeleteModal(false)
+        setSelectedSupplier(null)
+        loadSuppliers() // 重新加载列表
+      } else {
+        notification.error({
+          message: 'Error',
+          description: result.error || 'Failed to delete supplier',
+          placement: 'topRight',
+        })
+      }
+    } catch (error) {
+      console.error('Error deleting supplier:', error)
+      notification.error({
+        message: 'Error',
+        description: 'An error occurred while deleting',
+        placement: 'topRight',
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-6">
@@ -114,7 +274,16 @@ export default function SuppliersPage() {
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Main Menu
           </Link>
-          <h1 className="text-2xl font-semibold text-gray-900">Suppliers</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold text-gray-900">Suppliers</h1>
+            <button
+              onClick={handleAdd}
+              className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center text-sm transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Supplier
+            </button>
+          </div>
         </div>
 
         {/* 供应商表格 */}
@@ -143,17 +312,23 @@ export default function SuppliersPage() {
                     Telephone
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Fax
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Address
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center">
+                    <td colSpan={6} className="px-4 py-12 text-center">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                         <span className="ml-3 text-gray-600">Loading suppliers...</span>
@@ -162,7 +337,7 @@ export default function SuppliersPage() {
                   </tr>
                 ) : suppliers.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
                       <Building2 className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                       <p className="text-sm">No suppliers found</p>
                     </td>
@@ -177,10 +352,31 @@ export default function SuppliersPage() {
                         {supplier.telephone || '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
+                        {supplier.email || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
                         {supplier.fax || '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {supplier.address || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(supplier)}
+                            className="inline-flex items-center justify-center px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(supplier)}
+                            className="inline-flex items-center justify-center px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -237,16 +433,171 @@ export default function SuppliersPage() {
               </div>
             </div>
           )}
-
-          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex justify-between items-center">
-            <span className="text-xs text-gray-500">
-              Click on any row to view details
-            </span>
-            <button className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm transition-colors">
-              Delete
-            </button>
-          </div>
         </div>
+
+        {/* 新增/编辑模态框 */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+              {/* 模态框头部 */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {isEditing ? 'Edit Supplier' : 'New Supplier'}
+                </h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 模态框内容 */}
+              <div className="px-6 py-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Supplier Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-900"
+                      placeholder="Enter supplier name"
+                      disabled={isEditing} // 编辑时不能修改名称（因为是主键）
+                    />
+                    {isEditing && (
+                      <p className="text-xs text-gray-500 mt-1">Supplier name cannot be changed</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Telephone
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.tel}
+                      onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-900"
+                      placeholder="Enter telephone number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-900"
+                      placeholder="supplier@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fax
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.fax}
+                      onChange={(e) => setFormData({ ...formData, fax: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-900"
+                      placeholder="Enter fax number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <textarea
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-900"
+                      placeholder="Enter address"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 模态框底部 */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                <button
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="px-4 py-2 text-sm bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isSaving ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 删除确认模态框 */}
+        {showDeleteModal && selectedSupplier && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+              {/* 模态框头部 */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Delete Supplier
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setSelectedSupplier(null)
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 模态框内容 */}
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-700 mb-4">
+                  Are you sure you want to delete supplier <strong>{selectedSupplier.name}</strong>?
+                </p>
+                <p className="text-sm text-red-600">
+                  This action cannot be undone. The supplier will be permanently deleted.
+                </p>
+              </div>
+
+              {/* 模态框底部 */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setSelectedSupplier(null)
+                  }}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

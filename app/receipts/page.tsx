@@ -49,9 +49,10 @@ export default function ReceiptsPage() {
     }
   }, [currentPage])
 
-  // 当搜索条件变化时重置到第一页
+  // 当搜索条件变化时重置到第一页并加载
   useEffect(() => {
     setCurrentPage(1)
+    loadReceipts()
   }, [receiptNoSearch, bookingNumberSearch, customerSearch, dateFrom, dateTo])
 
   const loadReceipts = async () => {

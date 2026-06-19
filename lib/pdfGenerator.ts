@@ -14,6 +14,7 @@ interface BookingInvoiceData {
   customerName: string
   address: string
   tel: string
+  email?: string
   tourCode: string
   tour: string
   departureDate: string
@@ -249,8 +250,13 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     y += 5
   }
   doc.text(`Telephone: ${data.tel}`, 15, y)
+  y += 5
+  if (data.email) {
+    doc.text(`Email: ${data.email}`, 15, y)
+    y += 5
+  }
   
-  y += 10
+  y += 5
   
   // Tour Information (修改为显示 Tour Code 和 Tour) - 左侧
   doc.setFont('helvetica', 'bold')
@@ -477,8 +483,8 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     styles: { fontSize: 9 },
     columnStyles: {      0: { cellWidth: 100, halign: 'left' },
       1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 25, halign: 'left' },
-      3: { cellWidth: 25, halign: 'left' }
+      2: { cellWidth: 25, halign: 'right' },
+      3: { cellWidth: 25, halign: 'right' }
     },
     didParseCell: function(data) {
         // 设置header的对齐方式
@@ -488,7 +494,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
           } else if (data.column.index === 1) {  // Passport
             data.cell.styles.halign = 'center'
           } else if (data.column.index === 2 || data.column.index === 3) {  // DOB, DOE
-            data.cell.styles.halign = 'left'
+            data.cell.styles.halign = 'right'
           }
         }
       },
@@ -526,8 +532,8 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
       columnStyles: {
         0: { cellWidth: 65, halign: 'left' },
         1: { cellWidth: 50, halign: 'center' },
-        2: { cellWidth: 32.5, halign: 'left' },
-        3: { cellWidth: 32.5, halign: 'left' }
+        2: { cellWidth: 32.5, halign: 'right' },
+        3: { cellWidth: 32.5, halign: 'right' }
       },
       didParseCell: function(data) {
         // 设置header的对齐方式
@@ -537,7 +543,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
           } else if (data.column.index === 1) {  // Passport
             data.cell.styles.halign = 'center'
           } else if (data.column.index === 2 || data.column.index === 3) {  // DOB, DOE
-            data.cell.styles.halign = 'left'
+            data.cell.styles.halign = 'right'
           }
         }
       },
@@ -815,7 +821,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   
   // EXCHANGE ORDER INVOICE 标题 (右上角)
   doc.setFontSize(10)
-  doc.setFont('helvetica', 'normal')
+  doc.setFont('helvetica', 'bold')
   doc.text('EXCHANGE ORDER', 200, 20, { align: 'right' })
   
   // Invoice Number and Date (右上角)
@@ -825,14 +831,12 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   doc.text(`Booking #: ${data.bookingNumber}`, 200, 34, { align: 'right' })
   doc.text(`Date: ${formatDate(data.date)}`, 200, 40, { align: 'right' })
   
-  let y = 50
+  let y = 60
   
   // Supplier Info (取代Customer，添加address和tel)
   doc.setFontSize(10)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Supplier:', 15, y)
   doc.setFont('helvetica', 'normal')
-  doc.text(data.supplier, 35, y)
+  doc.text(`Supplier: ${data.supplier}`, 15, y)
   
   y += 5
   if (data.supplierAddress) {
@@ -883,22 +887,22 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Departure Date 1 :', 20, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate), 62, y)
+    doc.text(formatDate(data.departureDate), 52, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 88, y)
+    doc.text('Time :', 78, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureTime || '-', 100, y)
+    doc.text(data.departureTime || '-', 90, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 120, y)
+    doc.text('Flight :', 110, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight || '-', 134, y)
+    doc.text(data.departureFlight || '-', 125, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 155, y)
+    doc.text('Destination :', 148, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest || '-', 180, y, { align: 'left' })
+    doc.text(data.departureDest || '-', 170, y, { align: 'left' })
     y += 5
   }
   
@@ -907,22 +911,22 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Departure Date 2 :', 20, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate2), 62, y)
+    doc.text(formatDate(data.departureDate2), 52, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 88, y)
+    doc.text('Time :', 78, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureTime2 || '-', 100, y)
+    doc.text(data.departureTime2 || '-', 90, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 120, y)
+    doc.text('Flight :', 110, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight2 || '-', 134, y)
+    doc.text(data.departureFlight2 || '-', 125, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 155, y)
+    doc.text('Destination :', 148, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest2 || '-', 180, y, { align: 'left' })
+    doc.text(data.departureDest2 || '-', 170, y, { align: 'left' })
     y += 5
   }
   
@@ -931,22 +935,22 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Departure Date 3 :', 20, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate3), 62, y)
+    doc.text(formatDate(data.departureDate3), 52, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 88, y)
+    doc.text('Time :', 78, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureTime3 || '-', 100, y)
+    doc.text(data.departureTime3 || '-', 90, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 120, y)
+    doc.text('Flight :', 110, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight3 || '-', 134, y)
+    doc.text(data.departureFlight3 || '-', 125, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 155, y)
+    doc.text('Destination :', 148, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest3 || '-', 180, y, { align: 'left' })
+    doc.text(data.departureDest3 || '-', 170, y, { align: 'left' })
     y += 5
   }
   
@@ -955,22 +959,22 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Arrival      Date 1 :', 20, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate), 62, y)
+    doc.text(formatDate(data.arrivalDate), 52, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 88, y)
+    doc.text('Time :', 78, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalTime || '-', 100, y)
+    doc.text(data.arrivalTime || '-', 90, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 120, y)
+    doc.text('Flight :', 110, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight || '-', 134, y)
+    doc.text(data.arrivalFlight || '-', 125, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 155, y)
+    doc.text('Destination :', 148, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest || '-', 180, y, { align: 'left' })
+    doc.text(data.arrivalDest || '-', 170, y, { align: 'left' })
     y += 5
   }
   
@@ -979,22 +983,22 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Arrival      Date 2 :', 20, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate2), 62, y)
+    doc.text(formatDate(data.arrivalDate2), 52, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 88, y)
+    doc.text('Time :', 78, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalTime2 || '-', 100, y)
+    doc.text(data.arrivalTime2 || '-', 90, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 120, y)
+    doc.text('Flight :', 110, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight2 || '-', 134, y)
+    doc.text(data.arrivalFlight2 || '-', 125, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 155, y)
+    doc.text('Destination :', 148, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest2 || '-', 180, y, { align: 'left' })
+    doc.text(data.arrivalDest2 || '-', 170, y, { align: 'left' })
     y += 5
   }
   
@@ -1003,25 +1007,24 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Arrival      Date 3 :', 20, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate3), 62, y)
+    doc.text(formatDate(data.arrivalDate3), 52, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 88, y)
+    doc.text('Time :', 78, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalTime3 || '-', 100, y)
+    doc.text(data.arrivalTime3 || '-', 90, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 120, y)
+    doc.text('Flight :', 110, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight3 || '-', 134, y)
+    doc.text(data.arrivalFlight3 || '-', 125, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 155, y)
+    doc.text('Destination :', 148, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest3 || '-', 180, y, { align: 'left' })
+    doc.text(data.arrivalDest3 || '-', 170, y, { align: 'left' })
     y += 5
   }
-  
   y = boxY + boxHeight + 10
   
   // Items Table (宽度180，右边对齐到195)
@@ -1046,8 +1049,8 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     columnStyles: {
       0: { cellWidth: 100, halign: 'left' },
       1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 25, halign: 'left' },
-      3: { cellWidth: 25, halign: 'left' }
+      2: { cellWidth: 25, halign: 'right' },
+      3: { cellWidth: 25, halign: 'right' }
     },
     didParseCell: function(data) {
       // 设置header的对齐方式
@@ -1057,7 +1060,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
         } else if (data.column.index === 1) {  // Quantity
           data.cell.styles.halign = 'center'
         } else if (data.column.index === 2 || data.column.index === 3) {  // Price, Amount
-          data.cell.styles.halign = 'left'
+          data.cell.styles.halign = 'right'
         }
       }
     },

@@ -39,10 +39,10 @@ export default function ExchangeOrdersPage() {
     setCurrentPage(1)
   }, [supplierSearch, orderNumberSearch, dateFromSearch, dateToSearch])
 
-  // 当页码变化时加载数据
+  // 当页码或搜索条件变化时加载数据
   useEffect(() => {
     loadOrders()
-  }, [currentPage])
+  }, [currentPage, supplierSearch, orderNumberSearch, dateFromSearch, dateToSearch])
 
   const loadOrders = async () => {
     setLoading(true)

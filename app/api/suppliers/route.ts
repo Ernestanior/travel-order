@@ -47,7 +47,8 @@ export async function GET(request: Request) {
       telephone: supplier.tel || '',
       tel: supplier.tel || '',
       address: supplier.address || '',
-      fax: supplier.fax || ''
+      fax: supplier.fax || '',
+      email: supplier.email || ''
     }))
 
     return NextResponse.json({

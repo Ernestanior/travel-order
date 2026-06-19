@@ -42,6 +42,7 @@ export async function GET(
       customerName: booking.customer,
       address: booking.customerData?.address || '',
       tel: booking.customerData?.tel || '',
+      email: booking.customerData?.email || '',
       staff: booking.staff || '',
       tourCode: booking.tourcode || '',
       tour: booking.tour || '',
@@ -148,11 +149,13 @@ export async function PUT(
         update: {
           address: body.address || null,
           tel: body.tel,
+          email: body.email || null,
         },
         create: {
           customer: body.customerName,
           address: body.address || null,
           tel: body.tel,
+          email: body.email || null,
         }
       })
     }

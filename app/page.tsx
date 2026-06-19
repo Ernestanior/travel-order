@@ -153,7 +153,8 @@ export default function HomePage() {
             </div>
           </Link>
 
-          <Link
+          {/* Passenger Inquiry - Hidden */}
+          {/* <Link
             href="/passenger-inquiry"
             className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
           >
@@ -168,7 +169,7 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-          </Link>
+          </Link> */}
 
           <Link
             href="/reports"

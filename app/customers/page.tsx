@@ -26,10 +26,10 @@ export default function CustomersPage() {
     setCurrentPage(1)
   }, [searchTerm])
 
-  // 当页码变化时加载数据
+  // 当页码或搜索条件变化时加载数据
   useEffect(() => {
     loadCustomers()
-  }, [currentPage])
+  }, [currentPage, searchTerm])
 
   const loadCustomers = async () => {
     setLoading(true)

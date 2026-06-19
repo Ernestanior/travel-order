@@ -39,6 +39,7 @@ interface BookingOrder {
   customerName: string
   address: string
   tel: string
+  email: string
   discount: number
   staff: string
   tourCode: string
@@ -280,6 +281,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       customerName: order.customerName,
       address: order.address,
       tel: order.tel,
+      email: order.email,
       tourCode: order.tourCode,
       tour: order.tour,
       departureDate: order.departureDate,
@@ -509,6 +511,18 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                   ) : (
                     <p className="text-sm text-gray-900">{order.tel}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  {isEditing ? (
+                    <input type="email" value={displayData.email || ''}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      placeholder="customer@example.com" />
+                  ) : (
+                    <p className="text-sm text-gray-900">{order.email || '-'}</p>
                   )}
                 </div>
                 
