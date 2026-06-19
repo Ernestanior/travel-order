@@ -88,6 +88,34 @@ export async function POST(
         paidtext: body.paidtext || null
       }
     })
+    
+    // 计算outstanding并更新status
+    const fullExchange = await prisma.exchangeData.findUnique({
+      where: { id: exchangeId },
+      include: {
+        items: true,
+        payments: true
+      }
+    })
+    
+    if (fullExchange) {
+      const totalCost = fullExchange.items.reduce((sum, item) => 
+        sum + Number(item.price || 0), 0
+      )
+      const discount = Number(fullExchange.discount || 0)
+      const paid = fullExchange.payments.reduce((sum, payment) => 
+        sum + Number(payment.amountpaid || 0), 0
+      )
+      const outstanding = (totalCost - discount) - paid
+      
+      // 如果outstanding <= 0，自动设置status为Close
+      if (outstanding <= 0.001) {
+        await prisma.exchangeData.update({
+          where: { id: exchangeId },
+          data: { status: 'Close' }
+        })
+      }
+    }
 
     return NextResponse.json({
       success: true,

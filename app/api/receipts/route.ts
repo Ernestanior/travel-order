@@ -67,6 +67,9 @@ export async function GET(request: NextRequest) {
         booking: {
           select: {
             bookno: true,
+            tour: true,
+            tourcode: true,
+            deptdate: true,
             customerData: {
               select: {
                 customer: true
@@ -90,7 +93,10 @@ export async function GET(request: NextRequest) {
       amountPaid: receipt.amountpaid ? parseFloat(receipt.amountpaid.toString()) : 0,
       paidText: receipt.paidtext || '',
       customer: receipt.customer || (receipt.booking?.customerData?.customer) || '',
-      payFor: receipt.payfor || ''
+      payFor: receipt.payfor || '',
+      tourCode: receipt.booking?.tourcode || '',
+      tour: receipt.booking?.tour || '',
+      departureDate: receipt.booking?.deptdate ? receipt.booking.deptdate.toISOString().split('T')[0] : ''
     }))
 
     return NextResponse.json({

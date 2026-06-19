@@ -18,6 +18,9 @@ interface ReceiptData {
   paidText: string
   customer: string
   payFor: string
+  tourCode?: string
+  tour?: string
+  departureDate?: string
 }
 
 export default function ReceiptsPage() {
@@ -160,6 +163,9 @@ export default function ReceiptsPage() {
       customer: receipt.customer,
       paymentType: receipt.paymentType,
       'for': receipt['for'],
+      tourCode: receipt.tourCode,
+      tour: receipt.tour,
+      departureDate: receipt.departureDate,
       amount: receipt.amountPaid,
       chequeNo: receipt.chequeNo,
       visaNo: receipt.visaNo,

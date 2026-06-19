@@ -87,6 +87,34 @@ export async function POST(
       }
     })
     
+    // 计算outstanding并更新status
+    const fullBooking = await prisma.bookingData.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        payments: true
+      }
+    })
+    
+    if (fullBooking) {
+      const totalCost = fullBooking.items.reduce((sum, item) => 
+        sum + Number(item.price || 0), 0
+      )
+      const discount = Number(fullBooking.discount || 0)
+      const paid = fullBooking.payments.reduce((sum, payment) => 
+        sum + Number(payment.amountpaid || 0), 0
+      )
+      const outstanding = (totalCost - discount) - paid
+      
+      // 如果outstanding <= 0，自动设置status为Close
+      if (outstanding <= 0.001) {
+        await prisma.bookingData.update({
+          where: { id },
+          data: { status: 'Close' }
+        })
+      }
+    }
+    
     return NextResponse.json({ 
       success: true,
       payment

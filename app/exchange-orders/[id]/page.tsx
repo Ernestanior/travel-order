@@ -201,6 +201,8 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
       bookingNumber: order.bookingNumber,
       date: order.exchangeDate,
       supplier: order.supplier,
+      supplierAddress: order.supplierAddress,
+      supplierTel: order.supplierTel,
       customer: order.customer,
       tourCode: order.tourCode,
       tour: order.tour,
