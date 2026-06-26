@@ -163,17 +163,21 @@ export async function POST(request: Request) {
       }
     })
     
-    // 创建一个 item 记录金额
-    if (body.amount && body.amount > 0) {
-      await prisma.exchangeItemData.create({
-        data: {
-          exchangeno: newExchangeNumber,
-          item: body.tour || 'Service Fee',
-          quantity: 1,
-          unitprice: body.amount,
-          price: body.amount,
+    // 创建 items
+    if (body.items && Array.isArray(body.items) && body.items.length > 0) {
+      for (const item of body.items) {
+        if (item.item && item.item.trim() !== '') {
+          await prisma.exchangeItemData.create({
+            data: {
+              exchangeno: newExchangeNumber,
+              item: item.item,
+              quantity: item.quantity || 1,
+              unitprice: item.unitPrice || 0,
+              price: item.price || 0,
+            }
+          })
         }
-      })
+      }
     }
 
     return NextResponse.json({ 

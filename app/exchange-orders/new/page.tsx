@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Search, X } from 'lucide-react'
+import { ArrowLeft, Save, Search, X, Plus, Trash2 } from 'lucide-react'
 import { notification } from 'antd'
 
 interface BookingOrder {
@@ -46,11 +46,13 @@ export default function NewExchangeOrderPage() {
   const [supplierSearch, setSupplierSearch] = useState('')
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [showSupplierDropdown, setShowSupplierDropdown] = useState(false)
+  const [items, setItems] = useState<{ item: string; quantity: number; unitPrice: number; price: number }[]>([
+    { item: '', quantity: 1, unitPrice: 0, price: 0 }
+  ])
   
   const [formData, setFormData] = useState({
     exchangeDate: new Date().toISOString().split('T')[0],
     supplier: '',
-    amount: '',
     notes: '',
     // 这些会从 Booking 自动填充
     customer: '',
@@ -152,8 +154,21 @@ export default function NewExchangeOrderPage() {
       const response = await fetch(`/api/booking-orders/${booking.id}`)
       const fullBooking = await response.json()
       
-      // 存储 booking items
+      // 存储 booking items（仅供参考显示）
       setBookingItems(fullBooking.items || [])
+      
+      // 复制 booking items 到 exchange items（作为初始值）
+      if (fullBooking.items && fullBooking.items.length > 0) {
+        setItems(fullBooking.items.map((item: BookingItem) => ({
+          item: item.item,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          price: item.price
+        })))
+      } else {
+        // 如果没有 items，设置一个空行
+        setItems([{ item: '', quantity: 1, unitPrice: 0, price: 0 }])
+      }
       
       // 自动填充表单
       setFormData({
@@ -185,7 +200,6 @@ export default function NewExchangeOrderPage() {
         arrivalTime3: fullBooking.arrivalTime3 || '',
         arrivalFlight3: fullBooking.arrivalFlight3 || '',
         arrivalDest3: fullBooking.arrivalDest3 || '',
-        amount: fullBooking.totalCost.toString() || '',
       })
       
       setStep('fillDetails')
@@ -198,6 +212,29 @@ export default function NewExchangeOrderPage() {
       })
     }
   }
+
+  // Item 操作
+  const addItem = () => {
+    setItems([...items, { item: '', quantity: 1, unitPrice: 0, price: 0 }])
+  }
+
+  const updateItem = (index: number, field: 'item' | 'quantity' | 'unitPrice', value: any) => {
+    const newItems = [...items]
+    newItems[index] = { ...newItems[index], [field]: value }
+    
+    // 自动计算 price
+    if (field === 'quantity' || field === 'unitPrice') {
+      newItems[index].price = newItems[index].quantity * newItems[index].unitPrice
+    }
+    
+    setItems(newItems)
+  }
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index))
+  }
+
+  const totalAmount = items.reduce((sum, item) => sum + item.price, 0)
 
   // 保存 Exchange Order
   const handleSave = async () => {
@@ -219,10 +256,12 @@ export default function NewExchangeOrderPage() {
       return
     }
     
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+    // 验证 items
+    const validItems = items.filter(item => item.item.trim() !== '' && item.quantity > 0)
+    if (validItems.length === 0) {
       notification.error({
         message: 'Validation Error',
-        description: 'Please enter a valid amount',
+        description: 'Please add at least one item',
         placement: 'topRight',
       })
       return
@@ -237,7 +276,7 @@ export default function NewExchangeOrderPage() {
           bookingNumber: selectedBooking.bookingNumber,
           exchangeDate: formData.exchangeDate,
           supplier: formData.supplier,
-          amount: parseFloat(formData.amount),
+          items: validItems, // 发送 items 数组
           customer: formData.customer,
           tour: formData.tour,
           tourCode: formData.tourCode,
@@ -453,405 +492,455 @@ export default function NewExchangeOrderPage() {
                   <span className="ml-2 font-medium text-blue-900">${selectedBooking.totalCost.toFixed(2)}</span>
                 </div>
               </div>
-              
-              {/* Items 显示 */}
-              {bookingItems.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-blue-200">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-2">Items</h4>
-                  <div className="space-y-2">
-                    {bookingItems.map((item, index) => (
-                      <div key={index} className="flex justify-between items-start text-sm bg-white rounded px-3 py-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{item.item}</p>
-                          <p className="text-xs text-gray-600">{item.quantity} × ${item.unitPrice.toFixed(2)}</p>
-                        </div>
-                        <p className="font-medium text-gray-900">${item.price.toFixed(2)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Exchange 基本信息 */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Exchange Details</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Exchange Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.exchangeDate}
-                    onChange={(e) => setFormData({ ...formData, exchangeDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Supplier <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={supplierSearch || formData.supplier}
-                      onChange={(e) => {
-                        setSupplierSearch(e.target.value)
-                        setFormData({ ...formData, supplier: e.target.value })
-                      }}
-                      onFocus={() => setShowSupplierDropdown(true)}
-                      placeholder="Type supplier name..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                    {(supplierSearch || formData.supplier) && (
-                      <button
-                        onClick={() => {
-                          setSupplierSearch('')
-                          setFormData({ ...formData, supplier: '' })
-                          setShowSupplierDropdown(false)
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+            {/* 两列布局 - 与编辑页面一致 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Exchange Information */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Exchange Information</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Exchange Date</label>
+                      <input
+                        type="date"
+                        value={formData.exchangeDate}
+                        onChange={(e) => setFormData({ ...formData, exchangeDate: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
                     
-                    {/* 供应商下拉列表 */}
-                    {showSupplierDropdown && suppliers.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                        {suppliers.map((supplier) => (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={supplierSearch || formData.supplier}
+                          onChange={(e) => {
+                            setSupplierSearch(e.target.value)
+                            setFormData({ ...formData, supplier: e.target.value })
+                          }}
+                          onFocus={() => setShowSupplierDropdown(true)}
+                          placeholder="Type supplier name..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        />
+                        {(supplierSearch || formData.supplier) && (
                           <button
-                            key={supplier.id}
                             onClick={() => {
-                              setFormData({ ...formData, supplier: supplier.name })
                               setSupplierSearch('')
+                              setFormData({ ...formData, supplier: '' })
                               setShowSupplierDropdown(false)
                             }}
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                           >
-                            <div className="font-medium">{supplier.name}</div>
-                            {supplier.tel && (
-                              <div className="text-xs text-gray-500">{supplier.tel}</div>
-                            )}
+                            <X className="w-4 h-4" />
                           </button>
-                        ))}
+                        )}
+                        
+                        {/* 供应商下拉列表 */}
+                        {showSupplierDropdown && suppliers.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                            {suppliers.map((supplier) => (
+                              <button
+                                key={supplier.id}
+                                onClick={() => {
+                                  setFormData({ ...formData, supplier: supplier.name })
+                                  setSupplierSearch('')
+                                  setShowSupplierDropdown(false)
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                              >
+                                <div className="font-medium">{supplier.name}</div>
+                                {supplier.tel && (
+                                  <div className="text-xs text-gray-500">{supplier.tel}</div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Customer (from Booking)</label>
+                      <p className="text-sm text-gray-900">{formData.customer || 'N/A'}</p>
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount (SGD) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    placeholder="0.00"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Booking total: ${selectedBooking.totalCost.toFixed(2)}
-                  </p>
+
+                {/* Items */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">Items</h2>
+                    <button
+                      onClick={addItem}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Item
+                    </button>
+                  </div>
+
+                  {items.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-8">No items</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {items.map((item, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-3">
+                          <div className="grid grid-cols-12 gap-2 items-start">
+                            <div className="col-span-5">
+                              <input
+                                type="text"
+                                value={item.item}
+                                onChange={(e) => updateItem(index, 'item', e.target.value)}
+                                placeholder="Item name"
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 0)}
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={item.unitPrice}
+                                onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <input
+                                type="text"
+                                value={`$${item.price.toFixed(2)}`}
+                                readOnly
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 font-medium"
+                              />
+                            </div>
+                            <div className="col-span-1 flex items-center">
+                              <button
+                                onClick={() => removeItem(index)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                      <span className="text-lg font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Flight Information */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Flight Information</h2>
+                  
+                  <div className="space-y-4">
+                    {/* Departures */}
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Departures</h3>
+                  
+                      {/* Departure 1 - Always visible */}
+                      <div className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-gray-600">Departure 1</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <input
+                            type="date"
+                            value={formData.departureDate}
+                            onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                          />
+                          <input
+                            type="text"
+                            value={formData.departureTime}
+                            onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Time"
+                          />
+                          <input
+                            type="text"
+                            value={formData.departureFlight}
+                            onChange={(e) => setFormData({ ...formData, departureFlight: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Flight"
+                          />
+                          <input
+                            type="text"
+                            value={formData.departureDest}
+                            onChange={(e) => setFormData({ ...formData, departureDest: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Dest"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Departure 2 - Shows when Departure 1 has date */}
+                      {formData.departureDate && (
+                        <div className="border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">Departure 2</span>
+                            <button
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                departureDate2: '', 
+                                departureTime2: '', 
+                                departureFlight2: '', 
+                                departureDest2: '' 
+                              })}
+                              className="text-red-600 hover:bg-red-50 p-1 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            <input
+                              type="date"
+                              value={formData.departureDate2}
+                              onChange={(e) => setFormData({ ...formData, departureDate2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={formData.departureTime2}
+                              onChange={(e) => setFormData({ ...formData, departureTime2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Time"
+                            />
+                            <input
+                              type="text"
+                              value={formData.departureFlight2}
+                              onChange={(e) => setFormData({ ...formData, departureFlight2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Flight"
+                            />
+                            <input
+                              type="text"
+                              value={formData.departureDest2}
+                              onChange={(e) => setFormData({ ...formData, departureDest2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Dest"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Departure 3 - Shows when Departure 2 has date */}
+                      {formData.departureDate2 && (
+                        <div className="border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">Departure 3</span>
+                            <button
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                departureDate3: '', 
+                                departureTime3: '', 
+                                departureFlight3: '', 
+                                departureDest3: '' 
+                              })}
+                              className="text-red-600 hover:bg-red-50 p-1 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            <input
+                              type="date"
+                              value={formData.departureDate3}
+                              onChange={(e) => setFormData({ ...formData, departureDate3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={formData.departureTime3}
+                              onChange={(e) => setFormData({ ...formData, departureTime3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Time"
+                            />
+                            <input
+                              type="text"
+                              value={formData.departureFlight3}
+                              onChange={(e) => setFormData({ ...formData, departureFlight3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Flight"
+                            />
+                            <input
+                              type="text"
+                              value={formData.departureDest3}
+                              onChange={(e) => setFormData({ ...formData, departureDest3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Dest"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Arrivals */}
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Arrivals</h3>
+                      
+                      {/* Arrival 1 - Always visible */}
+                      <div className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-gray-600">Arrival 1</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <input
+                            type="date"
+                            value={formData.arrivalDate}
+                            onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                          />
+                          <input
+                            type="text"
+                            value={formData.arrivalTime}
+                            onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Time"
+                          />
+                          <input
+                            type="text"
+                            value={formData.arrivalFlight}
+                            onChange={(e) => setFormData({ ...formData, arrivalFlight: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Flight"
+                          />
+                          <input
+                            type="text"
+                            value={formData.arrivalDest}
+                            onChange={(e) => setFormData({ ...formData, arrivalDest: e.target.value })}
+                            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            placeholder="Dest"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Arrival 2 - Shows when Arrival 1 has date */}
+                      {formData.arrivalDate && (
+                        <div className="border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">Arrival 2</span>
+                            <button
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                arrivalDate2: '', 
+                                arrivalTime2: '', 
+                                arrivalFlight2: '', 
+                                arrivalDest2: '' 
+                              })}
+                              className="text-red-600 hover:bg-red-50 p-1 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            <input
+                              type="date"
+                              value={formData.arrivalDate2}
+                              onChange={(e) => setFormData({ ...formData, arrivalDate2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={formData.arrivalTime2}
+                              onChange={(e) => setFormData({ ...formData, arrivalTime2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Time"
+                            />
+                            <input
+                              type="text"
+                              value={formData.arrivalFlight2}
+                              onChange={(e) => setFormData({ ...formData, arrivalFlight2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Flight"
+                            />
+                            <input
+                              type="text"
+                              value={formData.arrivalDest2}
+                              onChange={(e) => setFormData({ ...formData, arrivalDest2: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Dest"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Arrival 3 - Shows when Arrival 2 has date */}
+                      {formData.arrivalDate2 && (
+                        <div className="border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-gray-600">Arrival 3</span>
+                            <button
+                              onClick={() => setFormData({ 
+                                ...formData, 
+                                arrivalDate3: '', 
+                                arrivalTime3: '', 
+                                arrivalFlight3: '', 
+                                arrivalDest3: '' 
+                              })}
+                              className="text-red-600 hover:bg-red-50 p-1 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            <input
+                              type="date"
+                              value={formData.arrivalDate3}
+                              onChange={(e) => setFormData({ ...formData, arrivalDate3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                            />
+                            <input
+                              type="text"
+                              value={formData.arrivalTime3}
+                              onChange={(e) => setFormData({ ...formData, arrivalTime3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Time"
+                            />
+                            <input
+                              type="text"
+                              value={formData.arrivalFlight3}
+                              onChange={(e) => setFormData({ ...formData, arrivalFlight3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Flight"
+                            />
+                            <input
+                              type="text"
+                              value={formData.arrivalDest3}
+                              onChange={(e) => setFormData({ ...formData, arrivalDest3: e.target.value })}
+                              className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+                              placeholder="Dest"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Flight Information (预填充的) */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Flight Information (from Booking)</h2>
-              
-              <div className="space-y-4">
-                {/* Departures */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Departures</h3>
-                  
-                  {/* Departure 1 - Always visible */}
-                  <div className="border border-gray-200 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-gray-600">Departure 1</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      <input
-                        type="date"
-                        value={formData.departureDate}
-                        onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                      />
-                      <input
-                        type="text"
-                        value={formData.departureTime}
-                        onChange={(e) => setFormData({ ...formData, departureTime: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        placeholder="Time"
-                      />
-                      <input
-                        type="text"
-                        value={formData.departureFlight}
-                        onChange={(e) => setFormData({ ...formData, departureFlight: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        placeholder="Flight"
-                      />
-                      <input
-                        type="text"
-                        value={formData.departureDest}
-                        onChange={(e) => setFormData({ ...formData, departureDest: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        placeholder="Dest"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Departure 2 - Shows when Departure 1 has date */}
-                  {formData.departureDate && (
-                    <div className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-600">Departure 2</span>
-                        <button
-                          onClick={() => setFormData({ 
-                            ...formData, 
-                            departureDate2: '', 
-                            departureTime2: '', 
-                            departureFlight2: '', 
-                            departureDest2: '' 
-                          })}
-                          className="text-red-600 hover:bg-red-50 p-1 rounded"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <input
-                          type="date"
-                          value={formData.departureDate2}
-                          onChange={(e) => setFormData({ ...formData, departureDate2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        />
-                        <input
-                          type="text"
-                          value={formData.departureTime2}
-                          onChange={(e) => setFormData({ ...formData, departureTime2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Time"
-                        />
-                        <input
-                          type="text"
-                          value={formData.departureFlight2}
-                          onChange={(e) => setFormData({ ...formData, departureFlight2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Flight"
-                        />
-                        <input
-                          type="text"
-                          value={formData.departureDest2}
-                          onChange={(e) => setFormData({ ...formData, departureDest2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Dest"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Departure 3 - Shows when Departure 2 has date */}
-                  {formData.departureDate2 && (
-                    <div className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-600">Departure 3</span>
-                        <button
-                          onClick={() => setFormData({ 
-                            ...formData, 
-                            departureDate3: '', 
-                            departureTime3: '', 
-                            departureFlight3: '', 
-                            departureDest3: '' 
-                          })}
-                          className="text-red-600 hover:bg-red-50 p-1 rounded"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <input
-                          type="date"
-                          value={formData.departureDate3}
-                          onChange={(e) => setFormData({ ...formData, departureDate3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        />
-                        <input
-                          type="text"
-                          value={formData.departureTime3}
-                          onChange={(e) => setFormData({ ...formData, departureTime3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Time"
-                        />
-                        <input
-                          type="text"
-                          value={formData.departureFlight3}
-                          onChange={(e) => setFormData({ ...formData, departureFlight3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Flight"
-                        />
-                        <input
-                          type="text"
-                          value={formData.departureDest3}
-                          onChange={(e) => setFormData({ ...formData, departureDest3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Dest"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Arrivals */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-gray-700 border-b pb-1">Arrivals</h3>
-                  
-                  {/* Arrival 1 - Always visible */}
-                  <div className="border border-gray-200 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-gray-600">Arrival 1</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      <input
-                        type="date"
-                        value={formData.arrivalDate}
-                        onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                      />
-                      <input
-                        type="text"
-                        value={formData.arrivalTime}
-                        onChange={(e) => setFormData({ ...formData, arrivalTime: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        placeholder="Time"
-                      />
-                      <input
-                        type="text"
-                        value={formData.arrivalFlight}
-                        onChange={(e) => setFormData({ ...formData, arrivalFlight: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        placeholder="Flight"
-                      />
-                      <input
-                        type="text"
-                        value={formData.arrivalDest}
-                        onChange={(e) => setFormData({ ...formData, arrivalDest: e.target.value })}
-                        className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        placeholder="Dest"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Arrival 2 - Shows when Arrival 1 has date */}
-                  {formData.arrivalDate && (
-                    <div className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-600">Arrival 2</span>
-                        <button
-                          onClick={() => setFormData({ 
-                            ...formData, 
-                            arrivalDate2: '', 
-                            arrivalTime2: '', 
-                            arrivalFlight2: '', 
-                            arrivalDest2: '' 
-                          })}
-                          className="text-red-600 hover:bg-red-50 p-1 rounded"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <input
-                          type="date"
-                          value={formData.arrivalDate2}
-                          onChange={(e) => setFormData({ ...formData, arrivalDate2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        />
-                        <input
-                          type="text"
-                          value={formData.arrivalTime2}
-                          onChange={(e) => setFormData({ ...formData, arrivalTime2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Time"
-                        />
-                        <input
-                          type="text"
-                          value={formData.arrivalFlight2}
-                          onChange={(e) => setFormData({ ...formData, arrivalFlight2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Flight"
-                        />
-                        <input
-                          type="text"
-                          value={formData.arrivalDest2}
-                          onChange={(e) => setFormData({ ...formData, arrivalDest2: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Dest"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Arrival 3 - Shows when Arrival 2 has date */}
-                  {formData.arrivalDate2 && (
-                    <div className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-gray-600">Arrival 3</span>
-                        <button
-                          onClick={() => setFormData({ 
-                            ...formData, 
-                            arrivalDate3: '', 
-                            arrivalTime3: '', 
-                            arrivalFlight3: '', 
-                            arrivalDest3: '' 
-                          })}
-                          className="text-red-600 hover:bg-red-50 p-1 rounded"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <input
-                          type="date"
-                          value={formData.arrivalDate3}
-                          onChange={(e) => setFormData({ ...formData, arrivalDate3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                        />
-                        <input
-                          type="text"
-                          value={formData.arrivalTime3}
-                          onChange={(e) => setFormData({ ...formData, arrivalTime3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Time"
-                        />
-                        <input
-                          type="text"
-                          value={formData.arrivalFlight3}
-                          onChange={(e) => setFormData({ ...formData, arrivalFlight3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Flight"
-                        />
-                        <input
-                          type="text"
-                          value={formData.arrivalDest3}
-                          onChange={(e) => setFormData({ ...formData, arrivalDest3: e.target.value })}
-                          className="px-2 py-1.5 border border-gray-300 rounded text-sm"
-                          placeholder="Dest"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
+            {/* Notes - 移到两列布局之外 */}
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Notes</h2>
               <textarea
