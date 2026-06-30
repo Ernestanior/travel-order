@@ -368,33 +368,18 @@ export default function NewBookingOrderPage() {
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tel / HP <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.tel}
-                      onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Phone number"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Email address"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tel / HP <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tel}
+                    onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="Phone number"
+                    required
+                  />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">

@@ -144,20 +144,37 @@ export async function PUT(
     
     // 先更新或创建 Customer 记录（如果提供了 address 或 tel）
     if (body.customerName && body.tel) {
-      await prisma.customer.upsert({
-        where: { customer: body.customerName },
-        update: {
-          address: body.address || null,
-          tel: body.tel,
-          email: body.email || null,
-        },
-        create: {
-          customer: body.customerName,
-          address: body.address || null,
-          tel: body.tel,
-          email: body.email || null,
-        }
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { customer: body.customerName }
       })
+      
+      if (existingCustomer) {
+        // 客户已存在，只更新提供了新值的字段
+        const updateData: any = { tel: body.tel }
+        
+        if (body.address !== undefined && body.address !== '') {
+          updateData.address = body.address
+        }
+        
+        if (body.email !== undefined && body.email !== '') {
+          updateData.email = body.email
+        }
+        
+        await prisma.customer.update({
+          where: { customer: body.customerName },
+          data: updateData
+        })
+      } else {
+        // 客户不存在，创建新客户
+        await prisma.customer.create({
+          data: {
+            customer: body.customerName,
+            address: body.address || null,
+            tel: body.tel,
+            email: body.email || null,
+          }
+        })
+      }
     }
     
     // 更新主订单信息

@@ -74,12 +74,32 @@ export async function POST(request: Request) {
           email: body.email || null
         }
       })
-    } else if (body.email && existingCustomer.email !== body.email) {
-      // 如果客户已存在但 email 不同，更新 email
-      await prisma.customer.update({
-        where: { customer: customerName },
-        data: { email: body.email }
-      })
+    } else {
+      // 客户已存在，更新信息（如果提供了新的信息）
+      const updateData: any = {}
+      
+      // 更新 email（如果提供了新值）
+      if (body.email && existingCustomer.email !== body.email) {
+        updateData.email = body.email
+      }
+      
+      // 更新 address（如果提供了新值）
+      if (body.address && existingCustomer.address !== body.address) {
+        updateData.address = body.address
+      }
+      
+      // 更新 tel（如果提供了新值）
+      if (customerTel && existingCustomer.tel !== customerTel) {
+        updateData.tel = customerTel
+      }
+      
+      // 如果有任何更新，执行更新操作
+      if (Object.keys(updateData).length > 0) {
+        await prisma.customer.update({
+          where: { customer: customerName },
+          data: updateData
+        })
+      }
     }
     
     // 创建主订单
