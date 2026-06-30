@@ -9,17 +9,16 @@ export async function POST(request: Request) {
     const { prisma } = await import('@/lib/db')
     const body = await request.json()
     
-    // 生成新的唯一 booking number
-    // 查询数据库中最大的数字订单号
-    const maxBookingNumber = await prisma.$queryRaw<Array<{ max_bookno: string | null }>>`
-      SELECT MAX(CAST(bookno AS INTEGER)) as max_bookno 
-      FROM booking_data 
-      WHERE bookno ~ '^[0-9]+$'
-    `
+    // 生成新的唯一 booking number (格式: T100001, T100002, ...)
+    // 查询数据库中最大的 ID
+    const maxBooking = await prisma.bookingData.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true }
+    })
     
-    let nextNumber = 1043495 // 默认起始值
-    if (maxBookingNumber && maxBookingNumber[0]?.max_bookno) {
-      nextNumber = parseInt(maxBookingNumber[0].max_bookno) + 1
+    let nextNumber = 100001 // 默认起始值
+    if (maxBooking && maxBooking.id) {
+      nextNumber = maxBooking.id + 1
     }
     
     // 使用重试机制确保唯一性（防止并发冲突）
@@ -28,7 +27,7 @@ export async function POST(request: Request) {
     const maxAttempts = 10
     
     while (attempts < maxAttempts) {
-      newBookingNumber = `${nextNumber + attempts}`
+      newBookingNumber = `T${nextNumber + attempts}`
       
       // 检查是否已存在
       const existing = await prisma.bookingData.findUnique({

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Search, X, Receipt, Printer, FileDown } from 'lucide-react'
 import { generateReceiptPDF } from '@/lib/pdfGenerator'
+import { formatDate } from '@/lib/dateUtils'
 
 interface ReceiptData {
   id: number
@@ -388,7 +389,7 @@ export default function ReceiptsPage() {
                         {receipt.bookingNumber}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {receipt.receiptDate || '-'}
+                        {formatDate(receipt.receiptDate)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {receipt.customer}

@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Edit2, Trash2, Plus, FileDown, DollarSign, X } from 'l
 import { notification } from 'antd'
 import { generateExchangeInvoicePDF } from '@/lib/pdfGenerator'
 import MakePaymentModal from './MakePaymentModal'
+import { formatDate } from '@/lib/dateUtils'
 
 interface Item {
   item: string
@@ -67,6 +68,13 @@ interface ExchangeOrder {
   payments: Payment[]
 }
 
+interface Supplier {
+  id: string
+  name: string
+  tel: string
+  address?: string
+}
+
 export default function ExchangeOrderDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [order, setOrder] = useState<ExchangeOrder | null>(null)
@@ -78,10 +86,45 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
   
   const [formData, setFormData] = useState<Partial<ExchangeOrder>>({})
   const [editItems, setEditItems] = useState<Item[]>([])
+  
+  // Supplier search states
+  const [supplierSearch, setSupplierSearch] = useState('')
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false)
 
   useEffect(() => {
     loadOrder()
   }, [params.id])
+  
+  // Load suppliers when search text changes
+  useEffect(() => {
+    if (supplierSearch && supplierSearch.length > 0 && isEditing) {
+      loadSuppliers()
+    } else {
+      setSuppliers([])
+      setShowSupplierDropdown(false)
+    }
+  }, [supplierSearch, isEditing])
+  
+  const loadSuppliers = async () => {
+    try {
+      const params = new URLSearchParams()
+      params.set('search', supplierSearch)
+      params.set('limit', '10')
+      
+      const response = await fetch(`/api/suppliers?${params}`)
+      const result = await response.json()
+      
+      if (result.data && Array.isArray(result.data)) {
+        setSuppliers(result.data)
+      } else if (Array.isArray(result)) {
+        setSuppliers(result)
+      }
+      setShowSupplierDropdown(true)
+    } catch (error) {
+      console.error('Error loading suppliers:', error)
+    }
+  }
 
   const loadOrder = async () => {
     setLoading(true)
@@ -104,12 +147,16 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
     setIsEditing(true)
     setFormData(order || {})
     setEditItems(order?.items || [])
+    setSupplierSearch('')
+    setShowSupplierDropdown(false)
   }
 
   const handleCancelEdit = () => {
     setIsEditing(false)
     setFormData(order || {})
     setEditItems(order?.items || [])
+    setSupplierSearch('')
+    setShowSupplierDropdown(false)
   }
 
   const handleSave = async () => {
@@ -136,6 +183,8 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
       if (response.ok) {
         await loadOrder()
         setIsEditing(false)
+        setSupplierSearch('')
+        setShowSupplierDropdown(false)
         notification.success({
           message: 'Success',
           description: 'Exchange order updated successfully',
@@ -391,16 +440,69 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                       onChange={(e) => setFormData({ ...formData, exchangeDate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                   ) : (
-                    <p className="text-sm text-gray-900">{order.exchangeDate}</p>
+                    <p className="text-sm text-gray-900">{formatDate(order.exchangeDate)}</p>
                   )}
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
                   {isEditing ? (
-                    <input type="text" value={displayData.supplier || ''}
-                      onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={supplierSearch || displayData.supplier || ''}
+                        onChange={(e) => {
+                          setSupplierSearch(e.target.value)
+                          setFormData({ ...formData, supplier: e.target.value })
+                        }}
+                        onFocus={() => {
+                          if (supplierSearch) {
+                            setShowSupplierDropdown(true)
+                          }
+                        }}
+                        placeholder="Type supplier name..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      {(supplierSearch || displayData.supplier) && (
+                        <button
+                          onClick={() => {
+                            setSupplierSearch('')
+                            setFormData({ ...formData, supplier: '' })
+                            setShowSupplierDropdown(false)
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {/* Supplier dropdown list */}
+                      {showSupplierDropdown && suppliers.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                          {suppliers.map((supplier) => (
+                            <button
+                              key={supplier.id}
+                              onClick={() => {
+                                setFormData({ 
+                                  ...formData, 
+                                  supplier: supplier.name,
+                                  supplierAddress: supplier.address || '',
+                                  supplierTel: supplier.tel || ''
+                                })
+                                setSupplierSearch('')
+                                setShowSupplierDropdown(false)
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                            >
+                              <div className="font-medium">{supplier.name}</div>
+                              {supplier.tel && (
+                                <div className="text-xs text-gray-500">{supplier.tel}</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-sm text-gray-900">{order.supplier}</p>
                   )}

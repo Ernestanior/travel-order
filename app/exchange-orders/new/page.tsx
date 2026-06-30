@@ -28,6 +28,7 @@ interface Supplier {
   id: string
   name: string
   tel: string
+  address?: string
 }
 
 export default function NewExchangeOrderPage() {
@@ -53,6 +54,8 @@ export default function NewExchangeOrderPage() {
   const [formData, setFormData] = useState({
     exchangeDate: new Date().toISOString().split('T')[0],
     supplier: '',
+    supplierAddress: '',
+    supplierTel: '',
     notes: '',
     // 这些会从 Booking 自动填充
     customer: '',
@@ -157,18 +160,10 @@ export default function NewExchangeOrderPage() {
       // 存储 booking items（仅供参考显示）
       setBookingItems(fullBooking.items || [])
       
-      // 复制 booking items 到 exchange items（作为初始值）
-      if (fullBooking.items && fullBooking.items.length > 0) {
-        setItems(fullBooking.items.map((item: BookingItem) => ({
-          item: item.item,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          price: item.price
-        })))
-      } else {
-        // 如果没有 items，设置一个空行
-        setItems([{ item: '', quantity: 1, unitPrice: 0, price: 0 }])
-      }
+      // Exchange Order 的 items 不从 Booking Order 复制
+      // 因为 Exchange Order 是发给供应商的，items 与 Booking Order 不同
+      // 保持空白，让用户自己填写
+      setItems([{ item: '', quantity: 1, unitPrice: 0, price: 0 }])
       
       // 自动填充表单
       setFormData({
@@ -530,7 +525,12 @@ export default function NewExchangeOrderPage() {
                           <button
                             onClick={() => {
                               setSupplierSearch('')
-                              setFormData({ ...formData, supplier: '' })
+                              setFormData({ 
+                                ...formData, 
+                                supplier: '', 
+                                supplierAddress: '', 
+                                supplierTel: '' 
+                              })
                               setShowSupplierDropdown(false)
                             }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -546,7 +546,12 @@ export default function NewExchangeOrderPage() {
                               <button
                                 key={supplier.id}
                                 onClick={() => {
-                                  setFormData({ ...formData, supplier: supplier.name })
+                                  setFormData({ 
+                                    ...formData, 
+                                    supplier: supplier.name,
+                                    supplierAddress: supplier.address || '',
+                                    supplierTel: supplier.tel || ''
+                                  })
                                   setSupplierSearch('')
                                   setShowSupplierDropdown(false)
                                 }}
@@ -561,6 +566,28 @@ export default function NewExchangeOrderPage() {
                           </div>
                         )}
                       </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Address</label>
+                      <textarea
+                        value={formData.supplierAddress}
+                        onChange={(e) => setFormData({ ...formData, supplierAddress: e.target.value })}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="Supplier address..."
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Tel</label>
+                      <input
+                        type="text"
+                        value={formData.supplierTel}
+                        onChange={(e) => setFormData({ ...formData, supplierTel: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="Supplier telephone..."
+                      />
                     </div>
                     
                     <div>

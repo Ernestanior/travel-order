@@ -229,11 +229,25 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   doc.setFont('helvetica', 'bold')
   doc.text('BOOKING INVOICE', 200, 20, { align: 'right' })
   
+  // Helper function to format date as DD-MM-YYYY
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-'
+    try {
+      const date = new Date(dateStr)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}-${month}-${year}`
+    } catch {
+      return dateStr
+    }
+  }
+  
   // Invoice Number and Date (右上角)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   doc.text(`Invoice Number: ${data.bookingNumber}`, 200, 28, { align: 'right' })
-  doc.text(`Date: ${data.date}`, 200, 34, { align: 'right' })
+  doc.text(`Date: ${formatDate(data.date)}`, 200, 34, { align: 'right' })
   
   let y = 50
   
@@ -284,19 +298,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   const boxY = y
   const boxWidth = 180  // 固定宽度
   
-  // Helper function to format date as DD-MM-YYYY
-  const formatDate = (dateStr: string | undefined) => {
-    if (!dateStr) return '-'
-    try {
-      const date = new Date(dateStr)
-      const day = String(date.getDate()).padStart(2, '0')
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const year = date.getFullYear()
-      return `${day}-${month}-${year}`
-    } catch {
-      return dateStr
-    }
-  }
+  // formatDate function already defined above
   
   // 计算需要多少行
   let flightCount = 0
@@ -514,8 +516,8 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     const passengerRows = data.passengers.map(p => [
       p.name, 
       p.passport || '-',
-      p.birthdate || '-',  // DOB
-      p.passportExpiryDate || '-'  // DOE
+      formatDate(p.birthdate),  // DOB - 使用 DD-MM-YYYY 格式
+      formatDate(p.passportExpiryDate)  // DOE - 使用 DD-MM-YYYY 格式
     ])
     
     autoTable(doc, {
@@ -1107,6 +1109,20 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   // 加载logo
   const logoBase64 = await loadLogoAsBase64()
   
+  // Helper function to format date as DD-MM-YYYY
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-'
+    try {
+      const date = new Date(dateStr)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}-${month}-${year}`
+    } catch {
+      return dateStr
+    }
+  }
+  
   // 公司信息
   const companyInfo = {
     address: '101 Upper Cross Street, People\'s Park Centre',
@@ -1144,7 +1160,7 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   doc.setFont('helvetica', 'normal')
   doc.text(`Receipt No : ${data.receiptNo}`, 20, 82)
   doc.text(`Booking No: ${data.bookingNumber}`, 20, 90)
-  doc.text(`Date  :  ${data.date}`, 20, 98)
+  doc.text(`Date  :  ${formatDate(data.date)}`, 20, 98)
   
   // 横线
   doc.setLineWidth(0.8)
@@ -1174,7 +1190,7 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   doc.setFont('helvetica', 'normal')
   // Try to extract date from "for" field, otherwise use booking date
   const departureMatch = data.for ? data.for.match(/\d{4}-\d{2}-\d{2}/) : null
-  const departureDate = departureMatch ? departureMatch[0] : (data.date || '-')
+  const departureDate = departureMatch ? formatDate(departureMatch[0]) : (formatDate(data.date) || '-')
   doc.text(`:  ${departureDate}`, 55, y)
   
   y += 12

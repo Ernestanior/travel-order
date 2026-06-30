@@ -9,17 +9,16 @@ export async function POST(request: Request) {
     const { prisma } = await import('@/lib/db')
     const body = await request.json()
     
-    // 生成新的唯一 exchange number
-    // 查询数据库中最大的数字订单号
-    const maxExchangeNumber = await prisma.$queryRaw<Array<{ max_exchangeno: string | null }>>`
-      SELECT MAX(CAST(exchangeno AS INTEGER)) as max_exchangeno 
-      FROM exchange_data 
-      WHERE exchangeno ~ '^[0-9]+$'
-    `
+    // 生成新的唯一 exchange number (格式: 1100001, 1100002, ...)
+    // 查询数据库中最大的 ID
+    const maxExchange = await prisma.exchangeData.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true }
+    })
     
-    let nextNumber = 1041744 // 默认起始值
-    if (maxExchangeNumber && maxExchangeNumber[0]?.max_exchangeno) {
-      nextNumber = parseInt(maxExchangeNumber[0].max_exchangeno) + 1
+    let nextNumber = 100001 // 默认起始值
+    if (maxExchange && maxExchange.id) {
+      nextNumber = maxExchange.id + 1
     }
     
     // 使用重试机制确保唯一性（防止并发冲突）
@@ -28,7 +27,7 @@ export async function POST(request: Request) {
     const maxAttempts = 10
     
     while (attempts < maxAttempts) {
-      newExchangeNumber = `${nextNumber + attempts}`
+      newExchangeNumber = `1${nextNumber + attempts}`
       
       // 检查是否已存在
       const existing = await prisma.exchangeData.findUnique({
@@ -66,21 +65,37 @@ export async function POST(request: Request) {
       throw new Error(`Booking Order ${body.bookingNumber} 不存在`)
     }
     
-    // 确保供应商存在（如果不存在则创建）
+    // 确保供应商存在（如果不存在则创建，如果存在则更新）
     const existingSupplier = await prisma.supplier.findUnique({
       where: { supplier: body.supplier }
     })
     
     if (!existingSupplier) {
-      // 创建新供应商（使用默认电话号码，因为 Supplier 表的 tel 字段不能为空）
+      // 创建新供应商
       await prisma.supplier.create({
         data: {
           supplier: body.supplier,
-          tel: 'N/A',  // 默认值，稍后可以更新
-          address: null,
+          tel: body.supplierTel || 'N/A',  // 使用用户提供的电话，或默认值
+          address: body.supplierAddress || null,
           fax: null
         }
       })
+    } else if (body.supplierTel || body.supplierAddress) {
+      // 如果提供了新的地址或电话，更新现有供应商信息
+      const updateData: any = {}
+      if (body.supplierTel) {
+        updateData.tel = body.supplierTel
+      }
+      if (body.supplierAddress) {
+        updateData.address = body.supplierAddress
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await prisma.supplier.update({
+          where: { supplier: body.supplier },
+          data: updateData
+        })
+      }
     }
     
     // 确保客户存在（如果提供了客户名称）

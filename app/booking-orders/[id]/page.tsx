@@ -32,6 +32,8 @@ interface Payment {
   amount: number
 }
 
+import { formatDate } from '@/lib/dateUtils'
+
 interface BookingOrder {
   id: number
   bookingNumber: string
@@ -681,7 +683,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                             </span>
                           </div>
                           <p className="text-xs text-gray-500">
-                            {new Date(payment.date).toLocaleDateString()} {payment.for ? `• ${payment.for}` : ''}
+                            {formatDate(payment.date)} {payment.for ? `• ${payment.for}` : ''}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -1178,7 +1180,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Date:</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {new Date(paymentToDelete.date).toLocaleDateString()}
+                    {formatDate(paymentToDelete.date)}
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200">

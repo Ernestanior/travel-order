@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { mockSuppliers } from '@/lib/mockData'
 import { ArrowLeft, RefreshCw, Plus, Search, Filter, X } from 'lucide-react'
+import { formatDate } from '@/lib/dateUtils'
 
 interface ExchangeOrder {
   id: number
@@ -335,10 +336,10 @@ export default function ExchangeOrdersPage() {
                       {order.agent || order.supplierName}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {order.deptDate || order.departureDate || '-'}
+                      {formatDate(order.deptDate || order.departureDate)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {order.arvDate || order.arrivalDate || '-'}
+                      {formatDate(order.arvDate || order.arrivalDate)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                       ${order.totalCost.toFixed(2)}

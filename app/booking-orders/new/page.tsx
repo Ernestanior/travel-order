@@ -172,14 +172,7 @@ export default function NewBookingOrderPage() {
       return
     }
     
-    if (passengers.length === 0) {
-      notification.error({
-        message: 'Validation Error',
-        description: 'Please add at least one passenger',
-        placement: 'topRight',
-      })
-      return
-    }
+    // Passengers 是可选的，允许创建没有乘客的订单
     
     // 验证每个 passenger 必须有 name
     const emptyPassenger = passengers.find(p => !p.name || p.name.trim() === '')

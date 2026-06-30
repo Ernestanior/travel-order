@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { mockCustomers } from '@/lib/mockData'
 import { ArrowLeft, FileText, Plus, Search, Filter, X, Download } from 'lucide-react'
 import { generateOutstandingReportPDF } from '@/lib/pdfGenerator'
+import { formatDate } from '@/lib/dateUtils'
 
 interface BookingOrder {
   id: number
@@ -550,10 +551,10 @@ export default function BookingOrdersPage() {
                       {order.customerName}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {order.departureDate || '-'}
+                      {formatDate(order.departureDate)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {order.arrivalDate || '-'}
+                      {formatDate(order.arrivalDate)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                       ${order.totalCost.toFixed(2)}
