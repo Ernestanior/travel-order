@@ -227,7 +227,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // BOOKING INVOICE 标题 (右上角)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
-  doc.text('BOOKING INVOICE', 200, 20, { align: 'right' })
+  doc.text('TAX INVOICE', 200, 20, { align: 'right' })
   
   // Helper function to format date as DD-MM-YYYY
   const formatDate = (dateStr: string | undefined) => {
