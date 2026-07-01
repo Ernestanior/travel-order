@@ -119,7 +119,7 @@ export async function GET(request: Request) {
           }
         },
         orderBy: {
-          bookdate: 'desc'
+          id: 'desc'  // 按 ID 降序排列，最新的在最上面
         }
       })
 
@@ -212,7 +212,7 @@ export async function GET(request: Request) {
           }
         },
         orderBy: {
-          bookdate: 'desc'
+          id: 'desc'  // 按 ID 降序排列，最新的在最上面
         },
         skip,
         take: limit
