@@ -48,7 +48,7 @@ Tour: Air tkt
 ```
 Notes
 Bank: Maybank
-Name: TRAVEL GSH PTE LTD Pte Ltd
+Name: TRAVEL GSH PTE LTD
 Account: 0417-100-3306
 Paynow : UEN 199540
 ```

@@ -581,11 +581,11 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   doc.setFont('helvetica', 'normal')
   doc.text('Bank: Maybank', 15, y)
   y += 4
-  doc.text('Name: TRAVEL GSH PTE LTD Pte Ltd', 15, y)
+  doc.text('Name: TRAVEL GSH PTE LTD', 15, y)
   y += 4
   doc.text('Account: 0417-100-3306', 15, y)
   y += 4
-  doc.text('Paynow : UEN 199540', 15, y)
+  doc.text('Paynow : UEN 199205400K', 15, y)
   
   // Financial Summary (右下角，对齐到 x=195)
   const rightX = 140
