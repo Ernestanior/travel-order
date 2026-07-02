@@ -36,7 +36,7 @@ export async function GET(
     const paid = exchange.payments.reduce((sum, payment) => 
       sum + Number(payment.amountpaid || 0), 0
     )
-    const outstanding = totalCost - paid
+    const outstanding = Math.round((totalCost - paid) * 100) / 100
 
     const formatted = {
       id: exchange.id,

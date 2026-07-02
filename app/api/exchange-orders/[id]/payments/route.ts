@@ -106,7 +106,8 @@ export async function POST(
       const paid = fullExchange.payments.reduce((sum, payment) => 
         sum + Number(payment.amountpaid || 0), 0
       )
-      const outstanding = (totalCost - discount) - paid
+      const totalAfterDiscount = Math.round((totalCost - discount) * 100) / 100
+      const outstanding = Math.round((totalAfterDiscount - paid) * 100) / 100
       
       // 如果outstanding <= 0，自动设置status为Close
       if (outstanding <= 0.001) {

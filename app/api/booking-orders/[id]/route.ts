@@ -32,8 +32,8 @@ export async function GET(
     const paid = booking.payments.reduce((sum, payment) => 
       sum + Number(payment.amountpaid || 0), 0
     )
-    const totalAfterDiscount = totalCost - discount
-    const outstanding = totalAfterDiscount - paid
+    const totalAfterDiscount = Math.round((totalCost - discount) * 100) / 100
+    const outstanding = Math.round((totalAfterDiscount - paid) * 100) / 100
 
     const formatted = {
       id: booking.id,

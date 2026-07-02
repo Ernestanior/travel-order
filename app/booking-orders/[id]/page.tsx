@@ -94,6 +94,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null)
   const [includeTerms, setIncludeTerms] = useState(false)
   
+  // Customer search
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [customers, setCustomers] = useState<any[]>([])
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+  
   // 编辑状态的表单数据
   const [formData, setFormData] = useState<Partial<BookingOrder>>({})
   const [editItems, setEditItems] = useState<Item[]>([])
@@ -127,8 +132,9 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           // Calculate paid amount
           const totalPaid = data.payments.reduce((sum: number, p: any) => sum + p.amount, 0)
           data.paid = totalPaid
-          // outstanding应该是扣除discount后的金额减去已付款
-          data.outstanding = (data.totalCost - (data.discount || 0)) - totalPaid
+          // outstanding应该是扣除discount后的金额减去已付款，使用 Math.round 避免浮点数精度问题
+          const totalAfterDiscount = Math.round((data.totalCost - (data.discount || 0)) * 100) / 100
+          data.outstanding = Math.round((totalAfterDiscount - totalPaid) * 100) / 100
         }
         
         setOrder(data)
@@ -143,6 +149,44 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     }
   }
 
+  // Load customers when searching
+  const loadCustomers = async (search: string) => {
+    if (!search || search.length < 2) {
+      setCustomers([])
+      setShowCustomerDropdown(false)
+      return
+    }
+    
+    try {
+      const params = new URLSearchParams()
+      params.set('search', search)
+      params.set('limit', '10')
+      
+      const response = await fetch(`/api/customers?${params}`)
+      const result = await response.json()
+      
+      if (result.data && Array.isArray(result.data)) {
+        setCustomers(result.data)
+        setShowCustomerDropdown(true)
+      }
+    } catch (error) {
+      console.error('Error loading customers:', error)
+    }
+  }
+  
+  // Select customer from dropdown
+  const selectCustomer = (customer: any) => {
+    setFormData({
+      ...formData,
+      customerName: customer.name,
+      tel: customer.tel || '',
+      address: customer.address || '',
+      email: customer.email || ''
+    })
+    setCustomerSearch('')
+    setShowCustomerDropdown(false)
+  }
+
   const handleEdit = () => {
     setIsEditing(true)
     setFormData(order || {})
@@ -155,6 +199,8 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     setFormData(order || {})
     setEditItems(order?.items || [])
     setEditPassengers(order?.passengers || [])
+    setCustomerSearch('')
+    setShowCustomerDropdown(false)
   }
 
   const handleSave = async () => {
@@ -486,9 +532,47 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
                   {isEditing ? (
-                    <input type="text" value={displayData.customerName || ''}
-                      onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={customerSearch || displayData.customerName || ''}
+                        onChange={(e) => {
+                          setCustomerSearch(e.target.value)
+                          setFormData({ ...formData, customerName: e.target.value })
+                          loadCustomers(e.target.value)
+                        }}
+                        onFocus={() => {
+                          if (customerSearch.length >= 2) {
+                            loadCustomers(customerSearch)
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="Type to search or enter new customer"
+                        required
+                      />
+                      
+                      {/* Customer dropdown */}
+                      {showCustomerDropdown && customers.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {customers.map((customer) => (
+                            <button
+                              key={customer.id}
+                              type="button"
+                              onClick={() => selectCustomer(customer)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{customer.name}</div>
+                              <div className="text-xs text-gray-500">
+                                Tel: {customer.tel} {customer.email && `• Email: ${customer.email}`}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <p className="mt-1 text-xs text-gray-500">
+                        Start typing to search existing customers or enter a new name
+                      </p>
+                    </div>
                   ) : (
                     <p className="text-sm text-gray-900">{order.customerName}</p>
                   )}
