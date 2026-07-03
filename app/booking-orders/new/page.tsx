@@ -442,9 +442,13 @@ export default function NewBookingOrderPage() {
                             type="text"
                             value={item.item}
                             onChange={(e) => updateItem(index, 'item', e.target.value)}
+                            maxLength={200}
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
                             placeholder="e.g., Air Ticket"
                           />
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {item.item.length}/200 characters
+                          </p>
                         </div>
                         
                         <div className="col-span-2">

@@ -450,9 +450,23 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
               <h1 className="text-2xl font-semibold text-gray-900">
                 Booking #{order.bookingNumber}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Created on {order.bookingDate}
-              </p>
+              {isEditing ? (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                    Booking Date
+                  </label>
+                  <input
+                    type="date"
+                    value={displayData.bookingDate || ''}
+                    onChange={(e) => setFormData({ ...formData, bookingDate: e.target.value })}
+                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1">
+                  Created on {order.bookingDate}
+                </p>
+              )}
             </div>
             
             <div className="flex flex-col items-end gap-3">
@@ -659,7 +673,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                           <div className="col-span-5">
                             <input type="text" value={item.item} placeholder="Item name"
                               onChange={(e) => updateItem(index, 'item', e.target.value)}
+                              maxLength={200}
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {item.item.length}/200 characters
+                            </p>
                           </div>
                           <div className="col-span-2">
                             <input type="number" value={item.quantity}

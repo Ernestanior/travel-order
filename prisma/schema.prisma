@@ -135,7 +135,7 @@ model ExchangeData {
 
 model ItemData {
   bookno     String       @db.VarChar(50)
-  item       String       @db.VarChar(50)
+  item       String       @db.VarChar(200)
   quantity   Int?
   price      Decimal?     @db.Decimal(15, 2)
   unitprice  Decimal?     @db.Decimal(15, 2)
@@ -148,7 +148,7 @@ model ItemData {
 
 model ExchangeItemData {
   exchangeno String        @db.VarChar(50)
-  item       String        @db.VarChar(50)
+  item       String        @db.VarChar(200)
   quantity   Int?
   price      Decimal?      @db.Decimal(15, 2)
   unitprice  Decimal?      @db.Decimal(15, 2)
