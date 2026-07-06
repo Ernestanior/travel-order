@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { notification } from 'antd'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface MakePaymentModalProps {
   isOpen: boolean

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { mockSuppliers } from '@/lib/mockData'
 import { ArrowLeft, RefreshCw, Plus, Search, Filter, X } from 'lucide-react'
 import { formatDate } from '@/lib/dateUtils'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface ExchangeOrder {
   id: number

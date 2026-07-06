@@ -8,6 +8,7 @@ import { notification } from 'antd'
 import { generateExchangeInvoicePDF } from '@/lib/pdfGenerator'
 import MakePaymentModal from './MakePaymentModal'
 import { formatDate } from '@/lib/dateUtils'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface Item {
   item: string

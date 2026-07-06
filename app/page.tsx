@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { FileText, RefreshCw, Users, Building2, Search, BarChart3, Receipt } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FileText, RefreshCw, Users, Building2, Receipt, BarChart3, LogOut, ArrowRight } from 'lucide-react'
 import { formatPrice } from '@/lib/formatUtils'
+import { notification } from 'antd'
 
 export default function HomePage() {
+  const router = useRouter()
   const [stats, setStats] = useState({
     totalBookings: 0,
     totalExchanges: 0,
@@ -27,162 +30,151 @@ export default function HomePage() {
       })
   }, [])
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        notification.success({
+          message: 'Signed Out',
+          description: 'You have been signed out successfully',
+          placement: 'topRight',
+        })
+        router.push('/login')
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      notification.error({
+        message: 'Error',
+        description: 'An error occurred during logout',
+        placement: 'topRight',
+      })
+    }
+  }
+
+  const menuItems = [
+    {
+      href: '/booking-orders',
+      icon: FileText,
+      title: 'Booking Orders',
+      description: '管理客户预订订单，包括航班信息、乘客数据和付款记录'
+    },
+    {
+      href: '/exchange-orders',
+      icon: RefreshCw,
+      title: 'Exchange Orders',
+      description: '管理机票换票订单，包括供应商信息和改签详情'
+    },
+    {
+      href: '/customers',
+      icon: Users,
+      title: 'Customers',
+      description: '客户信息管理，查看和编辑客户联系方式'
+    },
+    {
+      href: '/suppliers',
+      icon: Building2,
+      title: 'Suppliers',
+      description: '供应商（航空公司）信息管理'
+    },
+    {
+      href: '/receipts',
+      icon: Receipt,
+      title: 'Payment Receipts',
+      description: '查看和打印所有付款收据'
+    },
+    {
+      href: '/reports',
+      icon: BarChart3,
+      title: 'Reports',
+      description: '其他报表查询和打印功能'
+    }
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* 头部 */}
-        <div className="mb-10">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1">Travel Order Management</h1>
-          <p className="text-sm text-gray-500">旅行社订单管理系统</p>
+    <div className="min-h-[100dvh] bg-zinc-50">
+      {/* Header */}
+      <header className="border-b border-zinc-200 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div>
+            <h1 className="text-[17px] font-semibold text-zinc-900 tracking-tight">Travel Order Management</h1>
+            <p className="text-[13px] text-zinc-500">旅行社订单管理系统</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="h-9 px-4 text-[14px] font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" strokeWidth={2} />
+            <span>Sign out</span>
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-[1400px] mx-auto px-6 py-12">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+          <div className="bg-white border border-zinc-200 rounded-xl p-6">
+            <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.06em] mb-3">
+              Booking Orders
+            </div>
+            <div className="text-[32px] font-semibold text-zinc-900 tracking-tight leading-none">
+              {loading ? '—' : stats.totalBookings}
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200 rounded-xl p-6">
+            <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.06em] mb-3">
+              Exchange Orders
+            </div>
+            <div className="text-[32px] font-semibold text-zinc-900 tracking-tight leading-none">
+              {loading ? '—' : stats.totalExchanges}
+            </div>
+          </div>
+
+          <div className="bg-white border border-zinc-200 rounded-xl p-6">
+            <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.06em] mb-3">
+              Outstanding
+            </div>
+            <div className="text-[32px] font-semibold text-zinc-900 tracking-tight leading-none">
+              {loading ? '—' : formatPrice(stats.outstandingAmount)}
+            </div>
+          </div>
         </div>
 
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          <div className="bg-white border border-gray-200 rounded-lg p-5">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Booking Orders</div>
-            <div className="text-2xl font-semibold text-gray-900">
-              {loading ? '...' : stats.totalBookings}
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-5">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Exchange Orders</div>
-            <div className="text-2xl font-semibold text-gray-900">
-              {loading ? '...' : stats.totalExchanges}
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-5">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Outstanding</div>
-            <div className="text-2xl font-semibold text-gray-900">
-              {loading ? '$...' : formatPrice(stats.outstandingAmount)}
-            </div>
-          </div>
-        </div>
-
-        {/* 主菜单选项 */}
+        {/* Menu Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link
-            href="/booking-orders"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <FileText className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Booking Order</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  管理客户预订订单，包括航班信息、乘客数据和付款记录
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            href="/exchange-orders"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <RefreshCw className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Exchange Order</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  管理机票换票订单，包括供应商信息和改签详情
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            href="/customers"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <Users className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Customer</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  客户信息管理，查看和编辑客户联系方式
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            href="/suppliers"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <Building2 className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Supplier</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  供应商（航空公司）信息管理
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            href="/receipts"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <Receipt className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Payment Receipts</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  查看和打印所有付款收据
-                </p>
-              </div>
-            </div>
-          </Link>
-
-          {/* Passenger Inquiry - Hidden */}
-          {/* <Link
-            href="/passenger-inquiry"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <Search className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Passenger Inquiry</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  按客户名搜索所有乘客信息
-                </p>
-              </div>
-            </div>
-          </Link> */}
-
-          <Link
-            href="/reports"
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-900 hover:shadow-sm transition-all group"
-          >
-            <div className="flex items-start mb-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mr-3 group-hover:bg-gray-900 transition-colors">
-                <BarChart3 className="w-5 h-5 text-gray-700 group-hover:text-white transition-colors" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-1">Reports / Printouts</h2>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  其他报表查询和打印功能
-                </p>
-              </div>
-            </div>
-          </Link>
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group bg-white border border-zinc-200 hover:border-zinc-900 rounded-xl p-6 transition-all"
+              >
+                <div className="flex items-start gap-4 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-zinc-100 group-hover:bg-zinc-900 flex items-center justify-center transition-colors flex-shrink-0">
+                    <Icon className="w-5 h-5 text-zinc-600 group-hover:text-white transition-colors" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h2 className="text-[16px] font-semibold text-zinc-900 tracking-tight">
+                        {item.title}
+                      </h2>
+                      <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 group-hover:translate-x-0.5 transition-all opacity-0 group-hover:opacity-100" strokeWidth={2} />
+                    </div>
+                    <p className="text-[14px] text-zinc-600 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

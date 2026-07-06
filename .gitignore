@@ -50,3 +50,6 @@ migration.log
 prisma/migrations
 
 /lib/generated/prisma
+
+# credentials and sensitive information
+SYSTEM_CREDENTIALS.md

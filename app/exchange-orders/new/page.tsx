@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Search, X, Plus, Trash2 } from 'lucide-react'
 import { notification } from 'antd'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface BookingOrder {
   id: number

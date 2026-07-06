@@ -94,6 +94,9 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [showDeletePaymentModal, setShowDeletePaymentModal] = useState(false)
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null)
   const [includeTerms, setIncludeTerms] = useState(false)
+  const [showDeleteItemModal, setShowDeleteItemModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null)
+  const [deleteItemPassword, setDeleteItemPassword] = useState('')
   
   // Customer search
   const [customerSearch, setCustomerSearch] = useState('')
@@ -390,7 +393,32 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   }
 
   const removeItem = (index: number) => {
-    setEditItems(editItems.filter((_, i) => i !== index))
+    setItemToDelete(index)
+    setShowDeleteItemModal(true)
+    setDeleteItemPassword('')
+  }
+
+  const confirmDeleteItem = () => {
+    if (deleteItemPassword !== '654321') {
+      notification.error({
+        message: 'Incorrect Password',
+        description: 'The password you entered is incorrect',
+        placement: 'topRight',
+      })
+      return
+    }
+
+    if (itemToDelete !== null) {
+      setEditItems(editItems.filter((_, i) => i !== itemToDelete))
+      setShowDeleteItemModal(false)
+      setItemToDelete(null)
+      setDeleteItemPassword('')
+      notification.success({
+        message: 'Success',
+        description: 'Item deleted successfully',
+        placement: 'topRight',
+      })
+    }
   }
 
   // Passengers 管理
@@ -1312,6 +1340,67 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete Payment
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Item Password Modal */}
+        {showDeleteItemModal && itemToDelete !== null && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Delete Item</h3>
+                  <p className="text-sm text-gray-500">Password required to delete</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-600 mb-3">
+                  You are about to delete: <span className="font-medium text-gray-900">{editItems[itemToDelete]?.item}</span>
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter password to confirm:
+                  </label>
+                  <input
+                    type="password"
+                    value={deleteItemPassword}
+                    onChange={(e) => setDeleteItemPassword(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        confirmDeleteItem()
+                      }
+                    }}
+                    placeholder="Enter password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button 
+                  onClick={() => {
+                    setShowDeleteItemModal(false)
+                    setItemToDelete(null)
+                    setDeleteItemPassword('')
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDeleteItem}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Item
                 </button>
               </div>
             </div>
