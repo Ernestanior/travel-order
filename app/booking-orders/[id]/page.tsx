@@ -8,6 +8,7 @@ import { notification } from 'antd'
 import MakePaymentModal from './MakePaymentModal'
 import AccountModal from './AccountModal'
 import { generateBookingInvoicePDF } from '@/lib/pdfGenerator'
+import { formatPrice, formatCurrency } from '@/lib/formatUtils'
 
 interface Item {
   item: string
@@ -634,7 +635,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                         onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
                     ) : (
-                      <p className="text-sm text-gray-900">${order.discount.toFixed(2)}</p>
+                      <p className="text-sm text-gray-900">{formatPrice(order.discount)}</p>
                     )}
                   </div>
                   <div>
@@ -690,7 +691,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                           </div>
                           <div className="col-span-2">
-                            <input type="text" value={`$${item.price.toFixed(2)}`} readOnly
+                            <input type="text" value={formatPrice(item.price)} readOnly
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 font-medium" />
                           </div>
                           <div className="col-span-1 flex items-center">
@@ -703,9 +704,9 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                         <>
                           <div>
                             <p className="text-sm font-medium text-gray-900">{item.item}</p>
-                            <p className="text-xs text-gray-500">{item.quantity} × ${item.unitPrice.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">{item.quantity} × {formatPrice(item.unitPrice)}</p>
                           </div>
-                          <p className="text-sm font-medium text-gray-900">${item.price.toFixed(2)}</p>
+                          <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)}</p>
                         </>
                       )}
                     </div>
@@ -716,7 +717,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Total Amount:</span>
-                  <span className="text-lg font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-gray-900">{formatPrice(totalAmount)}</span>
                 </div>
               </div>
             </div>
@@ -737,28 +738,28 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total Amount:</span>
-                    <span className="text-sm font-medium text-gray-900">${totalAmount.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatPrice(totalAmount)}</span>
                   </div>
                   {order.discount > 0 && (
                     <>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Discount:</span>
-                        <span className="text-sm font-medium text-orange-600">-${order.discount.toFixed(2)}</span>
+                        <span className="text-sm font-medium text-orange-600">-{formatPrice(order.discount)}</span>
                       </div>
                       <div className="flex justify-between items-center pb-2 border-b border-gray-200">
                         <span className="text-sm font-semibold text-gray-700">Amount Due:</span>
-                        <span className="text-sm font-bold text-gray-900">${order.totalAfterDiscount.toFixed(2)}</span>
+                        <span className="text-sm font-bold text-gray-900">{formatPrice(order.totalAfterDiscount)}</span>
                       </div>
                     </>
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total Paid:</span>
-                    <span className="text-sm font-medium text-green-600">${(order.paid || 0).toFixed(2)}</span>
+                    <span className="text-sm font-medium text-green-600">{formatPrice(order.paid || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                     <span className="text-sm font-semibold text-gray-700">Outstanding:</span>
                     <span className={`text-lg font-bold ${(order.outstanding || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      ${(order.outstanding || 0).toFixed(2)}
+                      {formatPrice(order.outstanding || 0)}
                     </span>
                   </div>
                 </div>
@@ -789,7 +790,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <p className="text-sm font-bold text-gray-900">${payment.amount.toFixed(2)}</p>
+                          <p className="text-sm font-bold text-gray-900">{formatPrice(payment.amount)}</p>
                           <button
                             onClick={() => {
                               setPaymentToDelete(payment)
@@ -1183,28 +1184,28 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 <dl className="space-y-3">
                   <div className="flex justify-between">
                     <dt className="text-sm text-gray-600">Total Cost</dt>
-                    <dd className="text-sm font-medium text-gray-900">${order.totalCost.toFixed(2)}</dd>
+                    <dd className="text-sm font-medium text-gray-900">{formatPrice(order.totalCost)}</dd>
                   </div>
                   {order.discount > 0 && (
                     <>
                       <div className="flex justify-between">
                         <dt className="text-sm text-gray-600">Discount</dt>
-                        <dd className="text-sm font-medium text-orange-600">-${order.discount.toFixed(2)}</dd>
+                        <dd className="text-sm font-medium text-orange-600">-{formatPrice(order.discount)}</dd>
                       </div>
                       <div className="flex justify-between pb-3 border-b border-gray-200">
                         <dt className="text-sm font-semibold text-gray-700">Amount Due</dt>
-                        <dd className="text-sm font-bold text-gray-900">${order.totalAfterDiscount.toFixed(2)}</dd>
+                        <dd className="text-sm font-bold text-gray-900">{formatPrice(order.totalAfterDiscount)}</dd>
                       </div>
                     </>
                   )}
                   <div className="flex justify-between">
                     <dt className="text-sm text-gray-600">Paid</dt>
-                    <dd className="text-sm font-medium text-green-600">${order.paid.toFixed(2)}</dd>
+                    <dd className="text-sm font-medium text-green-600">{formatPrice(order.paid)}</dd>
                   </div>
                   <div className="pt-3 border-t border-gray-200 flex justify-between">
                     <dt className="text-base font-medium text-gray-900">Outstanding</dt>
                     <dd className={`text-base font-semibold ${order.outstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      ${order.outstanding.toFixed(2)}
+                      {formatPrice(order.outstanding)}
                     </dd>
                   </div>
                 </dl>
@@ -1287,7 +1288,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200">
                   <span className="text-sm font-semibold text-gray-700">Amount:</span>
-                  <span className="text-base font-bold text-gray-900">${paymentToDelete.amount.toFixed(2)}</span>
+                  <span className="text-base font-bold text-gray-900">{formatPrice(paymentToDelete.amount)}</span>
                 </div>
               </div>
 

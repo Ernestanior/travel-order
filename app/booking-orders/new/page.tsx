@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
 import { notification } from 'antd'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface Customer {
   id: string
@@ -482,7 +483,7 @@ export default function NewBookingOrderPage() {
                           </label>
                           <input
                             type="text"
-                            value={`$${item.price.toFixed(2)}`}
+                            value={formatPrice(item.price)}
                             readOnly
                             className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 font-medium"
                           />
@@ -505,7 +506,7 @@ export default function NewBookingOrderPage() {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Total Amount:</span>
-                  <span className="text-lg font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-gray-900">{formatPrice(totalAmount)}</span>
                 </div>
               </div>
             </div>

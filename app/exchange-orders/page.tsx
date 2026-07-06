@@ -341,15 +341,15 @@ export default function ExchangeOrdersPage() {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                       {formatDate(order.arvDate || order.arrivalDate)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                      ${order.totalCost.toFixed(2)}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">{
+                      formatPrice(order.totalCost)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                      ${order.paid.toFixed(2)}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">{
+                      formatPrice(order.paid)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                      <span className={order.outstanding > 0 ? 'text-gray-900' : 'text-gray-400'}>
-                        ${order.outstanding.toFixed(2)}
+                      <span className={order.outstanding > 0 ? 'text-gray-900' : 'text-gray-400'}>{
+                        formatPrice(order.outstanding)}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">

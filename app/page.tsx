@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FileText, RefreshCw, Users, Building2, Search, BarChart3, Receipt } from 'lucide-react'
+import { formatPrice } from '@/lib/formatUtils'
 
 export default function HomePage() {
   const [stats, setStats] = useState({
@@ -36,7 +37,7 @@ export default function HomePage() {
         </div>
 
         {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Booking Orders</div>
             <div className="text-2xl font-semibold text-gray-900">
@@ -52,16 +53,9 @@ export default function HomePage() {
           </div>
 
           <div className="bg-white border border-gray-200 rounded-lg p-5">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Total Paid</div>
-            <div className="text-2xl font-semibold text-gray-900">
-              ${loading ? '...' : stats.totalRevenue.toFixed(2)}
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-5">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Outstanding</div>
             <div className="text-2xl font-semibold text-gray-900">
-              ${loading ? '...' : stats.outstandingAmount.toFixed(2)}
+              {loading ? '$...' : formatPrice(stats.outstandingAmount)}
             </div>
           </div>
         </div>

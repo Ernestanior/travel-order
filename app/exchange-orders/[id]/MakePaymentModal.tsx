@@ -138,7 +138,7 @@ export default function MakePaymentModal({
               </div>
               <div>
                 <span className="text-gray-600">Total Amount:</span>
-                <span className="ml-2 font-medium text-gray-900">${totalAmount.toFixed(2)}</span>
+                <span className="ml-2 font-medium text-gray-900">{formatPrice(totalAmount)}</span>
               </div>
             </div>
           </div>

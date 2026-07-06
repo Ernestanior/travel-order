@@ -6,6 +6,7 @@ import { mockCustomers } from '@/lib/mockData'
 import { ArrowLeft, FileText, Plus, Search, Filter, X, Download } from 'lucide-react'
 import { generateOutstandingReportPDF } from '@/lib/pdfGenerator'
 import { formatDate } from '@/lib/dateUtils'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface BookingOrder {
   id: number
@@ -25,9 +26,11 @@ interface BookingOrder {
 }
 
 export default function BookingOrdersPage() {
-  const [searchType, setSearchType] = useState<'all' | 'date' | 'outstanding' | 'customer'>('all')
+  const [searchType, setSearchType] = useState<'all' | 'date' | 'outstanding' | 'outstandingCustomer' | 'customer'>('all')
   const [departureDate, setDepartureDate] = useState('')
   const [outstandingBeforeDate, setOutstandingBeforeDate] = useState('')
+  const [outstandingCustomer, setOutstandingCustomer] = useState('')
+  const [showOutstandingCustomerDropdown, setShowOutstandingCustomerDropdown] = useState(false)
   const [customerSearch, setCustomerSearch] = useState('')
   const [bookingNumberSearch, setBookingNumberSearch] = useState('')
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
@@ -60,7 +63,7 @@ export default function BookingOrdersPage() {
       const params = new URLSearchParams()
       
       // 如果有直接搜索（booking number 或 customer），优先使用直接搜索
-      if (bookingNumberSearch || (customerSearch && searchType !== 'customer')) {
+      if (bookingNumberSearch || (customerSearch && searchType !== 'customer' && searchType !== 'outstandingCustomer')) {
         params.set('searchType', 'all')
         params.set('page', currentPage.toString())
         params.set('limit', itemsPerPage.toString())
@@ -68,7 +71,7 @@ export default function BookingOrdersPage() {
         if (bookingNumberSearch) {
           params.set('bookingNumber', bookingNumberSearch)
         }
-        if (customerSearch && searchType !== 'customer') {
+        if (customerSearch && searchType !== 'customer' && searchType !== 'outstandingCustomer') {
           params.set('customer', customerSearch)
         }
       } else {
@@ -81,6 +84,8 @@ export default function BookingOrdersPage() {
           params.set('departureDate', departureDate)
         } else if (searchType === 'outstanding' && outstandingBeforeDate) {
           params.set('outstandingBeforeDate', outstandingBeforeDate)
+        } else if (searchType === 'outstandingCustomer' && outstandingCustomer) {
+          params.set('outstandingCustomer', outstandingCustomer)
         } else if (searchType === 'customer' && customerSearch) {
           params.set('customer', customerSearch)
         }
@@ -125,9 +130,11 @@ export default function BookingOrdersPage() {
     loadOrders()
   }
 
-  // 当searchType变化时，如果是customer类型且已有customerSearch，自动搜索
+  // 当searchType变化时，如果是customer或outstandingCustomer类型且已有对应的search，自动搜索
   useEffect(() => {
     if (searchType === 'customer' && customerSearch) {
+      handleSearch()
+    } else if (searchType === 'outstandingCustomer' && outstandingCustomer) {
       handleSearch()
     }
   }, [searchType])
@@ -137,6 +144,7 @@ export default function BookingOrdersPage() {
     setSearchType('all')
     setDepartureDate('')
     setOutstandingBeforeDate('')
+    setOutstandingCustomer('')
     setCustomerSearch('')
     setBookingNumberSearch('')
     setCurrentPage(1)
@@ -180,6 +188,46 @@ export default function BookingOrdersPage() {
       
       // 生成PDF
       await generateOutstandingReportPDF(pdfData)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Failed to export PDF')
+    }
+  }
+
+  // 导出按客户筛选的Outstanding PDF
+  const handleExportOutstandingCustomerPDF = async () => {
+    if (!outstandingCustomer) {
+      alert('Please select a customer first')
+      return
+    }
+
+    try {
+      // 获取所有该客户的outstanding数据（不分页）
+      const params = new URLSearchParams()
+      params.set('searchType', 'outstandingCustomer')
+      params.set('outstandingCustomer', outstandingCustomer)
+      params.set('limit', '1000') // 获取所有记录
+      
+      const response = await fetch(`/api/booking-orders?${params}`)
+      const result = await response.json()
+      
+      const orders = result.data || result || []
+      
+      // 准备PDF数据
+      const pdfData = {
+        customer: outstandingCustomer,
+        orders: orders.map((order: BookingOrder) => ({
+          bookingNumber: order.bookingNumber,
+          date: order.date,
+          customer: order.customerName,
+          staff: order.staff || '-',
+          outstandingAmount: order.outstanding
+        })),
+        totalOutstanding: orders.reduce((sum: number, order: BookingOrder) => sum + order.outstanding, 0)
+      }
+      
+      // 生成PDF
+      await generateOutstandingReportPDF(pdfData, 'customer')
     } catch (error) {
       console.error('Error exporting PDF:', error)
       alert('Failed to export PDF')
@@ -237,9 +285,22 @@ export default function BookingOrdersPage() {
     ).slice(0, 5)
   }, [customerSearch])
 
+  // 为Outstanding by Customer的客户名模糊搜索
+  const matchedOutstandingCustomers = useMemo(() => {
+    if (!outstandingCustomer) return []
+    return mockCustomers.filter(c => 
+      c.name.toLowerCase().includes(outstandingCustomer.toLowerCase())
+    ).slice(0, 5)
+  }, [outstandingCustomer])
+
   const handleCustomerSelect = (customerName: string) => {
     setCustomerSearch(customerName)
     setShowCustomerDropdown(false)
+  }
+
+  const handleOutstandingCustomerSelect = (customerName: string) => {
+    setOutstandingCustomer(customerName)
+    setShowOutstandingCustomerDropdown(false)
   }
 
   return (
@@ -362,7 +423,7 @@ export default function BookingOrdersPage() {
           </div>
 
           {/* 搜索类型选择 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
             <button
               onClick={() => clearFilters()}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -392,6 +453,16 @@ export default function BookingOrdersPage() {
               }`}
             >
               Outstanding (Before Date)
+            </button>
+            <button
+              onClick={() => setSearchType('outstandingCustomer')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                searchType === 'outstandingCustomer'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              Outstanding by Customer
             </button>
           </div>
 
@@ -442,6 +513,75 @@ export default function BookingOrdersPage() {
                 {outstandingBeforeDate && bookingOrders.length > 0 && (
                   <button
                     onClick={handleExportOutstandingPDF}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export PDF with Summary Total
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {searchType === 'outstandingCustomer' && (
+            <div className="space-y-2">
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700 w-32">Customer:</label>
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={outstandingCustomer}
+                      onChange={(e) => {
+                        setOutstandingCustomer(e.target.value)
+                        setShowOutstandingCustomerDropdown(true)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setShowOutstandingCustomerDropdown(false)
+                          handleSearch()
+                        }
+                      }}
+                      onFocus={() => setShowOutstandingCustomerDropdown(true)}
+                      placeholder="Type customer name..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                    />
+                    {outstandingCustomer && (
+                      <button
+                        onClick={() => {
+                          setOutstandingCustomer('')
+                          setShowOutstandingCustomerDropdown(false)
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    
+                    {/* 客户下拉列表 */}
+                    {showOutstandingCustomerDropdown && matchedOutstandingCustomers.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                        {matchedOutstandingCustomers.map((customer) => (
+                          <button
+                            key={customer.id}
+                            onClick={() => handleOutstandingCustomerSelect(customer.name)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                          >
+                            {customer.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">
+                  (Shows all unpaid orders for the selected customer)
+                </span>
+                {outstandingCustomer && bookingOrders.length > 0 && (
+                  <button
+                    onClick={handleExportOutstandingCustomerPDF}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
                   >
                     <Download className="w-4 h-4" />
@@ -557,14 +697,14 @@ export default function BookingOrdersPage() {
                       {formatDate(order.arrivalDate)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                      ${order.totalCost.toFixed(2)}
+                      {formatPrice(order.totalCost)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                      ${order.paid.toFixed(2)}
+                      {formatPrice(order.paid)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
                       <span className={order.outstanding > 0 ? 'text-gray-900' : 'text-gray-400'}>
-                        ${order.outstanding.toFixed(2)}
+                        {formatPrice(order.outstanding)}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">

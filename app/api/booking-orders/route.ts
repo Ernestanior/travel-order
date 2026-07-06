@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     const searchType = searchParams.get('searchType') || 'all'
     const departureDate = searchParams.get('departureDate')
     const outstandingBeforeDate = searchParams.get('outstandingBeforeDate')
+    const outstandingCustomer = searchParams.get('outstandingCustomer')
     const customer = searchParams.get('customer')
     const bookingNumber = searchParams.get('bookingNumber')
     
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
         }
       }
 
-      if (customer && searchType !== 'customer') {
+      if (customer && searchType !== 'customer' && searchType !== 'outstandingCustomer') {
         where.customer = {
           contains: customer,
           mode: 'insensitive'
@@ -78,6 +79,11 @@ export async function GET(request: Request) {
       where.deptdate = {
         lte: new Date(outstandingBeforeDate)
       }
+    } else if (searchType === 'outstandingCustomer' && outstandingCustomer) {
+      where.customer = {
+        contains: outstandingCustomer,
+        mode: 'insensitive'
+      }
     } else if (searchType === 'customer' && customer) {
       where.customer = {
         contains: customer,
@@ -85,9 +91,9 @@ export async function GET(request: Request) {
       }
     }
 
-    // 对于outstanding搜索，需要获取所有数据然后过滤（因为outstanding是计算字段）
-    if (searchType === 'outstanding') {
-      // 获取所有符合日期条件的订单
+    // 对于outstanding或outstandingCustomer搜索，需要获取所有数据然后过滤（因为outstanding是计算字段）
+    if (searchType === 'outstanding' || searchType === 'outstandingCustomer') {
+      // 获取所有符合条件的订单
       const allBookings = await prisma.bookingData.findMany({
         where,
         select: {

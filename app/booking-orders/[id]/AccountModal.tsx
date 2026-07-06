@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { notification } from 'antd'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface ExchangeOrder {
   exchangeno: string
@@ -162,7 +163,7 @@ export default function AccountModal({
               Total TBF Amount:
             </div>
             <div className="text-2xl font-bold text-blue-600">
-              ${totalAmount.toFixed(2)}
+              {formatPrice(totalAmount)}
             </div>
           </div>
 
@@ -196,7 +197,7 @@ export default function AccountModal({
                         <td className="px-4 py-3 text-sm text-gray-600">{exchange.paidDate}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">{exchange.paymentMode}</td>
                         <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
-                          ${exchange.amount.toFixed(2)}
+                          {formatPrice(exchange.amount)}
                         </td>
                       </tr>
                     ))}
@@ -207,7 +208,7 @@ export default function AccountModal({
                         Total Exchange Amount:
                       </td>
                       <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-                        ${exchangeOrders.reduce((sum, ex) => sum + ex.amount, 0).toFixed(2)}
+                        {formatPrice(exchangeOrders.reduce((sum, ex) => sum + ex.amount, 0))}
                       </td>
                     </tr>
                   </tfoot>
@@ -314,7 +315,7 @@ export default function AccountModal({
                         Total Hotel Amount:
                       </td>
                       <td className="px-4 py-3 text-sm font-bold text-gray-900 text-right">
-                        ${hotelVouchers.reduce((sum, v) => sum + v.amount, 0).toFixed(2)}
+                        {formatPrice(hotelVouchers.reduce((sum, v) => sum + v.amount, 0))}
                       </td>
                       <td></td>
                     </tr>
@@ -331,7 +332,7 @@ export default function AccountModal({
                 Profit:
               </div>
               <div className={`text-3xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${profit.toFixed(2)}
+                {formatPrice(profit)}
               </div>
             </div>
           </div>

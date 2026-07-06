@@ -576,7 +576,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm" />
                           </div>
                           <div className="col-span-2">
-                            <input type="text" value={`$${item.price.toFixed(2)}`} readOnly
+                            <input type="text" value={formatPrice(item.price)} readOnly
                               className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-50 font-medium" />
                           </div>
                           <div className="col-span-1 flex items-center">
@@ -589,9 +589,9 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                         <>
                           <div>
                             <p className="text-sm font-medium text-gray-900">{item.item}</p>
-                            <p className="text-xs text-gray-500">{item.quantity} × ${item.unitPrice.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">{item.quantity} × {formatPrice(item.unitPrice)}</p>
                           </div>
-                          <p className="text-sm font-medium text-gray-900">${item.price.toFixed(2)}</p>
+                          <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)}</p>
                         </>
                       )}
                     </div>
@@ -602,7 +602,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">Total Amount:</span>
-                  <span className="text-lg font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-gray-900">{formatPrice(totalAmount)}</span>
                 </div>
               </div>
             </div>
@@ -621,7 +621,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                           <p className="text-sm font-medium text-gray-900">{payment.type || 'Payment'}</p>
                           <p className="text-xs text-gray-500">{payment.date}</p>
                         </div>
-                        <p className="text-sm font-medium text-gray-900">${payment.amount.toFixed(2)}</p>
+                        <p className="text-sm font-medium text-gray-900">{formatPrice(payment.amount)}</p>
                       </div>
                     ))}
                   </div>
@@ -630,15 +630,15 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Cost:</span>
-                    <span className="font-medium">${order.totalCost.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(order.totalCost)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Paid:</span>
-                    <span className="font-medium text-green-600">${order.paid.toFixed(2)}</span>
+                    <span className="font-medium text-green-600">{formatPrice(order.paid)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700 font-medium">Outstanding:</span>
-                    <span className="font-bold text-gray-900">${order.outstanding.toFixed(2)}</span>
+                    <span className="font-bold text-gray-900">{formatPrice(order.outstanding)}</span>
                   </div>
                 </div>
               </div>

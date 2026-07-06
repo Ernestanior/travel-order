@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { formatCurrency } from './formatUtils'
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -125,7 +126,8 @@ interface ReceiptInvoiceData {
 }
 
 interface OutstandingReportData {
-  beforeDate: string
+  beforeDate?: string
+  customer?: string
   orders: Array<{
     bookingNumber: string
     date: string
@@ -466,8 +468,8 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   const itemRows = data.items.map(item => [
     item.item,
     item.quantity.toString(),
-    `$${item.unitPrice.toFixed(2)}`,
-    `$${item.price.toFixed(2)}`
+    `$${formatCurrency(item.unitPrice)}`,
+    `$${formatCurrency(item.price)}`
   ])
   
   autoTable(doc, {
@@ -594,19 +596,19 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
   doc.text('Total Price:', rightX, summaryY)
-  doc.text(`$${data.totalPrice.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.totalPrice)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Discount:', rightX, summaryY)
-  doc.text(`$${data.discount.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.discount)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Payment:', rightX, summaryY)
-  doc.text(`$${data.payment.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.payment)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Balance:', rightX, summaryY)
-  doc.text(`$${data.balance.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.balance)}`, 195, summaryY, { align: 'right' })
   
   // Footer - Computer Generated Notice
   doc.setFontSize(8)
@@ -1033,8 +1035,8 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   const itemRows = data.items.map(item => [
     item.item,
     item.quantity.toString(),
-    `$${item.unitPrice.toFixed(2)}`,
-    `$${item.price.toFixed(2)}`
+    `$${formatCurrency(item.unitPrice)}`,
+    `$${formatCurrency(item.price)}`
   ])
   
   autoTable(doc, {
@@ -1079,19 +1081,19 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
   doc.text('Total Price:', rightX, summaryY)
-  doc.text(`$${data.totalPrice.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.totalPrice)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Discount:', rightX, summaryY)
-  doc.text(`$${data.discount.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.discount)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Payment:', rightX, summaryY)
-  doc.text(`$${data.payment.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.payment)}`, 195, summaryY, { align: 'right' })
   
   summaryY += 5
   doc.text('Balance:', rightX, summaryY)
-  doc.text(`$${data.balance.toFixed(2)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.balance)}`, 195, summaryY, { align: 'right' })
   
   // Footer - Computer Generated Notice
   doc.setFontSize(8)
@@ -1213,7 +1215,7 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   doc.text('Amount Paid:', 28, y + 19)
   
   doc.setFontSize(18)
-  doc.text(`$${data.amount.toFixed(2)}`, 182, y + 19, { align: 'right' })
+  doc.text(`$${formatCurrency(data.amount)}`, 182, y + 19, { align: 'right' })
   
   y += 50
   
@@ -1225,15 +1227,20 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   doc.save(`Receipt_${data.receiptNo}.pdf`)
 }
 
-export async function generateOutstandingReportPDF(data: OutstandingReportData) {
+export async function generateOutstandingReportPDF(data: OutstandingReportData, type: 'date' | 'customer' = 'date') {
   const doc = new jsPDF()
   
   // Set up the document
   doc.setFontSize(14)
   doc.setFont('helvetica', 'bold')
   
-  // Title
-  const title = `Booking Report Before This Date    ${data.beforeDate}`
+  // Title - 根据类型显示不同标题
+  let title: string
+  if (type === 'customer') {
+    title = `Outstanding Booking Report for Customer:  ${data.customer || ''}`
+  } else {
+    title = `Booking Report Before This Date    ${data.beforeDate || ''}`
+  }
   doc.text(title, 105, 20, { align: 'center' })
   
   // Prepare table data
@@ -1242,7 +1249,7 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData) 
     order.date,
     order.customer,
     order.staff,
-    `$${order.outstandingAmount.toFixed(2)}`
+    `$${formatCurrency(order.outstandingAmount)}`
   ])
   
   // Add table
@@ -1281,9 +1288,16 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData) 
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.text('TOTAL :', 105, finalY, { align: 'center' })
-  doc.text(`$${data.totalOutstanding.toFixed(2)}`, 150, finalY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.totalOutstanding)}`, 150, finalY, { align: 'right' })
   
-  // Save the PDF
-  const formattedDate = data.beforeDate.replace(/\//g, '-')
-  doc.save(`Outstanding_Report_Before_${formattedDate}.pdf`)
+  // Save the PDF - 根据类型使用不同的文件名
+  let filename: string
+  if (type === 'customer') {
+    const customerName = data.customer?.replace(/\s+/g, '_') || 'Unknown'
+    filename = `Outstanding_Report_Customer_${customerName}.pdf`
+  } else {
+    const formattedDate = data.beforeDate?.replace(/\//g, '-') || 'Unknown'
+    filename = `Outstanding_Report_Before_${formattedDate}.pdf`
+  }
+  doc.save(filename)
 }

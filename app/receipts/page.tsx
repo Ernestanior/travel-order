@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Search, X, Receipt, Printer, FileDown } from 'lucide-react'
 import { generateReceiptPDF } from '@/lib/pdfGenerator'
 import { formatDate } from '@/lib/dateUtils'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface ReceiptData {
   id: number
@@ -400,8 +401,8 @@ export default function ReceiptsPage() {
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {receipt['for']}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
-                        ${receipt.amountPaid.toFixed(2)}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">{
+                        formatPrice(receipt.amountPaid)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                         {receipt.chequeNo || receipt.visaNo || '-'}

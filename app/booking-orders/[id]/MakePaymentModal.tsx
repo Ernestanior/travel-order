@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { notification } from 'antd'
+import { formatPrice } from '@/lib/formatUtils'
 
 interface MakePaymentModalProps {
   isOpen: boolean
@@ -200,7 +201,7 @@ export default function MakePaymentModal({
             <div className="col-span-2">
               <input
                 type="text"
-                value={`$${totalAmount.toFixed(2)}`}
+                value={formatPrice(totalAmount)}
                 readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm font-medium"
               />
