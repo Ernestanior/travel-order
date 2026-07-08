@@ -91,9 +91,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
-  const [showDeletePaymentModal, setShowDeletePaymentModal] = useState(false)
   const [showEditPaymentModal, setShowEditPaymentModal] = useState(false)
-  const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null)
   const [paymentToEdit, setPaymentToEdit] = useState<Payment | null>(null)
   const [editPaymentAmount, setEditPaymentAmount] = useState('')
   const [paymentPassword, setPaymentPassword] = useState('')
@@ -290,51 +288,6 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     }
   }
 
-  const handleDeletePayment = async () => {
-    if (paymentPassword !== '654321') {
-      notification.error({
-        message: 'Incorrect Password',
-        description: 'The password you entered is incorrect',
-        placement: 'topRight',
-      })
-      return
-    }
-
-    if (!paymentToDelete) return
-
-    try {
-      const response = await fetch(`/api/booking-orders/${params.id}/payments/${paymentToDelete.id}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        notification.success({
-          message: 'Success',
-          description: 'Payment deleted successfully',
-          placement: 'topRight',
-        })
-        setShowDeletePaymentModal(false)
-        setPaymentToDelete(null)
-        setPaymentPassword('')
-        await loadOrder()
-      } else {
-        const result = await response.json()
-        notification.error({
-          message: 'Error',
-          description: result.error || 'Failed to delete payment',
-          placement: 'topRight',
-        })
-      }
-    } catch (error) {
-      console.error('Error deleting payment:', error)
-      notification.error({
-        message: 'Error',
-        description: 'Failed to delete payment',
-        placement: 'topRight',
-      })
-    }
-  }
-
   const handleEditPayment = async () => {
     if (paymentPassword !== '654321') {
       notification.error({
@@ -348,10 +301,10 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     if (!paymentToEdit) return
 
     const amount = parseFloat(editPaymentAmount)
-    if (isNaN(amount) || amount <= 0) {
+    if (isNaN(amount) || amount < 0) {
       notification.error({
         message: 'Invalid Amount',
-        description: 'Please enter a valid amount greater than 0',
+        description: 'Please enter a valid amount (0 or greater)',
         placement: 'topRight',
       })
       return
@@ -1338,87 +1291,6 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           totalAmount={order.totalAfterDiscount}
         />
 
-        {/* Delete Payment Modal */}
-        {showDeletePaymentModal && paymentToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Delete Payment</h3>
-                  <p className="text-sm text-gray-500">Password required</p>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Receipt No:</span>
-                  <span className="text-sm font-medium text-gray-900">{paymentToDelete.receiptNo}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Payment Type:</span>
-                  <span className="text-sm font-medium text-gray-900">{paymentToDelete.type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Date:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {formatDate(paymentToDelete.date)}
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-gray-200">
-                  <span className="text-sm font-semibold text-gray-700">Amount:</span>
-                  <span className="text-base font-bold text-gray-900">{formatPrice(paymentToDelete.amount)}</span>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Enter password to confirm:
-                </label>
-                <input
-                  type="password"
-                  value={paymentPassword}
-                  onChange={(e) => setPaymentPassword(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleDeletePayment()
-                    }
-                  }}
-                  placeholder="Enter password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  autoFocus
-                />
-              </div>
-
-              <p className="text-sm text-gray-600 mb-6">
-                Deleting this payment will increase the outstanding balance.
-              </p>
-
-              <div className="flex gap-3 justify-end">
-                <button 
-                  onClick={() => {
-                    setShowDeletePaymentModal(false)
-                    setPaymentToDelete(null)
-                    setPaymentPassword('')
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleDeletePayment}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Payment
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Edit Payment Modal */}
         {showEditPaymentModal && paymentToEdit && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1428,8 +1300,8 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                   <Edit className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Edit Payment</h3>
-                  <p className="text-sm text-gray-500">Modify or delete payment</p>
+                  <h3 className="text-lg font-semibold text-gray-900">Edit Payment Amount</h3>
+                  <p className="text-sm text-gray-500">Update payment amount</p>
                 </div>
               </div>
               
@@ -1450,17 +1322,20 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 </div>
                 <div className="pt-2 border-t border-gray-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payment Amount:
+                    Payment Amount: <span className="text-gray-500">(Enter 0 to void payment)</span>
                   </label>
                   <input
                     type="number"
                     step="0.01"
-                    min="0.01"
+                    min="0"
                     value={editPaymentAmount}
                     onChange={(e) => setEditPaymentAmount(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter amount"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Note: Payments cannot be deleted to maintain receipt number continuity for government audit.
+                  </p>
                 </div>
               </div>
 
@@ -1494,25 +1369,6 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
-                </button>
-                <button 
-                  onClick={() => {
-                    if (paymentPassword !== '654321') {
-                      notification.error({
-                        message: 'Incorrect Password',
-                        description: 'The password you entered is incorrect',
-                        placement: 'topRight',
-                      })
-                      return
-                    }
-                    setPaymentToDelete(paymentToEdit)
-                    setShowEditPaymentModal(false)
-                    setShowDeletePaymentModal(true)
-                  }}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
                 </button>
                 <button 
                   onClick={handleEditPayment}

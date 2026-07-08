@@ -87,8 +87,8 @@ export async function PUT(
     }
 
     const amount = parseFloat(body.amount)
-    if (isNaN(amount) || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+    if (isNaN(amount) || amount < 0) {
+      return NextResponse.json({ error: 'Invalid amount. Amount must be 0 or greater.' }, { status: 400 })
     }
 
     // Get booking to verify it exists
@@ -114,7 +114,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Payment does not belong to this booking' }, { status: 403 })
     }
 
-    // Update the payment amount
+    // Update the payment amount (can be 0 to void the payment)
     const updatedPayment = await prisma.bookingPaymentData.update({
       where: { id: paymentId },
       data: { amountpaid: amount }
