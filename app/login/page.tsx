@@ -55,82 +55,132 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-zinc-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-[420px]">
-        {/* Brand */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center">
-              <Plane className="w-5 h-5 text-zinc-50" strokeWidth={2} />
+    <div className="min-h-[100dvh] bg-[#fafaf9] flex">
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex lg:w-[42%] bg-white p-12 flex-col justify-between border-r border-neutral-200/60">
+        <div>
+          <div className="inline-flex items-center gap-2.5 mb-12">
+            <div className="w-9 h-9 bg-neutral-900 rounded-[9px] flex items-center justify-center">
+              <Plane className="w-[18px] h-[18px] text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-[28px] font-semibold text-zinc-900 tracking-tight leading-none">
+            <div className="text-[19px] font-semibold text-neutral-900 tracking-tight">
               Travel Order
+            </div>
+          </div>
+          
+          <div className="space-y-5 max-w-[380px]">
+            <h1 className="text-[36px] font-semibold text-neutral-900 tracking-tight leading-[1.15]">
+              Order management
+              <br />
+              for travel agencies
             </h1>
+            <p className="text-[15px] text-neutral-600 leading-[1.7]">
+              Streamline bookings, track payments, and manage customer relationships in one place.
+            </p>
           </div>
-          <p className="text-[15px] text-zinc-600 leading-relaxed">
-            Sign in to manage bookings and orders
-          </p>
         </div>
+        
+        <div className="space-y-3 max-w-[380px]">
+          <div className="flex items-start gap-3 p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/60">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0"></div>
+            <div>
+              <div className="text-[14px] font-medium text-neutral-900 mb-0.5">Real-time updates</div>
+              <div className="text-[13px] text-neutral-600 leading-[1.6]">Instant sync across devices</div>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3 p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/60">
+            <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
+            <div>
+              <div className="text-[14px] font-medium text-neutral-900 mb-0.5">Secure by default</div>
+              <div className="text-[13px] text-neutral-600 leading-[1.6]">Enterprise-grade encryption</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="username" className="block text-[13px] font-medium text-zinc-700 mb-2">
-              Username
-            </label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              className="w-full h-11 px-4 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
-              placeholder="Enter username"
-              autoFocus
-              disabled={isLoading}
-            />
+      {/* Right side - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-white">
+        <div className="w-full max-w-[360px]">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-10">
+            <div className="inline-flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">
+                <Plane className="w-[16px] h-[16px] text-white" strokeWidth={2.5} />
+              </div>
+              <div className="text-[18px] font-semibold text-neutral-900 tracking-tight">
+                Travel Order
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-[13px] font-medium text-zinc-700 mb-2">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full h-11 px-4 bg-white border border-zinc-200 rounded-lg text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all"
-              placeholder="Enter password"
-              disabled={isLoading}
-            />
+          <div className="mb-8">
+            <h2 className="text-[28px] font-semibold text-neutral-900 tracking-tight mb-1.5">
+              Sign in
+            </h2>
+            <p className="text-[14px] text-neutral-600">
+              Enter your credentials to continue
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-400 disabled:cursor-not-allowed text-white text-[15px] font-medium rounded-lg transition-all flex items-center justify-center gap-2 group"
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                <span>Signing in</span>
-              </>
-            ) : (
-              <>
-                <span>Sign in</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2} />
-              </>
-            )}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-[13px] font-medium text-neutral-700 mb-1.5">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="w-full h-11 px-3.5 bg-white border border-neutral-300 rounded-[10px] text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                placeholder="your_username"
+                autoFocus
+                disabled={isLoading}
+              />
+            </div>
 
-        {/* Footer */}
-        <div className="mt-8 pt-8 border-t border-zinc-200">
-          <p className="text-[13px] text-zinc-500 text-center">
-            Internal use only · Contact admin for access
-          </p>
+            <div>
+              <label htmlFor="password" className="block text-[13px] font-medium text-neutral-700 mb-1.5">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full h-11 px-3.5 bg-white border border-neutral-300 rounded-[10px] text-[14px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                placeholder="••••••••"
+                disabled={isLoading}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 active:scale-[0.98] disabled:bg-neutral-400 disabled:cursor-not-allowed text-white text-[14px] font-medium rounded-[10px] transition-all flex items-center justify-center gap-2 group mt-6"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                  <span>Signing in</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign in</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-neutral-200">
+            <p className="text-[12px] text-neutral-500 text-center">
+              Internal use only · Contact administrator for access
+            </p>
+          </div>
         </div>
       </div>
     </div>

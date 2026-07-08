@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign, Calculator, FileDown } from 'lucide-react'
+import { ArrowLeft, Save, Edit2, Trash2, Plus, X, DollarSign, Calculator, FileDown, Edit } from 'lucide-react'
 import { notification } from 'antd'
 import MakePaymentModal from './MakePaymentModal'
 import AccountModal from './AccountModal'
@@ -92,11 +92,12 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showAccountModal, setShowAccountModal] = useState(false)
   const [showDeletePaymentModal, setShowDeletePaymentModal] = useState(false)
+  const [showEditPaymentModal, setShowEditPaymentModal] = useState(false)
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null)
+  const [paymentToEdit, setPaymentToEdit] = useState<Payment | null>(null)
+  const [editPaymentAmount, setEditPaymentAmount] = useState('')
+  const [paymentPassword, setPaymentPassword] = useState('')
   const [includeTerms, setIncludeTerms] = useState(false)
-  const [showDeleteItemModal, setShowDeleteItemModal] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null)
-  const [deleteItemPassword, setDeleteItemPassword] = useState('')
   
   // Customer search
   const [customerSearch, setCustomerSearch] = useState('')
@@ -290,6 +291,15 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   }
 
   const handleDeletePayment = async () => {
+    if (paymentPassword !== '654321') {
+      notification.error({
+        message: 'Incorrect Password',
+        description: 'The password you entered is incorrect',
+        placement: 'topRight',
+      })
+      return
+    }
+
     if (!paymentToDelete) return
 
     try {
@@ -305,6 +315,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
         })
         setShowDeletePaymentModal(false)
         setPaymentToDelete(null)
+        setPaymentPassword('')
         await loadOrder()
       } else {
         const result = await response.json()
@@ -319,6 +330,64 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
       notification.error({
         message: 'Error',
         description: 'Failed to delete payment',
+        placement: 'topRight',
+      })
+    }
+  }
+
+  const handleEditPayment = async () => {
+    if (paymentPassword !== '654321') {
+      notification.error({
+        message: 'Incorrect Password',
+        description: 'The password you entered is incorrect',
+        placement: 'topRight',
+      })
+      return
+    }
+
+    if (!paymentToEdit) return
+
+    const amount = parseFloat(editPaymentAmount)
+    if (isNaN(amount) || amount <= 0) {
+      notification.error({
+        message: 'Invalid Amount',
+        description: 'Please enter a valid amount greater than 0',
+        placement: 'topRight',
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/booking-orders/${params.id}/payments/${paymentToEdit.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      })
+      
+      if (response.ok) {
+        notification.success({
+          message: 'Success',
+          description: 'Payment updated successfully',
+          placement: 'topRight',
+        })
+        setShowEditPaymentModal(false)
+        setPaymentToEdit(null)
+        setEditPaymentAmount('')
+        setPaymentPassword('')
+        await loadOrder()
+      } else {
+        const result = await response.json()
+        notification.error({
+          message: 'Error',
+          description: result.error || 'Failed to update payment',
+          placement: 'topRight',
+        })
+      }
+    } catch (error) {
+      console.error('Error updating payment:', error)
+      notification.error({
+        message: 'Error',
+        description: 'Failed to update payment',
         placement: 'topRight',
       })
     }
@@ -393,32 +462,12 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
   }
 
   const removeItem = (index: number) => {
-    setItemToDelete(index)
-    setShowDeleteItemModal(true)
-    setDeleteItemPassword('')
-  }
-
-  const confirmDeleteItem = () => {
-    if (deleteItemPassword !== '654321') {
-      notification.error({
-        message: 'Incorrect Password',
-        description: 'The password you entered is incorrect',
-        placement: 'topRight',
-      })
-      return
-    }
-
-    if (itemToDelete !== null) {
-      setEditItems(editItems.filter((_, i) => i !== itemToDelete))
-      setShowDeleteItemModal(false)
-      setItemToDelete(null)
-      setDeleteItemPassword('')
-      notification.success({
-        message: 'Success',
-        description: 'Item deleted successfully',
-        placement: 'topRight',
-      })
-    }
+    setEditItems(editItems.filter((_, i) => i !== index))
+    notification.success({
+      message: 'Success',
+      description: 'Item removed successfully',
+      placement: 'topRight',
+    })
   }
 
   // Passengers 管理
@@ -755,40 +804,42 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">Payment History</h2>
-                  <button 
-                    onClick={() => setShowPaymentModal(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1">
-                    <Plus className="w-4 h-4" /> Add Payment
-                  </button>
                 </div>
                 
-                {/* Payment Summary */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
+                {/* Outstanding Display */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-5 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Amount:</span>
-                    <span className="text-sm font-medium text-gray-900">{formatPrice(totalAmount)}</span>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Outstanding Balance</p>
+                      <p className={`text-3xl font-bold ${(order.outstanding || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatPrice(order.outstanding || 0)}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setShowPaymentModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg text-sm font-medium flex items-center gap-2 shadow-md">
+                      <Plus className="w-5 h-5" /> Add Payment
+                    </button>
                   </div>
-                  {order.discount > 0 && (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Discount:</span>
-                        <span className="text-sm font-medium text-orange-600">-{formatPrice(order.discount)}</span>
+                  <div className="mt-3 pt-3 border-t border-blue-200 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Total Amount: </span>
+                      <span className="font-semibold text-gray-900">{formatPrice(totalAmount)}</span>
+                    </div>
+                    {order.discount > 0 && (
+                      <div>
+                        <span className="text-gray-600">Discount: </span>
+                        <span className="font-semibold text-orange-600">-{formatPrice(order.discount)}</span>
                       </div>
-                      <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                        <span className="text-sm font-semibold text-gray-700">Amount Due:</span>
-                        <span className="text-sm font-bold text-gray-900">{formatPrice(order.totalAfterDiscount)}</span>
-                      </div>
-                    </>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Paid:</span>
-                    <span className="text-sm font-medium text-green-600">{formatPrice(order.paid || 0)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="text-sm font-semibold text-gray-700">Outstanding:</span>
-                    <span className={`text-lg font-bold ${(order.outstanding || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatPrice(order.outstanding || 0)}
-                    </span>
+                    )}
+                    <div>
+                      <span className="text-gray-600">Amount Due: </span>
+                      <span className="font-semibold text-gray-900">{formatPrice(order.totalAfterDiscount)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Total Paid: </span>
+                      <span className="font-semibold text-green-600">{formatPrice(order.paid || 0)}</span>
+                    </div>
                   </div>
                 </div>
                 
@@ -821,13 +872,15 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                           <p className="text-sm font-bold text-gray-900">{formatPrice(payment.amount)}</p>
                           <button
                             onClick={() => {
-                              setPaymentToDelete(payment)
-                              setShowDeletePaymentModal(true)
+                              setPaymentToEdit(payment)
+                              setEditPaymentAmount(payment.amount.toString())
+                              setPaymentPassword('')
+                              setShowEditPaymentModal(true)
                             }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-red-600 hover:bg-red-50 rounded"
-                            title="Delete payment"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                            title="Edit payment"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Edit className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -1295,11 +1348,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Delete Payment</h3>
-                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                  <p className="text-sm text-gray-500">Password required</p>
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
+              <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Receipt No:</span>
                   <span className="text-sm font-medium text-gray-900">{paymentToDelete.receiptNo}</span>
@@ -1320,8 +1373,27 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 </div>
               </div>
 
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Enter password to confirm:
+                </label>
+                <input
+                  type="password"
+                  value={paymentPassword}
+                  onChange={(e) => setPaymentPassword(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleDeletePayment()
+                    }
+                  }}
+                  placeholder="Enter password"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  autoFocus
+                />
+              </div>
+
               <p className="text-sm text-gray-600 mb-6">
-                确定要删除这条付款记录吗？删除后outstanding金额将会相应增加。
+                Deleting this payment will increase the outstanding balance.
               </p>
 
               <div className="flex gap-3 justify-end">
@@ -1329,6 +1401,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                   onClick={() => {
                     setShowDeletePaymentModal(false)
                     setPaymentToDelete(null)
+                    setPaymentPassword('')
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
@@ -1346,61 +1419,107 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           </div>
         )}
 
-        {/* Delete Item Password Modal */}
-        {showDeleteItemModal && itemToDelete !== null && (
+        {/* Edit Payment Modal */}
+        {showEditPaymentModal && paymentToEdit && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Edit className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Delete Item</h3>
-                  <p className="text-sm text-gray-500">Password required to delete</p>
+                  <h3 className="text-lg font-semibold text-gray-900">Edit Payment</h3>
+                  <p className="text-sm text-gray-500">Modify or delete payment</p>
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-600 mb-3">
-                  You are about to delete: <span className="font-medium text-gray-900">{editItems[itemToDelete]?.item}</span>
-                </p>
-                <div>
+              <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Receipt No:</span>
+                  <span className="text-sm font-medium text-gray-900">{paymentToEdit.receiptNo}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Payment Type:</span>
+                  <span className="text-sm font-medium text-gray-900">{paymentToEdit.type}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Date:</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {formatDate(paymentToEdit.date)}
+                  </span>
+                </div>
+                <div className="pt-2 border-t border-gray-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter password to confirm:
+                    Payment Amount:
                   </label>
                   <input
-                    type="password"
-                    value={deleteItemPassword}
-                    onChange={(e) => setDeleteItemPassword(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        confirmDeleteItem()
-                      }
-                    }}
-                    placeholder="Enter password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                    autoFocus
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={editPaymentAmount}
+                    onChange={(e) => setEditPaymentAmount(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter amount"
                   />
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Enter password to confirm:
+                </label>
+                <input
+                  type="password"
+                  value={paymentPassword}
+                  onChange={(e) => setPaymentPassword(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleEditPayment()
+                    }
+                  }}
+                  placeholder="Enter password"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
               </div>
 
               <div className="flex gap-3 justify-end">
                 <button 
                   onClick={() => {
-                    setShowDeleteItemModal(false)
-                    setItemToDelete(null)
-                    setDeleteItemPassword('')
+                    setShowEditPaymentModal(false)
+                    setPaymentToEdit(null)
+                    setEditPaymentAmount('')
+                    setPaymentPassword('')
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button 
-                  onClick={confirmDeleteItem}
+                  onClick={() => {
+                    if (paymentPassword !== '654321') {
+                      notification.error({
+                        message: 'Incorrect Password',
+                        description: 'The password you entered is incorrect',
+                        placement: 'topRight',
+                      })
+                      return
+                    }
+                    setPaymentToDelete(paymentToEdit)
+                    setShowEditPaymentModal(false)
+                    setShowDeletePaymentModal(true)
+                  }}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete Item
+                  Delete
+                </button>
+                <button 
+                  onClick={handleEditPayment}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Update
                 </button>
               </div>
             </div>

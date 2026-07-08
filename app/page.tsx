@@ -95,17 +95,17 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-[100dvh] bg-zinc-50">
+    <div className="min-h-[100dvh] bg-[#fafaf9]">
       {/* Header */}
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="border-b border-neutral-200/60 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 h-[60px] flex items-center justify-between">
           <div>
-            <h1 className="text-[17px] font-semibold text-zinc-900 tracking-tight">Travel Order Management</h1>
-            <p className="text-[13px] text-zinc-500">旅行社订单管理系统</p>
+            <div className="text-[16px] font-semibold text-neutral-900 tracking-tight">Travel Order</div>
+            <div className="text-[12px] text-neutral-600">Management System</div>
           </div>
           <button
             onClick={handleLogout}
-            className="h-9 px-4 text-[14px] font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors flex items-center gap-2"
+            className="h-9 px-3.5 text-[13px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-all flex items-center gap-2"
           >
             <LogOut className="w-4 h-4" strokeWidth={2} />
             <span>Sign out</span>
@@ -113,63 +113,60 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-[1400px] mx-auto px-6 py-12">
+      <main className="max-w-[1400px] mx-auto px-6 py-10">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-          <div className="bg-white border border-zinc-200 rounded-xl p-6">
-            <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.06em] mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-10">
+          <div className="bg-white border border-neutral-200/60 rounded-[14px] p-5">
+            <div className="text-[11px] font-medium text-neutral-500 uppercase tracking-[0.08em] mb-2.5">
               Booking Orders
             </div>
-            <div className="text-[32px] font-semibold text-zinc-900 tracking-tight leading-none">
-              {loading ? '—' : stats.totalBookings}
+            <div className="text-[32px] font-semibold text-neutral-900 tracking-tight leading-none">
+              {loading ? '—' : stats.totalBookings.toLocaleString()}
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-xl p-6">
-            <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.06em] mb-3">
+          <div className="bg-white border border-neutral-200/60 rounded-[14px] p-5">
+            <div className="text-[11px] font-medium text-neutral-500 uppercase tracking-[0.08em] mb-2.5">
               Exchange Orders
             </div>
-            <div className="text-[32px] font-semibold text-zinc-900 tracking-tight leading-none">
-              {loading ? '—' : stats.totalExchanges}
+            <div className="text-[32px] font-semibold text-neutral-900 tracking-tight leading-none">
+              {loading ? '—' : stats.totalExchanges.toLocaleString()}
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-xl p-6">
-            <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.06em] mb-3">
+          <div className="bg-white border border-neutral-200/60 rounded-[14px] p-5">
+            <div className="text-[11px] font-medium text-neutral-500 uppercase tracking-[0.08em] mb-2.5">
               Outstanding
             </div>
-            <div className="text-[32px] font-semibold text-zinc-900 tracking-tight leading-none">
+            <div className="text-[32px] font-semibold text-neutral-900 tracking-tight leading-none">
               {loading ? '—' : formatPrice(stats.outstandingAmount)}
             </div>
           </div>
         </div>
 
         {/* Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {menuItems.map((item) => {
             const Icon = item.icon
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="group bg-white border border-zinc-200 hover:border-zinc-900 rounded-xl p-6 transition-all"
+                className="group bg-white border border-neutral-200/60 hover:border-neutral-900 rounded-[14px] p-5 transition-all"
               >
-                <div className="flex items-start gap-4 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-zinc-100 group-hover:bg-zinc-900 flex items-center justify-center transition-colors flex-shrink-0">
-                    <Icon className="w-5 h-5 text-zinc-600 group-hover:text-white transition-colors" strokeWidth={2} />
+                <div className="flex items-start justify-between mb-3.5">
+                  <div className="w-10 h-10 rounded-[10px] bg-neutral-100 group-hover:bg-neutral-900 flex items-center justify-center transition-all">
+                    <Icon className="w-5 h-5 text-neutral-600 group-hover:text-white transition-colors" strokeWidth={2} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h2 className="text-[16px] font-semibold text-zinc-900 tracking-tight">
-                        {item.title}
-                      </h2>
-                      <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 group-hover:translate-x-0.5 transition-all opacity-0 group-hover:opacity-100" strokeWidth={2} />
-                    </div>
-                    <p className="text-[14px] text-zinc-600 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
+                  <ArrowRight className="w-4 h-4 text-neutral-300 group-hover:text-neutral-900 group-hover:translate-x-0.5 transition-all" strokeWidth={2} />
                 </div>
+                
+                <h2 className="text-[16px] font-semibold text-neutral-900 mb-1.5 tracking-tight">
+                  {item.title}
+                </h2>
+                <p className="text-[13px] text-neutral-600 leading-[1.6]">
+                  {item.description}
+                </p>
               </Link>
             )
           })}
