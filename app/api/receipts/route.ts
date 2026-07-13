@@ -45,10 +45,14 @@ export async function GET(request: NextRequest) {
     if (dateFrom || dateTo) {
       where.receiptdate = {}
       if (dateFrom) {
+        // Start of the day (00:00:00)
         where.receiptdate.gte = new Date(dateFrom)
       }
       if (dateTo) {
-        where.receiptdate.lte = new Date(dateTo)
+        // End of the day (23:59:59.999)
+        const endDate = new Date(dateTo)
+        endDate.setHours(23, 59, 59, 999)
+        where.receiptdate.lte = endDate
       }
     }
 

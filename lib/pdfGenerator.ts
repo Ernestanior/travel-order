@@ -1105,6 +1105,208 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   doc.save(`Exchange_Invoice_${data.exchangeNumber}.pdf`)
 }
 
+export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], dateRange?: { from: string; to: string }) {
+  const doc = new jsPDF()
+  
+  // Helper function to format date as D/M/YYYY (like in screenshot)
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-'
+    try {
+      const date = new Date(dateStr)
+      const day = date.getDate()
+      const month = date.getMonth() + 1
+      const year = date.getFullYear()
+      return `${day}/${month}/${year}`
+    } catch {
+      return dateStr
+    }
+  }
+  
+  let y = 20
+  
+  // Title - Receipt Date Range
+  doc.setFontSize(12)
+  doc.setFont('courier', 'bold')
+  const fromDate = dateRange?.from ? formatDate(dateRange.from) : '-'
+  const toDate = dateRange?.to ? formatDate(dateRange.to) : '-'
+  doc.text(`Receipt Date From       ${fromDate}      To ${toDate}`, 20, y)
+  
+  y += 15
+  
+  // Table headers - 注意：第4列是支付方式，所以表头留空或写"Type"
+  const headers = [['Receipt', 'Date', 'For', 'Type', 'Amount', 'Customer']]
+  
+  // Prepare table data
+  const tableData = receipts.map(receipt => {
+    // Map payment types to match screenshot format
+    let forText = ''  // For column (Full/Deposit/Balance)
+    let paymentMethod = ''  // Type column (Cash/Bank Transfer/etc)
+    
+    const payType = receipt.paymentType?.toLowerCase() || ''
+    const forField = receipt.for?.toLowerCase() || ''
+    
+    // Determine For column (Full/Deposit/Balance)
+    if (forField.includes('full')) {
+      forText = 'Full'
+    } else if (forField.includes('deposit')) {
+      forText = 'Deposit'
+    } else if (forField.includes('balance')) {
+      forText = 'Balance1'
+    } else {
+      forText = 'Full'
+    }
+    
+    // Determine Type column (payment method)
+    if (payType.includes('cash')) {
+      paymentMethod = 'Cash'
+    } else if (payType.includes('paynow')) {
+      paymentMethod = 'PayNow'
+    } else if (payType.includes('bank') || payType.includes('transfer') || payType.includes('giro')) {
+      paymentMethod = 'Bank Transfer'
+    } else if (payType.includes('credit') || payType.includes('card') || payType.includes('visa')) {
+      paymentMethod = 'Credit Card'
+    } else if (payType.includes('cheque') || payType.includes('check')) {
+      paymentMethod = 'Cheque'
+    } else if (payType.includes('nets')) {
+      paymentMethod = 'Nets'
+    } else {
+      paymentMethod = payType || 'Cash'
+    }
+    
+    return [
+      receipt.receiptNo,
+      formatDate(receipt.date),
+      forText,              // For column
+      paymentMethod,        // Type column
+      `$${formatCurrency(receipt.amount)}`,
+      receipt.customer
+    ]
+  })
+  
+  // Generate table
+  autoTable(doc, {
+    startY: y,
+    head: headers,
+    body: tableData,
+    theme: 'grid',
+    styles: { 
+      fontSize: 9,
+      font: 'courier',
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: 'normal',
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0]
+    },
+    columnStyles: {
+      0: { cellWidth: 25, halign: 'left' },    // Receipt
+      1: { cellWidth: 25, halign: 'left' },    // Date
+      2: { cellWidth: 25, halign: 'left' },    // Type (Full/Deposit)
+      3: { cellWidth: 35, halign: 'left' },    // Payment method
+      4: { cellWidth: 30, halign: 'right' },   // Amount
+      5: { cellWidth: 50, halign: 'left' }     // Customer
+    },
+    margin: { left: 20, right: 20 }
+  })
+  
+  // Calculate subtotals by payment type
+  const subtotals: { [key: string]: number } = {
+    'Cash': 0,
+    'Cheque': 0,
+    'Nets': 0,
+    'PayNow': 0,
+    'Bank Transfer': 0,
+    'Credit Card': 0
+  }
+  
+  let grandTotal = 0
+  
+  receipts.forEach(receipt => {
+    const amount = receipt.amount || 0
+    const payType = receipt.paymentType?.toLowerCase() || ''
+    
+    grandTotal += amount
+    
+    if (payType.includes('cash')) {
+      subtotals['Cash'] += amount
+    } else if (payType.includes('paynow')) {
+      subtotals['PayNow'] += amount
+    } else if (payType.includes('bank') || payType.includes('transfer') || payType.includes('giro')) {
+      subtotals['Bank Transfer'] += amount
+    } else if (payType.includes('credit') || payType.includes('card') || payType.includes('visa')) {
+      subtotals['Credit Card'] += amount
+    } else if (payType.includes('cheque') || payType.includes('check')) {
+      subtotals['Cheque'] += amount
+    } else if (payType.includes('nets')) {
+      subtotals['Nets'] += amount
+    } else {
+      subtotals['Cash'] += amount
+    }
+  })
+  
+  // Add subtotals and grand total
+  y = (doc as any).lastAutoTable.finalY + 15
+  
+  doc.setFontSize(10)
+  doc.setFont('courier', 'normal')
+  
+  // Right-align all subtotals
+  const rightX = 190
+  const labelX = 110
+  
+  // Sub-Total for Cash
+  doc.text('Sub-Total for Cash :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['Cash'])}`, rightX, y, { align: 'right' })
+  y += 7
+  
+  // Sub-Total for Cheque
+  doc.text('Sub-Total for Cheque :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['Cheque'])}`, rightX, y, { align: 'right' })
+  y += 7
+  
+  // Sub-Total for Nets
+  doc.text('Sub-Total for Nets :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['Nets'])}`, rightX, y, { align: 'right' })
+  y += 7
+  
+  // Sub-Total for PayNow
+  doc.text('Sub-Total for PayNow :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['PayNow'])}`, rightX, y, { align: 'right' })
+  y += 7
+  
+  // Sub-Total for Bank Transfer
+  doc.text('Sub-Total for Bank Transfer :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['Bank Transfer'])}`, rightX, y, { align: 'right' })
+  y += 7
+  
+  // Sub-Total for Credit Card
+  doc.text('Sub-Total for Credit Card :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['Credit Card'])}`, rightX, y, { align: 'right' })
+  y += 10
+  
+  // Grand Total
+  doc.setFont('courier', 'bold')
+  doc.text('Grand Total :', labelX, y)
+  doc.text(`$${formatCurrency(grandTotal)}`, rightX, y, { align: 'right' })
+  
+  // 生成文件名
+  let filename = 'Payment_Receipts'
+  if (dateRange && dateRange.from && dateRange.to) {
+    filename += `_${dateRange.from}_to_${dateRange.to}`
+  } else if (dateRange && dateRange.from) {
+    filename += `_from_${dateRange.from}`
+  } else if (dateRange && dateRange.to) {
+    filename += `_to_${dateRange.to}`
+  }
+  filename += `.pdf`
+  
+  // Save
+  doc.save(filename)
+}
+
 export async function generateReceiptPDF(data: ReceiptInvoiceData) {
   const doc = new jsPDF()
   

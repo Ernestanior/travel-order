@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Search, X, Receipt, Printer, FileDown } from 'lucide-react'
-import { generateReceiptPDF } from '@/lib/pdfGenerator'
+import { ArrowLeft, Search, X, Receipt, Printer, FileDown, Download } from 'lucide-react'
+import { generateReceiptPDF, generateBatchReceiptsPDF } from '@/lib/pdfGenerator'
 import { formatDate } from '@/lib/dateUtils'
 import { formatPrice } from '@/lib/formatUtils'
 
@@ -31,6 +31,7 @@ export default function ReceiptsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
   const itemsPerPage = 50
+  const [exporting, setExporting] = useState(false)
 
   // 搜索过滤
   const [receiptNoSearch, setReceiptNoSearch] = useState('')
@@ -176,6 +177,75 @@ export default function ReceiptsPage() {
     })
   }
 
+  // 导出所有搜索结果的 receipts
+  const handleExportAll = async () => {
+    if (totalRecords === 0) {
+      alert('No receipts to export')
+      return
+    }
+
+    // 确认导出
+    const confirmMsg = dateFrom || dateTo 
+      ? `Export ${totalRecords} receipt(s) from ${dateFrom || 'start'} to ${dateTo || 'end'}?`
+      : `Export all ${totalRecords} receipt(s)?`
+    
+    if (!confirm(confirmMsg)) {
+      return
+    }
+
+    setExporting(true)
+    
+    try {
+      // 获取所有符合条件的 receipts（不分页）
+      const params = new URLSearchParams()
+      params.set('page', '1')
+      params.set('limit', totalRecords.toString()) // 获取所有记录
+
+      if (receiptNoSearch) params.set('receiptNo', receiptNoSearch)
+      if (bookingNumberSearch) params.set('bookingNumber', bookingNumberSearch)
+      if (customerSearch) params.set('customer', customerSearch)
+      if (dateFrom) params.set('dateFrom', dateFrom)
+      if (dateTo) params.set('dateTo', dateTo)
+
+      const response = await fetch(`/api/receipts?${params}`)
+      const result = await response.json()
+
+      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        // 转换数据格式
+        const receiptsData = result.data.map((r: ReceiptData) => ({
+          receiptNo: r.receiptNo,
+          bookingNumber: r.bookingNumber,
+          date: r.receiptDate,
+          customer: r.customer,
+          paymentType: r.paymentType,
+          'for': r['for'],
+          tourCode: r.tourCode,
+          tour: r.tour,
+          departureDate: r.departureDate,
+          amount: r.amountPaid,
+          chequeNo: r.chequeNo,
+          visaNo: r.visaNo,
+          paidText: r.paidText
+        }))
+
+        // 生成批量 PDF
+        await generateBatchReceiptsPDF(receiptsData, {
+          from: dateFrom,
+          to: dateTo
+        })
+
+        alert(`Successfully exported ${receiptsData.length} receipt(s)`)
+      } else {
+        alert('No receipts found to export')
+      }
+    } catch (error) {
+      console.error('Error exporting receipts:', error)
+      alert('Failed to export receipts. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 py-6">
@@ -193,6 +263,25 @@ export default function ReceiptsPage() {
               <h1 className="text-2xl font-semibold text-gray-900">Payment Receipts</h1>
               <p className="text-sm text-gray-500 mt-1">View and print all payment receipts</p>
             </div>
+            {totalRecords > 0 && (
+              <button
+                onClick={handleExportAll}
+                disabled={exporting}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+              >
+                {exporting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Export All to PDF
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -318,10 +407,20 @@ export default function ReceiptsPage() {
           </div>
 
           {/* 显示搜索结果统计 */}
-          <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-            {loading ? 'Loading...' : (
-              <>Found <span className="font-semibold text-gray-900">{totalRecords}</span> receipt(s) • Showing page {currentPage} of {totalPages}</>
-            )}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {loading ? 'Loading...' : (
+                  <>Found <span className="font-semibold text-gray-900">{totalRecords}</span> receipt(s) • Showing page {currentPage} of {totalPages}</>
+                )}
+              </div>
+              {totalRecords > 0 && !loading && (
+                <div className="text-xs text-green-600 flex items-center gap-1">
+                  <Download className="w-3 h-3" />
+                  Click "Export All to PDF" above to download all {totalRecords} receipt(s)
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
