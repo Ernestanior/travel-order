@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       skip,
       take: limit,
       orderBy: {
-        receiptdate: 'desc'
+        id: 'desc'  // 按 ID 降序排列（最新的在最前面）
       },
       include: {
         booking: {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Users, Search, X } from 'lucide-react'
+import { formatDate } from '@/lib/dateUtils'
 
 interface Customer {
   id: string
@@ -299,13 +300,13 @@ export default function PassengerInquiryPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                          {result.departureDate || '-'}
+                          {formatDate(result.departureDate)}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {result.tour || '-'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                          {result.bookingDate}
+                          {formatDate(result.bookingDate)}
                         </td>
                       </tr>
                     ))}

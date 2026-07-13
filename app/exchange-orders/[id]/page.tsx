@@ -354,7 +354,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                 Exchange #{order.exchangeNumber}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Related to Booking #{order.bookingNumber} • Created on {order.exchangeDate}
+                Related to Booking #{order.bookingNumber} • Created on {formatDate(order.exchangeDate)}
               </p>
             </div>
             
@@ -679,7 +679,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                       </div>
                     ) : (
                       <p className="text-sm text-gray-900">
-                        {order.departureDate || '-'} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
+                        {formatDate(order.departureDate)} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
                       </p>
                     )}
                   </div>
@@ -720,7 +720,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.departureDate2 || '-'} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
+                          {formatDate(order.departureDate2)} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
                         </p>
                       )}
                     </div>
@@ -762,7 +762,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.departureDate3 || '-'} • {order.departureTime3 || '-'} • {order.departureFlight3 || '-'} • {order.departureDest3 || '-'}
+                          {formatDate(order.departureDate3)} • {order.departureTime3 || '-'} • {order.departureFlight3 || '-'} • {order.departureDest3 || '-'}
                         </p>
                       )}
                     </div>
@@ -795,7 +795,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                       </div>
                     ) : (
                       <p className="text-sm text-gray-900">
-                        {order.arrivalDate || '-'} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
+                        {formatDate(order.arrivalDate)} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
                       </p>
                     )}
                   </div>
@@ -836,7 +836,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.arrivalDate2 || '-'} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
+                          {formatDate(order.arrivalDate2)} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
                         </p>
                       )}
                     </div>
@@ -878,7 +878,7 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.arrivalDate3 || '-'} • {order.arrivalTime3 || '-'} • {order.arrivalFlight3 || '-'} • {order.arrivalDest3 || '-'}
+                          {formatDate(order.arrivalDate3)} • {order.arrivalTime3 || '-'} • {order.arrivalFlight3 || '-'} • {order.arrivalDest3 || '-'}
                         </p>
                       )}
                     </div>

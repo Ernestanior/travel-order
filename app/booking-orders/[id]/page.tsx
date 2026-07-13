@@ -495,7 +495,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                 </div>
               ) : (
                 <p className="text-sm text-gray-500 mt-1">
-                  Created on {order.bookingDate}
+                  Created on {formatDate(order.bookingDate)}
                 </p>
               )}
             </div>
@@ -905,7 +905,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                       </div>
                     ) : (
                       <p className="text-sm text-gray-900">
-                        {order.departureDate || '-'} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
+                        {formatDate(order.departureDate)} • {order.departureTime || '-'} • {order.departureFlight || '-'} • {order.departureDest || '-'}
                       </p>
                     )}
                   </div>
@@ -947,7 +947,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.departureDate2 || '-'} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
+                          {formatDate(order.departureDate2)} • {order.departureTime2 || '-'} • {order.departureFlight2 || '-'} • {order.departureDest2 || '-'}
                         </p>
                       )}
                     </div>
@@ -990,7 +990,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.departureDate3 || '-'} • {order.departureTime3 || '-'} • {order.departureFlight3 || '-'} • {order.departureDest3 || '-'}
+                          {formatDate(order.departureDate3)} • {order.departureTime3 || '-'} • {order.departureFlight3 || '-'} • {order.departureDest3 || '-'}
                         </p>
                       )}
                     </div>
@@ -1023,7 +1023,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                       </div>
                     ) : (
                       <p className="text-sm text-gray-900">
-                        {order.arrivalDate || '-'} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
+                        {formatDate(order.arrivalDate)} • {order.arrivalTime || '-'} • {order.arrivalFlight || '-'} • {order.arrivalDest || '-'}
                       </p>
                     )}
                   </div>
@@ -1065,7 +1065,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.arrivalDate2 || '-'} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
+                          {formatDate(order.arrivalDate2)} • {order.arrivalTime2 || '-'} • {order.arrivalFlight2 || '-'} • {order.arrivalDest2 || '-'}
                         </p>
                       )}
                     </div>
@@ -1108,7 +1108,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                         </div>
                       ) : (
                         <p className="text-sm text-gray-900">
-                          {order.arrivalDate3 || '-'} • {order.arrivalTime3 || '-'} • {order.arrivalFlight3 || '-'} • {order.arrivalDest3 || '-'}
+                          {formatDate(order.arrivalDate3)} • {order.arrivalTime3 || '-'} • {order.arrivalFlight3 || '-'} • {order.arrivalDest3 || '-'}
                         </p>
                       )}
                     </div>
@@ -1186,9 +1186,9 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                             <p className="text-xs text-gray-500 mt-1">
                               {passenger.passport && `Passport: ${passenger.passport}`}
                               {passenger.passport && (passenger.birthdate || passenger.passportExpiryDate) && ' • '}
-                              {passenger.birthdate && `DOB: ${passenger.birthdate}`}
+                              {passenger.birthdate && `DOB: ${formatDate(passenger.birthdate)}`}
                               {passenger.birthdate && passenger.passportExpiryDate && ' • '}
-                              {passenger.passportExpiryDate && `Expiry: ${passenger.passportExpiryDate}`}
+                              {passenger.passportExpiryDate && `Expiry: ${formatDate(passenger.passportExpiryDate)}`}
                             </p>
                           )}
                         </div>
