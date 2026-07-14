@@ -1122,6 +1122,13 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     }
   }
   
+  // 按日期从早到晚排序（仅在 PDF 中排序，不影响原数组）
+  const sortedReceipts = [...receipts].sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    return dateA - dateB  // 从早到晚
+  })
+  
   let y = 20
   
   // Title - Receipt Date Range
@@ -1136,8 +1143,8 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   // Table headers - 注意：第4列是支付方式，所以表头留空或写"Type"
   const headers = [['Receipt', 'Date', 'For', 'Type', 'Amount', 'Customer']]
   
-  // Prepare table data
-  const tableData = receipts.map(receipt => {
+  // Prepare table data (使用排序后的数据)
+  const tableData = sortedReceipts.map(receipt => {
     // Map payment types to match screenshot format
     let forText = ''  // For column (Full/Deposit/Balance)
     let paymentMethod = ''  // Type column (Cash/Bank Transfer/etc)
@@ -1183,6 +1190,11 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     ]
   })
   
+  // 计算表格宽度和居中位置
+  const pageWidth = doc.internal.pageSize.width
+  const tableWidth = 170  // 表格总宽度
+  const startX = (pageWidth - tableWidth) / 2  // 居中计算
+  
   // Generate table
   autoTable(doc, {
     startY: y,
@@ -1202,21 +1214,21 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
       lineColor: [0, 0, 0]
     },
     columnStyles: {
-      0: { cellWidth: 25, halign: 'left' },    // Receipt
-      1: { cellWidth: 25, halign: 'left' },    // Date
-      2: { cellWidth: 25, halign: 'left' },    // Type (Full/Deposit)
-      3: { cellWidth: 35, halign: 'left' },    // Payment method
-      4: { cellWidth: 30, halign: 'right' },   // Amount
-      5: { cellWidth: 50, halign: 'left' }     // Customer
+      0: { cellWidth: 22, halign: 'left' },    // Receipt (缩小)
+      1: { cellWidth: 22, halign: 'left' },    // Date (缩小)
+      2: { cellWidth: 20, halign: 'left' },    // For (缩小)
+      3: { cellWidth: 30, halign: 'left' },    // Type (缩小)
+      4: { cellWidth: 25, halign: 'right' },   // Amount (缩小)
+      5: { cellWidth: 51, halign: 'left' }     // Customer (放大)
     },
-    margin: { left: 20, right: 20 }
+    margin: { left: startX, right: startX },  // 左右边距相同，实现居中
+    tableWidth: tableWidth
   })
   
-  // Calculate subtotals by payment type
+  // Calculate subtotals by payment type (使用排序后的数据)
   const subtotals: { [key: string]: number } = {
     'Cash': 0,
     'Cheque': 0,
-    'Nets': 0,
     'PayNow': 0,
     'Bank Transfer': 0,
     'Credit Card': 0
@@ -1224,7 +1236,7 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   
   let grandTotal = 0
   
-  receipts.forEach(receipt => {
+  sortedReceipts.forEach(receipt => {
     const amount = receipt.amount || 0
     const payType = receipt.paymentType?.toLowerCase() || ''
     
@@ -1240,8 +1252,6 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
       subtotals['Credit Card'] += amount
     } else if (payType.includes('cheque') || payType.includes('check')) {
       subtotals['Cheque'] += amount
-    } else if (payType.includes('nets')) {
-      subtotals['Nets'] += amount
     } else {
       subtotals['Cash'] += amount
     }
@@ -1265,11 +1275,6 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   // Sub-Total for Cheque
   doc.text('Sub-Total for Cheque :', labelX, y)
   doc.text(`$${formatCurrency(subtotals['Cheque'])}`, rightX, y, { align: 'right' })
-  y += 7
-  
-  // Sub-Total for Nets
-  doc.text('Sub-Total for Nets :', labelX, y)
-  doc.text(`$${formatCurrency(subtotals['Nets'])}`, rightX, y, { align: 'right' })
   y += 7
   
   // Sub-Total for PayNow
