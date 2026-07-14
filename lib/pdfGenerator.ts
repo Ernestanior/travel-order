@@ -1131,6 +1131,9 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   
   let y = 20
   
+  // 设置所有文字为黑色
+  doc.setTextColor(0, 0, 0)
+  
   // Title - Receipt Date Range
   doc.setFontSize(12)
   doc.setFont('courier', 'bold')
@@ -1204,13 +1207,23 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     styles: { 
       fontSize: 9,
       font: 'courier',
+      fontStyle: 'bold',  // 所有文字加粗
       cellPadding: 3,
+      textColor: [0, 0, 0],  // 黑色文字
+      lineWidth: 0.5,  // 统一边框粗细
+      lineColor: [0, 0, 0]  // 黑色边框
     },
     headStyles: {
       fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],
-      fontStyle: 'normal',
-      lineWidth: 0.5,
+      textColor: [0, 0, 0],  // 表头黑色文字
+      fontStyle: 'bold',  // 表头加粗
+      lineWidth: 0.5,  // 表头边框粗细
+      lineColor: [0, 0, 0]
+    },
+    bodyStyles: {
+      textColor: [0, 0, 0],  // 表格内容黑色文字
+      fontStyle: 'bold',  // 表格内容加粗
+      lineWidth: 0.5,  // 表格内容边框粗细
       lineColor: [0, 0, 0]
     },
     columnStyles: {
@@ -1260,8 +1273,10 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   // Add subtotals and grand total
   y = (doc as any).lastAutoTable.finalY + 15
   
+  // 确保小计文字也是黑色并加粗
+  doc.setTextColor(0, 0, 0)
   doc.setFontSize(10)
-  doc.setFont('courier', 'normal')
+  doc.setFont('courier', 'bold')  // 小计全部加粗
   
   // Right-align all subtotals
   const rightX = 190
@@ -1293,6 +1308,7 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   y += 10
   
   // Grand Total
+  doc.setTextColor(0, 0, 0)  // 确保 Grand Total 是黑色
   doc.setFont('courier', 'bold')
   doc.text('Grand Total :', labelX, y)
   doc.text(`$${formatCurrency(grandTotal)}`, rightX, y, { align: 'right' })
