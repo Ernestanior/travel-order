@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const maxAttempts = 10
     
     while (attempts < maxAttempts) {
-      newExchangeNumber = `E1${nextNumber + attempts}`  // 添加 'E' 前缀
+      newExchangeNumber = `E${nextNumber + attempts}`  // 添加 'E' 前缀
       
       // 检查是否已存在
       const existing = await prisma.exchangeData.findUnique({
