@@ -11,6 +11,7 @@ import { formatPrice } from '@/lib/formatUtils'
 interface BookingOrder {
   id: number
   bookingNumber: string
+  displayNo?: string
   customerName: string
   date: string
   departureDate: string
@@ -685,7 +686,7 @@ export default function BookingOrdersPage() {
                     onClick={() => window.location.href = `/booking-orders/${order.id}`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {order.bookingNumber}
+                      {order.displayNo || order.bookingNumber}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {order.customerName}

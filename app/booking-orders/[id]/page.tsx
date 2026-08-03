@@ -38,6 +38,7 @@ import { formatDate } from '@/lib/dateUtils'
 interface BookingOrder {
   id: number
   bookingNumber: string
+  displayNo?: string
   bookingDate: string
   customerName: string
   address: string
@@ -350,7 +351,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
     if (!order) return
     
     await generateBookingInvoicePDF({
-      bookingNumber: order.bookingNumber,
+      bookingNumber: order.displayNo || order.bookingNumber,
       date: order.bookingDate,
       customerName: order.customerName,
       address: order.address,
@@ -479,7 +480,7 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">
-                Booking #{order.bookingNumber}
+                Booking #{order.displayNo || order.bookingNumber}
               </h1>
               {isEditing ? (
                 <div className="mt-2">

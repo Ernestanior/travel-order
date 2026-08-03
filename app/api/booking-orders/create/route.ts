@@ -23,16 +23,13 @@ export async function POST(request: Request) {
     
     // 使用数据库事务确保数据一致性
     const result = await prisma.$transaction(async (tx) => {
-      // 1. 使用PostgreSQL序列生成严格递增的订单号
-      // 这是原子操作，保证：
-      // - 顺序性：订单号严格按时间顺序递增
-      // - 唯一性：数据库级别保证不会冲突
-      // - 并发安全：多个请求同时到达也能正确处理
+      // 1. 使用PostgreSQL序列生成内部订单号（bookno，可以跳号）
+      // bookno 用于系统内部关联，允许跳号以保证性能
       
       let newBookingNumber: string = ''
       
       try {
-        // 方法1：使用数据库序列（推荐，需要先运行SETUP_BOOKING_SEQUENCE.sql）
+        // 使用数据库序列生成 bookno
         const sequenceResult = await tx.$queryRaw<Array<{ nextval: bigint }>>`
           SELECT nextval('booking_number_seq')::int as nextval
         `
@@ -47,7 +44,6 @@ export async function POST(request: Request) {
         // 如果序列不存在，回退到安全的自增方法
         console.warn('Sequence not found, using fallback method:', sequenceError)
         
-        // 使用数据库级别的行锁确保唯一性
         const maxBooking = await tx.bookingData.findFirst({
           orderBy: { id: 'desc' },
           select: { id: true }
@@ -82,7 +78,33 @@ export async function POST(request: Request) {
         }
       }
       
-      // 2. 确保客户存在（如果不存在则创建）
+      // 2. 生成严格连续的显示编号（display_no，给客户看，保证不跳号）
+      // 使用行锁确保 display_no 的连续性
+      const maxDisplayOrder = await tx.bookingData.findFirst({
+        where: {
+          display_no: {
+            not: null
+          }
+        },
+        orderBy: {
+          display_no: 'desc'
+        },
+        select: {
+          display_no: true
+        }
+      })
+      
+      let displayNumber = 100001
+      if (maxDisplayOrder && maxDisplayOrder.display_no) {
+        const match = maxDisplayOrder.display_no.match(/T(\d+)/)
+        if (match) {
+          displayNumber = parseInt(match[1]) + 1
+        }
+      }
+      
+      const newDisplayNo = `T${displayNumber}`
+      
+      // 3. 确保客户存在（如果不存在则创建）
       const existingCustomer = await tx.customer.findUnique({
         where: { customer: customerName }
       })
@@ -122,10 +144,11 @@ export async function POST(request: Request) {
         }
       }
       
-      // 3. 创建主订单（在事务中）
+      // 4. 创建主订单（在事务中）
       const booking = await tx.bookingData.create({
         data: {
           bookno: newBookingNumber,
+          display_no: newDisplayNo,  // 添加显示编号
           bookdate: body.bookingDate ? new Date(body.bookingDate) : new Date(),
           customer: customerName,
           deptdate: body.departureDate ? new Date(body.departureDate) : null,
@@ -153,7 +176,7 @@ export async function POST(request: Request) {
         }
       })
       
-      // 4. 创建乘客信息（在事务中）
+      // 5. 创建乘客信息（在事务中）
       if (body.passengers && body.passengers.length > 0) {
         await tx.passengerData.createMany({
           data: body.passengers.map((p: any) => ({
@@ -166,7 +189,7 @@ export async function POST(request: Request) {
         })
       }
       
-      // 5. 创建 items（在事务中）
+      // 6. 创建 items（在事务中）
       if (body.items && body.items.length > 0) {
         await tx.itemData.createMany({
           data: body.items.map((item: any) => ({
@@ -182,7 +205,8 @@ export async function POST(request: Request) {
       // 返回创建结果
       return {
         id: booking.id,
-        bookingNumber: newBookingNumber
+        bookingNumber: newBookingNumber,
+        displayNo: newDisplayNo  // 返回显示编号
       }
     }, {
       // 设置事务超时时间和隔离级别
@@ -193,7 +217,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       id: result.id,
-      bookingNumber: result.bookingNumber
+      bookingNumber: result.bookingNumber,
+      displayNo: result.displayNo
     })
   } catch (error) {
     console.error('Error creating booking:', error)

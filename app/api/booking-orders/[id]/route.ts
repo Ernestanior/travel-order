@@ -38,6 +38,7 @@ export async function GET(
     const formatted = {
       id: booking.id,
       bookingNumber: booking.bookno,
+      displayNo: booking.display_no,
       bookingDate: booking.bookdate?.toISOString().split('T')[0] || '',
       customerName: booking.customer,
       address: booking.customerData?.address || '',

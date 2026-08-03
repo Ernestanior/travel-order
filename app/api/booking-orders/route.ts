@@ -99,6 +99,7 @@ export async function GET(request: Request) {
         select: {
           id: true,
           bookno: true,
+          display_no: true,
           customer: true,
           bookdate: true,
           deptdate: true,
@@ -144,6 +145,7 @@ export async function GET(request: Request) {
         return {
           id: booking.id,
           bookingNumber: booking.bookno,
+          displayNo: booking.display_no,
           customerName: booking.customer,
           date: booking.bookdate?.toISOString().split('T')[0] || '',
           bookingDate: booking.bookdate?.toISOString().split('T')[0] || '',
@@ -193,6 +195,7 @@ export async function GET(request: Request) {
         select: {
           id: true,
           bookno: true,
+          display_no: true,
           customer: true,
           bookdate: true,
           deptdate: true,
@@ -240,6 +243,7 @@ export async function GET(request: Request) {
       return {
         id: booking.id,
         bookingNumber: booking.bookno,
+        displayNo: booking.display_no,
         customerName: booking.customer,
         date: booking.bookdate?.toISOString().split('T')[0] || '',
         bookingDate: booking.bookdate?.toISOString().split('T')[0] || '',

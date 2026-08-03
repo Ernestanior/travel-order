@@ -34,6 +34,7 @@ model Supplier {
 model BookingData {
   id         Int                  @id @default(autoincrement())
   bookno     String               @unique @db.VarChar(50)
+  display_no String?              @unique @db.VarChar(50)
   bookdate   DateTime?            @db.Date
   customer   String               @db.VarChar(200)
   deptdate   DateTime?            @db.Date
