@@ -1492,7 +1492,7 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
   // Add table
   autoTable(doc, {
     startY: 35,
-    head: [['Booking', 'Date', 'Customer', 'Handling Staff', 'Outstanding Amount']],
+    head: [['Booking', 'Depart Date', 'Customer', 'Handling Staff', 'Outstanding Amount']],
     body: tableRows,
     theme: 'grid',
     headStyles: { 

@@ -179,7 +179,7 @@ export default function BookingOrdersPage() {
         beforeDate: outstandingBeforeDate,
         orders: orders.map((order: BookingOrder) => ({
           bookingNumber: order.bookingNumber,
-          date: order.date,
+          date: order.departureDate,  // 使用 departureDate 而不是 date
           customer: order.customerName,
           staff: order.staff || '-',
           outstandingAmount: order.outstanding
@@ -219,7 +219,7 @@ export default function BookingOrdersPage() {
         customer: outstandingCustomer,
         orders: orders.map((order: BookingOrder) => ({
           bookingNumber: order.bookingNumber,
-          date: order.date,
+          date: order.departureDate,  // 使用 departureDate 而不是 date
           customer: order.customerName,
           staff: order.staff || '-',
           outstandingAmount: order.outstanding
