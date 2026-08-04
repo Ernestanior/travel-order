@@ -1453,6 +1453,20 @@ export async function generateReceiptPDF(data: ReceiptInvoiceData) {
 export async function generateOutstandingReportPDF(data: OutstandingReportData, type: 'date' | 'customer' = 'date') {
   const doc = new jsPDF()
   
+  // Helper function to format date as DD-MM-YYYY
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '-'
+    try {
+      const date = new Date(dateStr)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}-${month}-${year}`
+    } catch {
+      return dateStr
+    }
+  }
+  
   // Set up the document
   doc.setFontSize(14)
   doc.setFont('helvetica', 'bold')
@@ -1469,7 +1483,7 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
   // Prepare table data
   const tableRows = data.orders.map(order => [
     order.bookingNumber,
-    order.date,
+    formatDate(order.date),  // 格式化为 DD-MM-YYYY
     order.customer,
     order.staff,
     `$${formatCurrency(order.outstandingAmount)}`

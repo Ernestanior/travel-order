@@ -126,7 +126,7 @@ export async function GET(request: Request) {
           }
         },
         orderBy: {
-          id: 'desc'  // 按 ID 降序排列，最新的在最上面
+          bookno: 'desc'  // 按 bookno 降序排列（T100055, T100054, ...），最新的在上面
         }
       })
 
@@ -222,7 +222,7 @@ export async function GET(request: Request) {
           }
         },
         orderBy: {
-          id: 'desc'  // 按 ID 降序排列，最新的在最上面
+          bookno: 'desc'  // 按 bookno 降序排列（T100055, T100054, ...），最新的在上面
         },
         skip,
         take: limit

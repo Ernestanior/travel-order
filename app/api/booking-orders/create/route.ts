@@ -78,31 +78,81 @@ export async function POST(request: Request) {
         }
       }
       
-      // 2. 生成严格连续的显示编号（display_no，给客户看，保证不跳号）
-      // 使用行锁确保 display_no 的连续性
-      const maxDisplayOrder = await tx.bookingData.findFirst({
-        where: {
-          display_no: {
-            not: null
-          }
-        },
-        orderBy: {
-          display_no: 'desc'
-        },
-        select: {
-          display_no: true
-        }
-      })
+      // 2. display_no 直接等于 bookno
+      const newDisplayNo = newBookingNumber
       
-      let displayNumber = 100001
-      if (maxDisplayOrder && maxDisplayOrder.display_no) {
-        const match = maxDisplayOrder.display_no.match(/T(\d+)/)
-        if (match) {
-          displayNumber = parseInt(match[1]) + 1
+      // 2.5. 自动检测并填充跳号（可选）
+      // 提取新订单号的数字部分
+      const newNumberMatch = newBookingNumber.match(/T(\d+)/)
+      if (newNumberMatch) {
+        const newNumber = parseInt(newNumberMatch[1])
+        
+        // 查找最大的现有订单号
+        const maxExisting = await tx.bookingData.findFirst({
+          where: {
+            bookno: {
+              not: newBookingNumber
+            }
+          },
+          orderBy: {
+            bookno: 'desc'
+          },
+          select: {
+            bookno: true
+          }
+        })
+        
+        if (maxExisting) {
+          const maxMatch = maxExisting.bookno.match(/T(\d+)/)
+          if (maxMatch) {
+            const maxNumber = parseInt(maxMatch[1])
+            
+            // 如果有跳号（新号码 > 最大号码 + 1）
+            if (newNumber > maxNumber + 1) {
+              console.log(`检测到跳号: T${maxNumber} -> T${newNumber}`)
+              
+              // 确保占位客户存在
+              const placeholderCustomer = '[PLACEHOLDER]'
+              const customerExists = await tx.customer.findUnique({
+                where: { customer: placeholderCustomer }
+              })
+              
+              if (!customerExists) {
+                await tx.customer.create({
+                  data: {
+                    customer: placeholderCustomer,
+                    tel: '00000000'
+                  }
+                })
+              }
+              
+              // 填充缺失的订单号
+              for (let i = maxNumber + 1; i < newNumber; i++) {
+                const missingBookno = `T${i}`
+                
+                // 检查是否已存在
+                const exists = await tx.bookingData.findUnique({
+                  where: { bookno: missingBookno }
+                })
+                
+                if (!exists) {
+                  await tx.bookingData.create({
+                    data: {
+                      bookno: missingBookno,
+                      display_no: missingBookno,
+                      bookdate: new Date('2000-01-01'),
+                      customer: placeholderCustomer,
+                      status: 'Placeholder',
+                      special: `Auto-filled placeholder to maintain sequential numbering. Created on ${new Date().toISOString()}`
+                    }
+                  })
+                  console.log(`自动填充占位订单: ${missingBookno}`)
+                }
+              }
+            }
+          }
         }
       }
-      
-      const newDisplayNo = `T${displayNumber}`
       
       // 3. 确保客户存在（如果不存在则创建）
       const existingCustomer = await tx.customer.findUnique({
