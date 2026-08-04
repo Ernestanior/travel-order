@@ -173,6 +173,7 @@ export default function MakePaymentModal({
                   <option value="Visa">Visa</option>
                   <option value="Debit">Debit</option>
                   <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="PayNow">PayNow</option>
                 </select>
               </div>
             </div>

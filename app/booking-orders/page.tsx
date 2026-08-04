@@ -174,17 +174,24 @@ export default function BookingOrdersPage() {
       
       const orders = result.data || result || []
       
+      // 按照 departureDate 排序（从最早到最晚）
+      const sortedOrders = [...orders].sort((a: BookingOrder, b: BookingOrder) => {
+        const dateA = new Date(a.departureDate).getTime()
+        const dateB = new Date(b.departureDate).getTime()
+        return dateA - dateB  // 升序排列，最早的在前
+      })
+      
       // 准备PDF数据
       const pdfData = {
         beforeDate: outstandingBeforeDate,
-        orders: orders.map((order: BookingOrder) => ({
+        orders: sortedOrders.map((order: BookingOrder) => ({
           bookingNumber: order.bookingNumber,
           date: order.departureDate,  // 使用 departureDate 而不是 date
           customer: order.customerName,
           staff: order.staff || '-',
           outstandingAmount: order.outstanding
         })),
-        totalOutstanding: orders.reduce((sum: number, order: BookingOrder) => sum + order.outstanding, 0)
+        totalOutstanding: sortedOrders.reduce((sum: number, order: BookingOrder) => sum + order.outstanding, 0)
       }
       
       // 生成PDF
@@ -214,17 +221,24 @@ export default function BookingOrdersPage() {
       
       const orders = result.data || result || []
       
+      // 按照 departureDate 排序（从最早到最晚）
+      const sortedOrders = [...orders].sort((a: BookingOrder, b: BookingOrder) => {
+        const dateA = new Date(a.departureDate).getTime()
+        const dateB = new Date(b.departureDate).getTime()
+        return dateA - dateB  // 升序排列，最早的在前
+      })
+      
       // 准备PDF数据
       const pdfData = {
         customer: outstandingCustomer,
-        orders: orders.map((order: BookingOrder) => ({
+        orders: sortedOrders.map((order: BookingOrder) => ({
           bookingNumber: order.bookingNumber,
           date: order.departureDate,  // 使用 departureDate 而不是 date
           customer: order.customerName,
           staff: order.staff || '-',
           outstandingAmount: order.outstanding
         })),
-        totalOutstanding: orders.reduce((sum: number, order: BookingOrder) => sum + order.outstanding, 0)
+        totalOutstanding: sortedOrders.reduce((sum: number, order: BookingOrder) => sum + order.outstanding, 0)
       }
       
       // 生成PDF
