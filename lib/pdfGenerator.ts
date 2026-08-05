@@ -1108,15 +1108,15 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
 export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], dateRange?: { from: string; to: string }) {
   const doc = new jsPDF()
   
-  // Helper function to format date as D/M/YYYY (like in screenshot)
+  // Helper function to format date as DD-MM-YYYY
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return '-'
     try {
       const date = new Date(dateStr)
-      const day = date.getDate()
-      const month = date.getMonth() + 1
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
       const year = date.getFullYear()
-      return `${day}/${month}/${year}`
+      return `${day}-${month}-${year}`
     } catch {
       return dateStr
     }
@@ -1173,7 +1173,7 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     } else if (payType.includes('paynow')) {
       paymentMethod = 'PayNow'
     } else if (payType.includes('bank') || payType.includes('transfer') || payType.includes('giro')) {
-      paymentMethod = 'Bank Transfer'
+      paymentMethod = 'GIRO'
     } else if (payType.includes('credit') || payType.includes('card') || payType.includes('visa')) {
       paymentMethod = 'Credit Card'
     } else if (payType.includes('cheque') || payType.includes('check')) {
@@ -1244,7 +1244,7 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     'Cash': 0,
     'Cheque': 0,
     'PayNow': 0,
-    'Bank Transfer': 0,
+    'GIRO': 0,
     'Credit Card': 0
   }
   
@@ -1261,7 +1261,7 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     } else if (payType.includes('paynow')) {
       subtotals['PayNow'] += amount
     } else if (payType.includes('bank') || payType.includes('transfer') || payType.includes('giro')) {
-      subtotals['Bank Transfer'] += amount
+      subtotals['GIRO'] += amount
     } else if (payType.includes('credit') || payType.includes('card') || payType.includes('visa')) {
       subtotals['Credit Card'] += amount
     } else if (payType.includes('cheque') || payType.includes('check')) {
@@ -1298,9 +1298,9 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   doc.text(`$${formatCurrency(subtotals['PayNow'])}`, rightX, y, { align: 'right' })
   y += 7
   
-  // Sub-Total for Bank Transfer
-  doc.text('Sub-Total for Bank Transfer :', labelX, y)
-  doc.text(`$${formatCurrency(subtotals['Bank Transfer'])}`, rightX, y, { align: 'right' })
+  // Sub-Total for GIRO
+  doc.text('Sub-Total for GIRO :', labelX, y)
+  doc.text(`$${formatCurrency(subtotals['GIRO'])}`, rightX, y, { align: 'right' })
   y += 7
   
   // Sub-Total for Credit Card
@@ -1476,7 +1476,7 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
   if (type === 'customer') {
     title = `Outstanding Booking Report for Customer:  ${data.customer || ''}`
   } else {
-    title = `Booking Report Before This Date    ${data.beforeDate || ''}`
+    title = `Outstanding Report Before This Date    ${data.beforeDate || ''}`
   }
   doc.text(title, 105, 20, { align: 'center' })
   
@@ -1492,7 +1492,7 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
   // Add table
   autoTable(doc, {
     startY: 35,
-    head: [['Booking', 'Depart Date', 'Customer', 'Handling Staff', 'Outstanding Amount']],
+    head: [['Booking', 'Depart Date', 'Customer', 'Staff', 'Outstanding Amount']],
     body: tableRows,
     theme: 'grid',
     headStyles: { 
@@ -1510,11 +1510,11 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
       fontSize: 10
     },
     columnStyles: {
-      0: { cellWidth: 30, halign: 'center' },
-      1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 60, halign: 'center' },
-      3: { cellWidth: 35, halign: 'center' },
-      4: { cellWidth: 35, halign: 'center' }
+      0: { cellWidth: 20, halign: 'center' },
+      1: { cellWidth: 25, halign: 'center' },
+      2: { cellWidth: 90, halign: 'center' },
+      3: { cellWidth: 20, halign: 'center' },
+      4: { cellWidth: 25, halign: 'center' }
     },
     margin: { left: 15, right: 15 }
   })

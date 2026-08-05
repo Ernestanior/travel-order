@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { mockCustomers } from '@/lib/mockData'
-import { ArrowLeft, FileText, Plus, Search, Filter, X, Download } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Search, Filter, X, Download, GitBranch } from 'lucide-react'
 import { generateOutstandingReportPDF } from '@/lib/pdfGenerator'
 import { formatDate } from '@/lib/dateUtils'
 import { formatPrice } from '@/lib/formatUtils'
@@ -40,6 +40,7 @@ export default function BookingOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
   const itemsPerPage = 50
+  const [filling, setFilling] = useState(false)
 
   // 初始加载
   useEffect(() => {
@@ -48,9 +49,7 @@ export default function BookingOrdersPage() {
 
   // 当页码变化时加载数据
   useEffect(() => {
-    if (currentPage > 1) {
-      loadOrders()
-    }
+    loadOrders()
   }, [currentPage])
 
   // 当搜索条件变化时重置到第一页
@@ -249,6 +248,42 @@ export default function BookingOrdersPage() {
     }
   }
 
+  // 填充跳号
+  const handleFillGaps = async () => {
+    if (!confirm('This will create placeholder orders for any missing booking numbers. Continue?')) {
+      return
+    }
+
+    setFilling(true)
+    try {
+      const response = await fetch('/api/booking-orders/fill-gaps', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        if (result.filled && result.filled.length > 0) {
+          alert(`Successfully filled ${result.filled.length} gap(s):\n${result.filled.join(', ')}`)
+          // 重新加载订单列表
+          loadOrders()
+        } else {
+          alert(result.message || 'No gaps found to fill')
+        }
+      } else {
+        alert(`Failed to fill gaps: ${result.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Error filling gaps:', error)
+      alert('Failed to fill gaps')
+    } finally {
+      setFilling(false)
+    }
+  }
+
   const filteredOrders = bookingOrders
 
   // 后端分页，直接使用返回的数据
@@ -332,13 +367,23 @@ export default function BookingOrdersPage() {
           </Link>
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold text-gray-900">Booking Orders</h1>
-            <Link 
-              href="/booking-orders/new"
-              className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center text-sm transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Booking
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleFillGaps}
+                disabled={filling}
+                className="bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-4 py-2 rounded-lg flex items-center text-sm transition-colors"
+              >
+                <GitBranch className="w-4 h-4 mr-2" />
+                {filling ? 'Filling...' : 'Fill Missing Numbers'}
+              </button>
+              <Link 
+                href="/booking-orders/new"
+                className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center text-sm transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Booking
+              </Link>
+            </div>
           </div>
         </div>
 
