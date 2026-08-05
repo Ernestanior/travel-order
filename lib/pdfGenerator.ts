@@ -1228,12 +1228,12 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
       lineColor: [0, 0, 0]
     },
     columnStyles: {
-      0: { cellWidth: 22, halign: 'left' },    // Receipt (缩小)
-      1: { cellWidth: 22, halign: 'left' },    // Date (缩小)
-      2: { cellWidth: 20, halign: 'left' },    // For (缩小)
-      3: { cellWidth: 30, halign: 'left' },    // Type (缩小)
-      4: { cellWidth: 25, halign: 'right' },   // Amount (缩小)
-      5: { cellWidth: 51, halign: 'left' }     // Customer (放大)
+      0: { cellWidth: 22, halign: 'left' },    // Receipt
+      1: { cellWidth: 32, halign: 'left' },    // Date
+      2: { cellWidth: 20, halign: 'left' },    // For
+      3: { cellWidth: 20, halign: 'left' },    // Type
+      4: { cellWidth: 25, halign: 'right' },   // Amount
+      5: { cellWidth: 51, halign: 'left' }     // Customer
     },
     margin: { left: startX, right: startX },  // 左右边距相同，实现居中
     tableWidth: tableWidth
@@ -1512,7 +1512,7 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
     columnStyles: {
       0: { cellWidth: 20, halign: 'center' },
       1: { cellWidth: 25, halign: 'center' },
-      2: { cellWidth: 90, halign: 'center' },
+      2: { cellWidth: 90, halign: 'left' },
       3: { cellWidth: 20, halign: 'center' },
       4: { cellWidth: 25, halign: 'center' }
     },
