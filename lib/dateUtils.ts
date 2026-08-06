@@ -25,9 +25,9 @@ export function formatDate(dateStr: string | Date | undefined | null): string {
 }
 
 /**
- * Format date to YYYY-MM-DD format (for input fields)
+ * Format date to DD-MM-YYYY format (for input fields)
  * @param dateStr - Date string or Date object
- * @returns Formatted date string in YYYY-MM-DD format
+ * @returns Formatted date string in DD-MM-YYYY format
  */
 export function formatDateForInput(dateStr: string | Date | undefined | null): string {
   if (!dateStr) return ''
@@ -44,7 +44,7 @@ export function formatDateForInput(dateStr: string | Date | undefined | null): s
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     
-    return `${year}-${month}-${day}`
+    return `${day}-${month}-${year}`
   } catch {
     return ''
   }

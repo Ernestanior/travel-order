@@ -1135,37 +1135,24 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   // 设置所有文字为黑色
   doc.setTextColor(0, 0, 0)
   
-  // Title - Receipt Date Range
-  doc.setFontSize(12)
-  doc.setFont('courier', 'bold')
+  // Title - Receipt Date Range（使用与 Outstanding Report 相同的字体样式）
+  doc.setFontSize(14)  // 与 Outstanding Report 一致
+  doc.setFont('helvetica', 'bold')  // 使用 helvetica 而不是 courier
   const fromDate = dateRange?.from ? formatDate(dateRange.from) : '-'
   const toDate = dateRange?.to ? formatDate(dateRange.to) : '-'
-  doc.text(`Receipt Date From       ${fromDate}      To ${toDate}`, 20, y)
+  doc.text(`Receipt Date From       ${fromDate}      To ${toDate}`, 105, y, { align: 'center' })  // 居中对齐
   
   y += 15
   
-  // Table headers - 注意：第4列是支付方式，所以表头留空或写"Type"
-  const headers = [['Receipt', 'Date', 'For', 'Type', 'Amount', 'Customer']]
+  // Table headers - 删除 "For" 列
+  const headers = [['Receipt', 'Date', 'Type', 'Amount', 'Customer']]
   
   // Prepare table data (使用排序后的数据)
   const tableData = sortedReceipts.map(receipt => {
     // Map payment types to match screenshot format
-    let forText = ''  // For column (Full/Deposit/Balance)
     let paymentMethod = ''  // Type column (Cash/Bank Transfer/etc)
     
     const payType = receipt.paymentType?.toLowerCase() || ''
-    const forField = receipt.for?.toLowerCase() || ''
-    
-    // Determine For column (Full/Deposit/Balance)
-    if (forField.includes('full')) {
-      forText = 'Full'
-    } else if (forField.includes('deposit')) {
-      forText = 'Deposit'
-    } else if (forField.includes('balance')) {
-      forText = 'Balance1'
-    } else {
-      forText = 'Full'
-    }
     
     // Determine Type column (payment method)
     if (payType.includes('cash')) {
@@ -1187,8 +1174,7 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
     return [
       receipt.receiptNo,
       formatDate(receipt.date),
-      forText,              // For column
-      paymentMethod,        // Type column
+      paymentMethod,        // Type column (之前的第4列现在变成第3列)
       `$${formatCurrency(receipt.amount)}`,
       receipt.customer
     ]
@@ -1199,41 +1185,37 @@ export async function generateBatchReceiptsPDF(receipts: ReceiptInvoiceData[], d
   const tableWidth = 170  // 表格总宽度
   const startX = (pageWidth - tableWidth) / 2  // 居中计算
   
-  // Generate table
+  // Generate table - 使用与 Outstanding Report 相同的样式
   autoTable(doc, {
     startY: y,
     head: headers,
     body: tableData,
     theme: 'grid',
-    styles: { 
-      fontSize: 9,
-      font: 'courier',
-      fontStyle: 'bold',  // 所有文字加粗
-      cellPadding: 3,
+    headStyles: { 
+      fillColor: [255, 255, 255],  // 白色背景
       textColor: [0, 0, 0],  // 黑色文字
-      lineWidth: 0.5,  // 统一边框粗细
-      lineColor: [0, 0, 0]  // 黑色边框
-    },
-    headStyles: {
-      fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],  // 表头黑色文字
-      fontStyle: 'bold',  // 表头加粗
-      lineWidth: 0.5,  // 表头边框粗细
-      lineColor: [0, 0, 0]
+      lineColor: [0, 0, 0],  // 黑色边框
+      lineWidth: 0.5,
+      fontSize: 10,
+      fontStyle: 'bold',
+      halign: 'center'  // 表头居中
     },
     bodyStyles: {
-      textColor: [0, 0, 0],  // 表格内容黑色文字
-      fontStyle: 'bold',  // 表格内容加粗
-      lineWidth: 0.5,  // 表格内容边框粗细
-      lineColor: [0, 0, 0]
+      lineColor: [0, 0, 0],  // 黑色边框
+      lineWidth: 0.5,
+      fontSize: 10,  // 与 Outstanding Report 一致
+      textColor: [0, 0, 0],  // 黑色文字
+      fontStyle: 'normal'  // 不加粗，字体更细
+    },
+    styles: { 
+      fontSize: 10
     },
     columnStyles: {
-      0: { cellWidth: 22, halign: 'left' },    // Receipt
-      1: { cellWidth: 32, halign: 'left' },    // Date
-      2: { cellWidth: 20, halign: 'left' },    // For
-      3: { cellWidth: 20, halign: 'left' },    // Type
-      4: { cellWidth: 25, halign: 'right' },   // Amount
-      5: { cellWidth: 51, halign: 'left' }     // Customer
+      0: { cellWidth: 22, halign: 'center' },    // Receipt
+      1: { cellWidth: 25, halign: 'center' },    // Date
+      2: { cellWidth: 20, halign: 'center' },    // Type (之前的第4列)
+      3: { cellWidth: 25, halign: 'center' },    // Amount (之前的第5列)
+      4: { cellWidth: 78, halign: 'left' }       // Customer (增加 15 个单位：63 -> 78)
     },
     margin: { left: startX, right: startX },  // 左右边距相同，实现居中
     tableWidth: tableWidth
@@ -1476,7 +1458,9 @@ export async function generateOutstandingReportPDF(data: OutstandingReportData, 
   if (type === 'customer') {
     title = `Outstanding Booking Report for Customer:  ${data.customer || ''}`
   } else {
-    title = `Outstanding Report Before This Date    ${data.beforeDate || ''}`
+    // 格式化日期为 DD-MM-YYYY 格式
+    const formattedBeforeDate = formatDate(data.beforeDate)
+    title = `Outstanding Report Before This Date    ${formattedBeforeDate}`
   }
   doc.text(title, 105, 20, { align: 'center' })
   
