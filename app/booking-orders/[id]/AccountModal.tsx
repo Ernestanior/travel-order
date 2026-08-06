@@ -374,7 +374,7 @@ export default function AccountModal({
                   <option value="Cheque">Cheque</option>
                   <option value="Visa">Visa</option>
                   <option value="Debit">Debit</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="GIRO">GIRO</option>
                 </select>
               </div>
 
