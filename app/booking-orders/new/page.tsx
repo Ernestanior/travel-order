@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
@@ -29,7 +29,7 @@ interface Passenger {
   passportExpiryDate: string
 }
 
-export default function NewBookingOrderPage() {
+function NewBookingOrderContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const templateId = searchParams.get('templateId')
@@ -879,5 +879,17 @@ export default function NewBookingOrderPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function NewBookingOrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    }>
+      <NewBookingOrderContent />
+    </Suspense>
   )
 }
