@@ -208,3 +208,49 @@ model ExchangePaymentData {
   @@index([amountpaid])
   @@map("exchange_payment_data")
 }
+
+model BookingTemplate {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(100)
+  description String?   @db.VarChar(255)
+  customer    String    @db.VarChar(200)
+  tel         String    @db.VarChar(50)
+  address     String?   @db.VarChar(255)
+  email       String?   @db.VarChar(255)
+  discount    Decimal   @default(0) @db.Decimal(15, 2)
+  staff       String?   @db.VarChar(100)
+  tourcode    String?   @db.VarChar(50)
+  tour        String?   @db.VarChar(50)
+  special     String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items       BookingTemplateItem[]
+  passengers  BookingTemplatePassenger[]
+
+  @@map("booking_templates")
+}
+
+model BookingTemplateItem {
+  id         Int              @id @default(autoincrement())
+  templateId Int
+  item       String           @db.VarChar(200)
+  quantity   Int
+  unitprice  Decimal          @db.Decimal(15, 2)
+  price      Decimal          @db.Decimal(15, 2)
+  template   BookingTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("booking_template_items")
+}
+
+model BookingTemplatePassenger {
+  id                   Int              @id @default(autoincrement())
+  templateId           Int
+  paxname              String           @db.VarChar(50)
+  passport             String?          @db.VarChar(50)
+  birthdate            DateTime?        @db.Date
+  passport_expiry_date DateTime?        @db.Date
+  template             BookingTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("booking_template_passengers")
+}

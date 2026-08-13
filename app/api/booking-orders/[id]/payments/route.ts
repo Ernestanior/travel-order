@@ -82,7 +82,7 @@ export async function POST(
         visano: body.visaNo || null,
         amountpaid: parseFloat(body.amountPaid),
         paidtext: body.amountPaidText || null,
-        customer: booking.customer || body.receiveFrom || null,
+        customer: body.receiveFrom || booking.customer || null,
         payfor: body.paymentOf || null,
       }
     })

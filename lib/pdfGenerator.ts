@@ -331,14 +331,14 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.text(data.departureTime || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight || '-', 128, y)
+    doc.text(data.departureFlight || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest || '-', 170, y, { align: 'left' })
+    doc.text(data.departureDest || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -355,14 +355,14 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.text(data.departureTime2 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight2 || '-', 128, y)
+    doc.text(data.departureFlight2 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest2 || '-', 170, y, { align: 'left' })
+    doc.text(data.departureDest2 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -379,14 +379,14 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.text(data.departureTime3 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight3 || '-', 128, y)
+    doc.text(data.departureFlight3 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest3 || '-', 170, y, { align: 'left' })
+    doc.text(data.departureDest3 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -403,14 +403,14 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.text(data.arrivalTime || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight || '-', 128, y)
+    doc.text(data.arrivalFlight || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest || '-', 170, y, { align: 'left' })
+    doc.text(data.arrivalDest || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -427,14 +427,14 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.text(data.arrivalTime2 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight2 || '-', 128, y)
+    doc.text(data.arrivalFlight2 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest2 || '-', 170, y, { align: 'left' })
+    doc.text(data.arrivalDest2 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -451,14 +451,14 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.text(data.arrivalTime3 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight3 || '-', 128, y)
+    doc.text(data.arrivalFlight3 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest3 || '-', 170, y, { align: 'left' })
+    doc.text(data.arrivalDest3 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -899,14 +899,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.text(data.departureTime || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight || '-', 128, y)
+    doc.text(data.departureFlight || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest || '-', 170, y, { align: 'left' })
+    doc.text(data.departureDest || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -923,14 +923,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.text(data.departureTime2 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight2 || '-', 128, y)
+    doc.text(data.departureFlight2 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest2 || '-', 170, y, { align: 'left' })
+    doc.text(data.departureDest2 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -947,14 +947,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.text(data.departureTime3 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight3 || '-', 128, y)
+    doc.text(data.departureFlight3 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest3 || '-', 170, y, { align: 'left' })
+    doc.text(data.departureDest3 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -971,14 +971,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.text(data.arrivalTime || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight || '-', 128, y)
+    doc.text(data.arrivalFlight || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest || '-', 170, y, { align: 'left' })
+    doc.text(data.arrivalDest || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -995,14 +995,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.text(data.arrivalTime2 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight2 || '-', 128, y)
+    doc.text(data.arrivalFlight2 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest2 || '-', 170, y, { align: 'left' })
+    doc.text(data.arrivalDest2 || '-', 180, y, { align: 'left' })
     y += 5
   }
   
@@ -1019,14 +1019,14 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
     doc.text(data.arrivalTime3 || '-', 88, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 115, y)
+    doc.text('Flight :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight3 || '-', 128, y)
+    doc.text(data.arrivalFlight3 || '-', 138, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 148, y)
+    doc.text('Destination :', 158, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest3 || '-', 170, y, { align: 'left' })
+    doc.text(data.arrivalDest3 || '-', 180, y, { align: 'left' })
     y += 5
   }
   y = boxY + boxHeight + 10

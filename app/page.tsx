@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FileText, RefreshCw, Users, Building2, Receipt, BarChart3, LogOut, ArrowRight } from 'lucide-react'
+import { FileText, RefreshCw, Users, Building2, Receipt, BarChart3, LogOut, ArrowRight, FileCode } from 'lucide-react'
 import { formatPrice } from '@/lib/formatUtils'
 import { notification } from 'antd'
 
@@ -61,6 +61,12 @@ export default function HomePage() {
       icon: FileText,
       title: 'Booking Orders',
       description: '管理客户预订订单，包括航班信息、乘客数据和付款记录'
+    },
+    {
+      href: '/booking-templates',
+      icon: FileCode,
+      title: 'Booking Templates',
+      description: '创建和管理订单模板，快速开单'
     },
     {
       href: '/exchange-orders',
