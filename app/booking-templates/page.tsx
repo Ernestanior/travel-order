@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Edit, Trash2, FileText } from 'lucide-react'
+import { Plus, Edit, Trash2, FileText, Home } from 'lucide-react'
 import { notification, Modal } from 'antd'
 
 interface Template {
@@ -95,11 +95,20 @@ export default function BookingTemplatesPage() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Booking Templates</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Create and manage order templates for quick booking
-              </p>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors flex items-center justify-center"
+                title="Back to Home"
+              >
+                <Home className="w-5 h-5" />
+              </Link>
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900">Booking Templates</h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Create and manage order templates for quick booking
+                </p>
+              </div>
             </div>
             
             <Link
