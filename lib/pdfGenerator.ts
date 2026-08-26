@@ -298,7 +298,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   doc.setDrawColor(0, 0, 0)
   doc.setLineWidth(0.5)
   const boxY = y
-  const boxWidth = 180  // 固定宽度，右边对齐到195
+  const boxWidth = 185 // 固定宽度，右边对齐到200
 
   // formatDate function already defined above
 
@@ -487,8 +487,8 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     styles: { fontSize: 9 },
     columnStyles: {      0: { cellWidth: 100, halign: 'left' },
       1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 25, halign: 'right' },
-      3: { cellWidth: 25, halign: 'right' }
+      2: { cellWidth: 26, halign: 'right' },
+      3: { cellWidth: 30, halign: 'right' }
     },
     didParseCell: function(data) {
         // 设置header的对齐方式
@@ -502,8 +502,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
           }
         }
       },
-    margin: { left: 15, right: 15 },
-    tableWidth: 180
+    tableWidth: 185
   })
   
   y = (doc as any).lastAutoTable.finalY + 10
@@ -552,7 +551,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
         }
       },
       margin: { left: 15, right: 15 },
-      tableWidth: 180
+      tableWidth: 200
     })
     
     y = (doc as any).lastAutoTable.finalY + 10
@@ -869,7 +868,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   doc.setDrawColor(0, 0, 0)
   doc.setLineWidth(0.5)
   const boxY = y
-  const boxWidth = 180
+  const boxWidth = 185
   
   // 计算需要多少行
   let flightCount = 0
@@ -1069,7 +1068,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
       }
     },
     margin: { left: 15, right: 15 },
-    tableWidth: 180
+    tableWidth: 185
   })
   
   y = (doc as any).lastAutoTable.finalY + 10
@@ -1093,7 +1092,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   
   summaryY += 5
   doc.text('Balance:', rightX, summaryY)
-  doc.text(`$${formatCurrency(data.balance)}`, 195, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.balance)}`, 155, summaryY, { align: 'right' })
   
   // Footer - Computer Generated Notice
   doc.setFontSize(8)
