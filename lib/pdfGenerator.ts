@@ -321,9 +321,9 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // Departure Date 1
   if (data.departureDate) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Date 1 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate), 34, y)
+    doc.text(formatDate(data.departureDate), 27, y)
 
     doc.setFont('helvetica', 'bold')
     doc.text('Time :', 56, y)
@@ -345,9 +345,9 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // Departure Date 2
   if (data.departureDate2) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Date 2 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate2), 34, y)
+    doc.text(formatDate(data.departureDate2), 27, y)
 
     doc.setFont('helvetica', 'bold')
     doc.text('Time :', 56, y)
@@ -369,9 +369,9 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // Departure Date 3
   if (data.departureDate3) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Date 3 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate3), 34, y)
+    doc.text(formatDate(data.departureDate3), 27, y)
 
     doc.setFont('helvetica', 'bold')
     doc.text('Time :', 56, y)
@@ -393,9 +393,9 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // Arrival Date 1
   if (data.arrivalDate) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Date 4 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate), 34, y)
+    doc.text(formatDate(data.arrivalDate), 27, y)
 
     doc.setFont('helvetica', 'bold')
     doc.text('Time :', 56, y)
@@ -417,9 +417,9 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // Arrival Date 2
   if (data.arrivalDate2) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Date 5 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate2), 34, y)
+    doc.text(formatDate(data.arrivalDate2), 27, y)
 
     doc.setFont('helvetica', 'bold')
     doc.text('Time :', 56, y)
@@ -441,9 +441,9 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
   // Arrival Date 3
   if (data.arrivalDate3) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Date 6 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate3), 34, y)
+    doc.text(formatDate(data.arrivalDate3), 27, y)
 
     doc.setFont('helvetica', 'bold')
     doc.text('Time :', 56, y)
@@ -487,7 +487,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     styles: { fontSize: 9 },
     columnStyles: {      0: { cellWidth: 100, halign: 'left' },
       1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 26, halign: 'right' },
+      2: { cellWidth: 25, halign: 'right' },
       3: { cellWidth: 30, halign: 'right' }
     },
     didParseCell: function(data) {
@@ -535,8 +535,8 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
       columnStyles: {
         0: { cellWidth: 65, halign: 'left' },
         1: { cellWidth: 50, halign: 'center' },
-        2: { cellWidth: 32.5, halign: 'right' },
-        3: { cellWidth: 32.5, halign: 'right' }
+        2: { cellWidth: 35, halign: 'right' },
+        3: { cellWidth: 35, halign: 'right' }
       },
       didParseCell: function(data) {
         // 设置header的对齐方式
@@ -888,144 +888,144 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   // Departure Date 1
   if (data.departureDate) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Departure Date 1 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate), 50, y)
+    doc.text(formatDate(data.departureDate), 27, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 73, y)
+    doc.text('Time :', 56, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureTime || '-', 84, y)
+    doc.text(data.departureTime || '-', 67, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 110, y)
+    doc.text('Flight :', 87, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight || '-', 122, y)
+    doc.text(data.departureFlight || '-', 100, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 158, y)
+    doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest || '-', 180, y, { align: 'left' })
+    doc.text(data.departureDest || '-', 153, y, { align: 'left' })
     y += 5
   }
   
   // Departure Date 2
   if (data.departureDate2) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Departure Date 2 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate2), 50, y)
+    doc.text(formatDate(data.departureDate2), 27, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 73, y)
+    doc.text('Time :', 56, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureTime2 || '-', 84, y)
+    doc.text(data.departureTime2 || '-', 67, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 110, y)
+    doc.text('Flight :', 87, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight2 || '-', 122, y)
+    doc.text(data.departureFlight2 || '-', 100, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 158, y)
+    doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest2 || '-', 180, y, { align: 'left' })
+    doc.text(data.departureDest2 || '-', 153, y, { align: 'left' })
     y += 5
   }
   
   // Departure Date 3
   if (data.departureDate3) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Departure Date 3 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.departureDate3), 50, y)
+    doc.text(formatDate(data.departureDate3), 27, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 73, y)
+    doc.text('Time :', 56, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureTime3 || '-', 84, y)
+    doc.text(data.departureTime3 || '-', 67, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 110, y)
+    doc.text('Flight :', 87, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureFlight3 || '-', 122, y)
+    doc.text(data.departureFlight3 || '-', 100, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 158, y)
+    doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest3 || '-', 180, y, { align: 'left' })
+    doc.text(data.departureDest3 || '-', 153, y, { align: 'left' })
     y += 5
   }
   
   // Arrival Date 1
   if (data.arrivalDate) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Arrival      Date 1 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate), 50, y)
+    doc.text(formatDate(data.arrivalDate), 27, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 73, y)
+    doc.text('Time :', 56, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalTime || '-', 84, y)
+    doc.text(data.arrivalTime || '-', 67, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 110, y)
+    doc.text('Flight :', 87, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight || '-', 122, y)
+    doc.text(data.arrivalFlight || '-', 100, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 158, y)
+    doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest || '-', 180, y, { align: 'left' })
+    doc.text(data.arrivalDest || '-', 153, y, { align: 'left' })
     y += 5
   }
   
   // Arrival Date 2
   if (data.arrivalDate2) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Arrival      Date 2 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate2), 50, y)
+    doc.text(formatDate(data.arrivalDate2), 27, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 73, y)
+    doc.text('Time :', 56, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalTime2 || '-', 84, y)
+    doc.text(data.arrivalTime2 || '-', 67, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 110, y)
+    doc.text('Flight :', 87, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight2 || '-', 122, y)
+    doc.text(data.arrivalFlight2 || '-', 100, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 158, y)
+    doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest2 || '-', 180, y, { align: 'left' })
+    doc.text(data.arrivalDest2 || '-', 153, y, { align: 'left' })
     y += 5
   }
   
   // Arrival Date 3
   if (data.arrivalDate3) {
     doc.setFont('helvetica', 'bold')
-    doc.text('Arrival      Date 3 :', 17, y)
+    doc.text('Date:', 17, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(formatDate(data.arrivalDate3), 50, y)
+    doc.text(formatDate(data.arrivalDate3), 27, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Time :', 73, y)
+    doc.text('Time :', 56, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalTime3 || '-', 84, y)
+    doc.text(data.arrivalTime3 || '-', 67, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Flight :', 110, y)
+    doc.text('Flight :', 87, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalFlight3 || '-', 122, y)
+    doc.text(data.arrivalFlight3 || '-', 100, y)
     
     doc.setFont('helvetica', 'bold')
-    doc.text('Destination :', 158, y)
+    doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.arrivalDest3 || '-', 180, y, { align: 'left' })
+    doc.text(data.arrivalDest3 || '-', 153, y, { align: 'left' })
     y += 5
   }
   y = boxY + boxHeight + 10
@@ -1053,7 +1053,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
       0: { cellWidth: 100, halign: 'left' },
       1: { cellWidth: 30, halign: 'center' },
       2: { cellWidth: 25, halign: 'right' },
-      3: { cellWidth: 25, halign: 'right' }
+      3: { cellWidth: 30, halign: 'right' }
     },
     didParseCell: function(data) {
       // 设置header的对齐方式
@@ -1092,7 +1092,7 @@ export async function generateExchangeInvoicePDF(data: ExchangeInvoiceData) {
   
   summaryY += 5
   doc.text('Balance:', rightX, summaryY)
-  doc.text(`$${formatCurrency(data.balance)}`, 155, summaryY, { align: 'right' })
+  doc.text(`$${formatCurrency(data.balance)}`, 195, summaryY, { align: 'right' })
   
   // Footer - Computer Generated Notice
   doc.setFontSize(8)
