@@ -31,6 +31,7 @@ interface Payment {
   type: string
   for: string
   amount: number
+  chequeNo?: string  // For Cheque or Visa card numbers
 }
 
 import { formatDate } from '@/lib/dateUtils'
@@ -130,7 +131,8 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
             date: p.receiptdate,
             type: p.paytype || 'N/A',
             for: p.for || '',
-            amount: parseFloat(p.amountpaid) || 0
+            amount: parseFloat(p.amountpaid) || 0,
+            chequeNo: p.chequeno || ''  // Add cheque/card number
           }))
           
           // Calculate paid amount
@@ -817,6 +819,11 @@ export default function BookingOrderDetailPage({ params }: { params: { id: strin
                             }`}>
                               {payment.type}
                             </span>
+                            {payment.chequeNo && (payment.type === 'Cheque' || payment.type === 'Visa' || payment.type === 'Debit') && (
+                              <span className="text-xs text-gray-600">
+                                ({payment.type === 'Cheque' ? 'Cheque #' : 'Card'}: {payment.chequeNo})
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-500">
                             {formatDate(payment.date)} {payment.for ? `• ${payment.for}` : ''}

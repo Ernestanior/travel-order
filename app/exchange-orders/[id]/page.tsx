@@ -23,6 +23,7 @@ interface Payment {
   type: string
   amount: number
   remarks: string
+  chequeNo?: string  // For Cheque or Visa card numbers
 }
 
 interface ExchangeOrder {
@@ -619,8 +620,18 @@ export default function ExchangeOrderDetailPage({ params }: { params: { id: stri
                     {order.payments.map((payment) => (
                       <div key={payment.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{payment.type || 'Payment'}</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {payment.type || 'Payment'}
+                            {payment.chequeNo && (payment.type === 'Cheque' || payment.type === 'Visa' || payment.type === 'Debit') && (
+                              <span className="ml-2 text-xs text-gray-600">
+                                ({payment.type === 'Cheque' ? 'Cheque #' : 'Card'}: {payment.chequeNo})
+                              </span>
+                            )}
+                          </p>
                           <p className="text-xs text-gray-500">{payment.date}</p>
+                          {payment.remarks && (
+                            <p className="text-xs text-gray-500 mt-0.5">{payment.remarks}</p>
+                          )}
                         </div>
                         <p className="text-sm font-medium text-gray-900">{formatPrice(payment.amount)}</p>
                       </div>

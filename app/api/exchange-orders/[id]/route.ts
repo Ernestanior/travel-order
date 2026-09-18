@@ -102,7 +102,8 @@ export async function GET(
         date: payment.receiptdate?.toISOString().split('T')[0] || '',
         type: payment.paytype || '',
         amount: Number(payment.amountpaid || 0),
-        remarks: payment.remarks || ''
+        remarks: payment.remarks || '',
+        chequeNo: payment.chequeno || ''  // Add cheque/card number
       }))
     }
 
