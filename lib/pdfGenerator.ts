@@ -434,7 +434,7 @@ export async function generateBookingInvoicePDF(data: BookingInvoiceData) {
     doc.setFont('helvetica', 'bold')
     doc.text('Destination :', 125, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(data.departureDest2 || '-', 153, y)
+    doc.text(data.arrivalDest2 || '-', 153, y)
     y += 5
   }
 
